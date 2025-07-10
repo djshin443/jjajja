@@ -348,6 +348,9 @@ function updateTextParticles(ctx) {
 
 
 function updateQuestionPanel() {
+    // 추가: 질문이 활성화된 상태일 때만 계속 진행
+    if (!gameState.questionActive) return;
+    
     document.getElementById('questionText').textContent = `✨ ${gameState.currentQuestion} = ?`;
     if (gameState.currentEnemy) {
         const enemyName = gameState.currentEnemy.type === 'boss' ? '👑 보스' : 
@@ -508,3 +511,4 @@ function startSelectedGame() {
     
     initGame();
 }
+
