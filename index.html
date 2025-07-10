@@ -143,16 +143,19 @@
 			cursor: default;
 			-webkit-user-select: none;
 			user-select: none;
-			touch-action: none;        /* 추가 */
-			pointer-events: none;       /* 추가 */
+			touch-action: none;
+			pointer-events: none;
+			display: inline-block;
 		}
         
         /* 커스텀 키보드 스타일 추가 */
         #customKeyboard {
-            margin-top: 20px;
+            margin-top: 15px;
             display: grid;
             gap: 8px;
             justify-content: center;
+            width: 100%;
+            max-width: 350px;
         }
 
         .keyboard-row {
@@ -674,11 +677,10 @@
 		@media screen and (orientation: landscape) {
 		  #questionPanel {
 			  position: fixed;
-			  top: 0;
-			  left: 0;
-			  right: 0;
-			  bottom: 0;
-			  margin: auto;
+			  top: 50%;
+			  left: 50%;
+			  transform: translate(-50%, -50%);
+			  margin: 0;
 			  padding: 2vh 3vw;
 			  background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
 			  border: 0.8vw solid #FF69B4;
@@ -686,8 +688,10 @@
 			  color: #D8008B;
 			  display: none;
 			  z-index: 50;
-			  width: 100vw;
-			  max-height: 100vh;
+			  width: 80vw;
+			  max-width: 90%;
+			  height: auto;
+			  max-height: 90vh;
 			  overflow-y: auto;
 			  font-family: 'Jua', sans-serif;
 			  border-radius: 4vw;
@@ -696,7 +700,7 @@
 			  display: flex;
 			  flex-direction: column;
 			  align-items: center;
-			  justify-content: flex-start;
+			  justify-content: center;
 			}
 
 		  #questionText {
@@ -711,8 +715,9 @@
 		  }
 
 		  #answerInput {
-			width: 200px;
-			font-size: 24px;
+			width: 40%;
+			min-width: 120px;
+			font-size: 3vw;
 			padding: 1.2vh 1.5vw;
 			margin: 1.5vh 1vw;
 		  }
@@ -721,15 +726,17 @@
 			font-size: 2.5vw;
 			padding: 1.2vh 2.5vw;
 			margin: 1.5vh 1vw;
-			min-width: 140px;
+			min-width: 120px;
 		  }
 
 		  #customKeyboard .key-btn {
-			width: 12vw;
-			height: 12vw;
-			font-size: 5vw;
-			max-width: 80px;
-			max-height: 80px;
+			width: 50px;
+			height: 50px;
+			font-size: 20px;
+			max-width: 15vw;
+			max-height: 15vw;
+			min-width: 40px;
+			min-height: 40px;
 		  }
 
 		  .keyboard-row {
