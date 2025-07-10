@@ -244,6 +244,9 @@ function initGame() {
     gameState.questionActive = false;
     gameState.isMoving = true;
     gameState.cameraX = 0;
+
+    // 추가: 문제 패널 명시적으로 숨기기
+    document.getElementById('questionPanel').style.display = 'none';
     
     jiyul.x = 100;
     jiyul.worldX = 100;
