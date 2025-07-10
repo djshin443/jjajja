@@ -128,21 +128,23 @@
         }
 
         #answerInput {
-            padding: 15px 20px;
-            border: 3px solid #FF69B4;
-            font-size: 20px;
-            text-align: center;
-            margin: 20px 10px;
-            width: 180px;
-            background: #FFF;
-            color: #FF1493;
-            font-family: 'Jua', sans-serif;
-            border-radius: 20px;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
-            cursor: default;
-            -webkit-user-select: none;
-            user-select: none;
-        }
+			padding: 15px 20px;
+			border: 3px solid #FF69B4;
+			font-size: 20px;
+			text-align: center;
+			margin: 20px 10px;
+			width: 180px;
+			background: #FFF;
+			color: #FF1493;
+			font-family: 'Jua', sans-serif;
+			border-radius: 20px;
+			box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+			cursor: default;
+			-webkit-user-select: none;
+			user-select: none;
+			touch-action: none;        /* 추가 */
+			pointer-events: none;       /* 추가 */
+		}
         
         /* 커스텀 키보드 스타일 추가 */
         #customKeyboard {
