@@ -586,40 +586,40 @@ function checkCollisions() {
     });
     
     // 적과의 충돌
-    enemies.forEach(enemy => {
-        if (!enemy.alive) return;
-        
-        const enemyScreenX = enemy.x - gameState.cameraX;
-        
-        if (enemyScreenX > -100 && enemyScreenX < canvas.width + 100) {
-            if (checkBoxCollision(
-                {x: jiyul.worldX, y: jiyul.y, width: jiyul.width, height: jiyul.height},
-                {x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height}
-            )) {
-                // 문제 출제
-                if (!gameState.questionActive) {
-                    gameState.questionActive = true;
-                    gameState.currentEnemy = enemy;
-                    gameState.isMoving = false; // 전투 중에는 화면 정지
-                    generateQuestion();
-                    updateQuestionPanel();
-                    document.getElementById('questionPanel').style.display = 'block';
-                    
-                    // 입력창 초기화 및 모바일 키보드 완전 차단
-                    const answerInput = document.getElementById('answerInput');
-                    answerInput.value = '';
-                    answerInput.blur(); // 포커스 제거로 모바일 키보드 방지
-                    
-                    // 추가 보안 조치
-                    answerInput.setAttribute('readonly', 'readonly');
-                    answerInput.setAttribute('inputmode', 'none');
-                    
-                    // 모든 포커스 제거
-                    document.activeElement.blur();
-                }
-            }
-        }
-    });
+	enemies.forEach(enemy => {
+		if (!enemy.alive) return;
+		
+		const enemyScreenX = enemy.x - gameState.cameraX;
+		
+		if (enemyScreenX > -100 && enemyScreenX < canvas.width + 100) {
+			if (checkBoxCollision(
+				{x: jiyul.worldX, y: jiyul.y, width: jiyul.width, height: jiyul.height},
+				{x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height}
+			)) {
+				// 문제 출제
+				if (!gameState.questionActive) {
+					gameState.questionActive = true;
+					gameState.currentEnemy = enemy;
+					gameState.isMoving = false; // 전투 중에는 화면 정지
+					generateQuestion();
+					updateQuestionPanel();
+					document.getElementById('questionPanel').style.display = 'block';
+					
+					// 입력창 초기화 및 모바일 키보드 완전 차단
+					const answerInput = document.getElementById('answerInput');
+					answerInput.value = '';
+					answerInput.blur(); // 포커스 제거로 모바일 키보드 방지
+					
+					// 추가 보안 조치
+					answerInput.setAttribute('readonly', 'readonly');
+					answerInput.setAttribute('inputmode', 'none');
+					
+					// 모든 포커스 제거
+					document.activeElement.blur();
+				}
+			}
+		}
+	});
 }
 
 // 박스 충돌 체크
