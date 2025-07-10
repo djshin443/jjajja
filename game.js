@@ -113,17 +113,126 @@ function resizeCanvas() {
 
 // 전체화면 기능
 function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().then(() => {
+    // iOS 감지
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    if (isIOS) {
+        // iOS에서는 풀스크린 대신 안내 메시지 표시
+        showIOSFullscreenGuide();
+        return;
+    }
+    
+    // 안드로이드 및 기타 브라우저
+    if (!document.fullscreenElement && 
+        !document.webkitFullscreenElement && 
+        !document.mozFullScreenElement && 
+        !document.msFullscreenElement) {
+        
+        const elem = document.documentElement;
+        
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        }
+        
+        // 화면 방향 잠금 시도
+        if (screen.orientation && screen.orientation.lock) {
             screen.orientation.lock('landscape').catch(() => {});
-            document.getElementById('fullscreenBtn').textContent = 'EXIT';
-        }).catch(() => {});
+        }
+        
+        document.getElementById('fullscreenBtn').textContent = 'EXIT';
     } else {
-        document.exitFullscreen().then(() => {
-            document.getElementById('fullscreenBtn').textContent = 'FULL';
-        }).catch(() => {});
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+        
+        document.getElementById('fullscreenBtn').textContent = 'FULL';
     }
 }
+
+// iOS 풀스크린 가이드 표시
+function showIOSFullscreenGuide() {
+    const guideDiv = document.createElement('div');
+    guideDiv.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #FF69B4, #FFB6C1);
+        color: white;
+        padding: 30px;
+        border: 3px solid #FFF;
+        border-radius: 20px;
+        font-size: 16px;
+        z-index: 10000;
+        font-family: 'Jua', sans-serif;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        text-align: center;
+        line-height: 1.8;
+        max-width: 90vw;
+    `;
+    
+    guideDiv.innerHTML = `
+        <div style="font-size: 24px; margin-bottom: 20px;">🍎 아이폰 사용자님께 🍎</div>
+        <div style="margin-bottom: 20px;">
+            전체화면으로 플레이하시려면:<br><br>
+            1. Safari 하단의 <span style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 10px;">공유 버튼</span>을 누르세요<br>
+            2. <span style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 10px;">"홈 화면에 추가"</span>를 선택하세요<br>
+            3. 홈 화면에서 앱처럼 실행하세요!
+        </div>
+        <button onclick="this.parentElement.remove()" style="
+            background: linear-gradient(135deg, #32CD32, #90EE90);
+            border: 3px solid #FFF;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Jua', sans-serif;
+            border-radius: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        ">확인</button>
+    `;
+    
+    document.body.appendChild(guideDiv);
+    
+    // 5초 후 자동으로 사라짐
+    setTimeout(() => {
+        if (guideDiv.parentElement) {
+            guideDiv.remove();
+        }
+    }, 5000);
+}
+
+// iOS 체크 함수 추가
+function checkIOSFullscreen() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.navigator.standalone === true;
+    
+    if (isIOS && !isStandalone) {
+        // 풀스크린 버튼 텍스트 변경
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        if (fullscreenBtn) {
+            fullscreenBtn.textContent = '🏠추가';
+        }
+    }
+}
+
+// 게임 시작 시 iOS 체크 추가
+window.addEventListener('load', checkIOSFullscreen);
 
 // 게임 초기화
 function initGame() {
