@@ -92,34 +92,34 @@
         }
 
         #questionPanel {
-		  position: absolute;
-		  top: 50%;
-		  left: 50%;
-		  transform: translate(-50%, -50%);
-		  background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
-		  padding: 3vw;
-		  border: 0.8vw solid #FF69B4;
-		  text-align: center;
-		  font-size: 2.5vw;
-		  color: #D8008B;
-		  display: none;
-		  z-index: 50;
-		  width: 80vw;
-		  max-width: 600px;
-		  font-family: 'Jua', sans-serif;
-		  border-radius: 4vw;
-		  box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
-		}
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
+          padding: 2vw;
+          border: 0.8vw solid #FF69B4;
+          text-align: center;
+          font-size: 2.5vw;
+          color: #D8008B;
+          display: none;
+          z-index: 50;
+          width: 85vw;
+          max-width: 600px;
+          font-family: 'Jua', sans-serif;
+          border-radius: 4vw;
+          box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
+        }
 
         #questionText {
             font-size: 24px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             color: #FF1493;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
         #enemyInfo {
-            margin: 15px 0;
+            margin: 10px 0;
             font-size: 14px;
             color: #FF69B4;
             background: rgba(255,255,255,0.5);
@@ -129,30 +129,30 @@
         }
 
         #answerInput {
-			padding: 15px 20px;
-			border: 3px solid #FF69B4;
-			font-size: 20px;
-			text-align: center;
-			margin: 20px 10px;
-			width: 180px;
-			background: #FFF;
-			color: #FF1493;
-			font-family: 'Jua', sans-serif;
-			border-radius: 20px;
-			box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
-			cursor: default;
-			-webkit-user-select: none;
-			user-select: none;
-			touch-action: none;
-			pointer-events: none;
-			display: inline-block;
-		}
+            padding: 12px 15px;
+            border: 3px solid #FF69B4;
+            font-size: 20px;
+            text-align: center;
+            margin: 10px 5px;
+            width: 180px;
+            background: #FFF;
+            color: #FF1493;
+            font-family: 'Jua', sans-serif;
+            border-radius: 20px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+            cursor: default;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: none;
+            pointer-events: none;
+            display: inline-block;
+        }
         
         /* 커스텀 키보드 스타일 추가 */
         #customKeyboard {
-            margin-top: 15px;
+            margin-top: 10px;
             display: grid;
-            gap: 8px;
+            gap: 6px;
             justify-content: center;
             width: 100%;
             max-width: 350px;
@@ -160,22 +160,22 @@
 
         .keyboard-row {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             justify-content: center;
         }
 
         .key-btn {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             background: linear-gradient(135deg, #FFE4E1, #FFC0CB);
             border: 3px solid #FF69B4;
             color: #FF1493;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             cursor: pointer;
             font-family: 'Jua', sans-serif;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             transition: all 0.1s ease;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
@@ -215,7 +215,7 @@
             background: linear-gradient(135deg, #87CEEB, #98D8E8);
             border-color: #4682B4;
             color: #1E90FF;
-            font-size: 30px;
+            font-size: 28px;
         }
 
         .key-btn.key-clear:active {
@@ -227,14 +227,14 @@
             background: linear-gradient(135deg, #FFB6C1, #FF69B4);
             border-color: #FF1493;
             color: #8B008B;
-            font-size: 20px;
+            font-size: 18px;
         }
 
         .key-btn.key-back:active {
             background: linear-gradient(135deg, #FF1493, #C71585);
             color: white;
-}    
-	
+        }    
+    
         #answerInput:focus {
             outline: none;
             border-color: #FF1493;
@@ -245,7 +245,7 @@
             background: linear-gradient(135deg, #FF1493, #FF69B4);
             color: white;
             border: 3px solid #FFF;
-            padding: 15px 30px;
+            padding: 12px 25px;
             font-size: 16px;
             cursor: pointer;
             margin: 0 10px;
@@ -295,12 +295,12 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
         }
-		
-		.selected {
-			background-color: orange !important;
-			color: white !important;
-		}
-				
+        
+        .selected {
+            background-color: orange !important;
+            color: white !important;
+        }
+                
         .control-btn:active {
             transform: scale(0.95);
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
@@ -536,7 +536,7 @@
             }
             
             #questionPanel {
-                padding: 2vh 3vw !important;
+                padding: 1.5vh 2vw !important;
             }
             
             #questionText {
@@ -644,107 +644,145 @@
         </div>
 
         <div id="questionPanel">
-		  <div id="questionText">✨ 2 × 3 = ?</div>
-		  <div id="enemyInfo">보스 체력: 3/3</div>
-		  <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
-			<input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
-			<button id="submitBtn">⚡ 공격!</button>
-		  </div>
-		  <div id="customKeyboard">
-			<div class="keyboard-row">
-			  <button class="key-btn" data-key="1">1</button>
-			  <button class="key-btn" data-key="2">2</button>
-			  <button class="key-btn" data-key="3">3</button>
-			  <button class="key-btn" data-key="4">4</button>
-			  <button class="key-btn" data-key="5">5</button>
-			</div>
-			<div class="keyboard-row">
-			  <button class="key-btn" data-key="6">6</button>
-			  <button class="key-btn" data-key="7">7</button>
-			  <button class="key-btn" data-key="8">8</button>
-			  <button class="key-btn" data-key="9">9</button>
-			  <button class="key-btn" data-key="0">0</button>
-			</div>
-			<div class="keyboard-row keyboard-controls">
-			  <button class="key-btn key-clear" data-key="clear">💖</button>
-			  <button class="key-btn key-back" data-key="back">⬅️</button>
-			</div>
-		  </div>
-		</div>
+          <div id="questionText">✨ 2 × 3 = ?</div>
+          <div id="enemyInfo">보스 체력: 3/3</div>
+          <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
+            <button id="submitBtn">⚡ 공격!</button>
+          </div>
+          <div id="customKeyboard">
+            <div class="keyboard-row">
+              <button class="key-btn" data-key="1">1</button>
+              <button class="key-btn" data-key="2">2</button>
+              <button class="key-btn" data-key="3">3</button>
+              <button class="key-btn" data-key="4">4</button>
+              <button class="key-btn" data-key="5">5</button>
+            </div>
+            <div class="keyboard-row">
+              <button class="key-btn" data-key="6">6</button>
+              <button class="key-btn" data-key="7">7</button>
+              <button class="key-btn" data-key="8">8</button>
+              <button class="key-btn" data-key="9">9</button>
+              <button class="key-btn" data-key="0">0</button>
+            </div>
+            <div class="keyboard-row keyboard-controls">
+              <button class="key-btn key-clear" data-key="clear">💖</button>
+              <button class="key-btn key-back" data-key="back">⬅️</button>
+            </div>
+          </div>
+        </div>
 
-		<!-- CSS 추가 -->
-		<style>
-		@media screen and (orientation: landscape) {
-		  #questionPanel {
-			  position: fixed;
-			  top: 50%;
-			  left: 50%;
-			  transform: translate(-50%, -50%);
-			  margin: 0;
-			  padding: 2vh 3vw;
-			  background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
-			  border: 0.8vw solid #FF69B4;
-			  font-size: 2.5vw;
-			  color: #D8008B;
-			  display: none;
-			  z-index: 50;
-			  width: 80vw;
-			  max-width: 90%;
-			  height: auto;
-			  max-height: 90vh;
-			  overflow-y: auto;
-			  font-family: 'Jua', sans-serif;
-			  border-radius: 4vw;
-			  box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
+        <!-- 모바일 가로 모드 최적화 -->
+        <style>
+        @media screen and (orientation: landscape) {
+          #questionPanel {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              margin: 0;
+              padding: 1.5vh 2vw;
+              background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
+              border: 0.6vw solid #FF69B4;
+              font-size: 2.5vw;
+              color: #D8008B;
+              display: none;
+              z-index: 50;
+              width: 85vw;
+              max-width: 95%;
+              height: auto;
+              max-height: 85vh;
+              overflow-y: auto;
+              font-family: 'Jua', sans-serif;
+              border-radius: 3vw;
+              box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
 
-			  display: flex;
-			  flex-direction: column;
-			  align-items: center;
-			  justify-content: center;
-			}
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+          }
 
-		  #questionText {
-			font-size: 4vw;
-			margin-bottom: 2vh;
-		  }
+          #questionText {
+            font-size: 3.5vw;
+            margin-bottom: 1vh;
+            line-height: 1.2;
+          }
 
-		  #enemyInfo {
-			font-size: 2.5vw;
-			padding: 1vh 2vw;
-			margin: 2vh 0;
-		  }
+          #enemyInfo {
+            font-size: 2vw;
+            padding: 0.6vh 1.5vw;
+            margin: 0.5vh 0 1vh 0;
+          }
 
-		  #answerInput {
-			width: 40%;
-			min-width: 120px;
-			font-size: 3vw;
-			padding: 1.2vh 1.5vw;
-			margin: 1.5vh 1vw;
-		  }
+          #answerInput {
+            width: 30%;
+            min-width: 100px;
+            font-size: 2.5vw;
+            padding: 0.8vh 1vw;
+            margin: 0.5vh 1vw;
+            border-width: 2px;
+          }
 
-		  #submitBtn {
-			font-size: 2.5vw;
-			padding: 1.2vh 2.5vw;
-			margin: 1.5vh 1vw;
-			min-width: 120px;
-		  }
+          #submitBtn {
+            font-size: 2vw;
+            padding: 0.8vh 2vw;
+            margin: 0.5vh 1vw;
+            min-width: 100px;
+            border-width: 2px;
+          }
 
-		  #customKeyboard .key-btn {
-			width: 50px;
-			height: 50px;
-			font-size: 20px;
-			max-width: 15vw;
-			max-height: 15vw;
-			min-width: 40px;
-			min-height: 40px;
-		  }
+          #customKeyboard {
+            margin-top: 0.8vh;
+            gap: 4px;
+          }
 
-		  .keyboard-row {
-			gap: 1.5vw;
-			margin-top: 1vh;
-		  }
-		}
-		</style>
+          #customKeyboard .key-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            max-width: 10vw;
+            max-height: 10vw;
+            min-width: 30px;
+            min-height: 30px;
+            border-width: 2px;
+            border-radius: 8px;
+          }
+
+          .keyboard-row {
+            gap: 4px;
+            margin-top: 0.5vh;
+          }
+          
+          /* 매우 낮은 화면 높이 대응 */
+          @media (max-height: 400px) {
+            #questionPanel {
+              padding: 1vh 2vw;
+            }
+            
+            #questionText {
+              font-size: 3vw;
+              margin-bottom: 0.5vh;
+            }
+            
+            #enemyInfo {
+              font-size: 1.8vw;
+              padding: 0.4vh 1vw;
+              margin: 0.3vh 0 0.5vh 0;
+            }
+            
+            #customKeyboard .key-btn {
+              width: 35px;
+              height: 35px;
+              font-size: 16px;
+            }
+            
+            .keyboard-row {
+              margin-top: 0.3vh;
+            }
+          }
+        }
+        </style>
 
         <div id="controls">
             <button class="control-btn" id="jumpBtn">🦄 점프!</button>
