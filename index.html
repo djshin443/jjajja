@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>지율이의 픽셀 수학 게임</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #000;
+            font-family: 'Jua', sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        #gameContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #5C94FC;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #gameCanvas {
+            flex: 1;
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        /* 공주님을 위한 예쁜 UI */
+        #fullscreenBtn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #FF69B4, #FFB6C1);
+            border: 3px solid #FFF;
+            color: white;
+            padding: 10px 15px;
+            font-size: 12px;
+            cursor: pointer;
+            z-index: 1000;
+            font-family: 'Jua', sans-serif;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 120px;
+            color: white;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 10;
+            background: linear-gradient(135deg, rgba(255,105,180,0.9), rgba(255,182,193,0.9));
+            border: 3px solid #FFF;
+            padding: 12px 20px;
+            display: none;
+            font-family: 'Jua', sans-serif;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        #questionPanel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
+            padding: 30px;
+            border: 4px solid #FF69B4;
+            text-align: center;
+            font-size: 16px;
+            color: #D8008B;
+            display: none;
+            z-index: 50;
+            min-width: 350px;
+            font-family: 'Jua', sans-serif;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        #questionText {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #FF1493;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        #enemyInfo {
+            margin: 15px 0;
+            font-size: 14px;
+            color: #FF69B4;
+            background: rgba(255,255,255,0.5);
+            padding: 8px 15px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        #answerInput {
+            padding: 15px 20px;
+            border: 3px solid #FF69B4;
+            font-size: 20px;
+            text-align: center;
+            margin: 20px 10px;
+            width: 180px;
+            background: #FFF;
+            color: #FF1493;
+            font-family: 'Jua', sans-serif;
+            border-radius: 20px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #answerInput:focus {
+            outline: none;
+            border-color: #FF1493;
+            box-shadow: 0 0 10px rgba(255,20,147,0.5);
+        }
+
+        #submitBtn {
+            background: linear-gradient(135deg, #FF1493, #FF69B4);
+            color: white;
+            border: 3px solid #FFF;
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-family: 'Jua', sans-serif;
+            border-radius: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        #submitBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0,0,0,0.4);
+        }
+
+        #submitBtn:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        #controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            gap: 2%;
+            z-index: 10;
+            height: 15vh;
+            min-height: 60px;
+            max-height: 80px;
+            padding: 0 2%;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
+            border: 3px solid #FFF;
+            color: #FF1493;
+            padding: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            flex: 1;
+            font-family: 'Jua', sans-serif;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+        }
+		
+		.selected {
+			background-color: orange !important;
+			color: white !important;
+		}
+				
+        .control-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        #jumpBtn {
+            background: linear-gradient(135deg, #FF1493, #FF69B4);
+            color: white;
+            flex: 2;
+            font-size: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        #jumpBtn:active {
+            background: linear-gradient(135deg, #C71585, #FF1493);
+        }
+
+        #selectMenu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2vh 4vw;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #menuTitle {
+            font-size: min(6vw, 32px);
+            color: #FF1493;
+            text-shadow: 3px 3px 0 #FFF, 4px 4px 10px rgba(0,0,0,0.3);
+            margin-bottom: 2vh;
+            text-align: center;
+            font-family: 'Jua', sans-serif;
+        }
+
+        #menuSubtitle {
+            font-size: min(3vw, 16px);
+            color: #8B008B;
+            margin-bottom: 3vh;
+            text-align: center;
+            font-family: 'Jua', sans-serif;
+            line-height: 1.5;
+            background: rgba(255,255,255,0.8);
+            padding: 1vh 3vw;
+            border-radius: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        #danGrid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5vh;
+            margin-bottom: 2vh;
+            width: 100%;
+            max-width: min(600px, 90vw);
+        }
+
+        .dan-btn {
+            background: linear-gradient(135deg, #FFF, #FFE4E1);
+            border: 3px solid #FF69B4;
+            color: #FF1493;
+            padding: 2vh 1vw;
+            font-size: min(4vw, 20px);
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            font-family: 'Jua', sans-serif;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            position: relative;
+            z-index: 100;
+        }
+
+        .dan-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .dan-btn:active {
+            transform: translateY(0);
+            background: linear-gradient(135deg, #FFB6C1, #FF69B4);
+        }
+
+        .dan-btn.selected {
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255,20,147,0.5);
+        }
+
+        .operator-btn {
+            background: linear-gradient(135deg, #FFF, #F0E68C);
+            border: 3px solid #FFD700;
+            color: #FF8C00;
+            padding: 25px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            font-family: 'Jua', sans-serif;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            position: relative;
+            z-index: 100;
+        }
+
+        .operator-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .operator-btn:active {
+            transform: translateY(0);
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+        }
+
+        .operator-btn.selected {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: white;
+            border-color: #FF6347;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+
+        #selectedOptions {
+            color: #8B008B;
+            font-size: 16px;
+            margin: 20px 0;
+            background: rgba(255,255,255,0.8);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        #selectedDans {
+            margin-bottom: 10px;
+        }
+
+        #startGameBtn {
+            background: linear-gradient(135deg, #32CD32, #90EE90);
+            border: 3px solid #FFF;
+            color: white;
+            padding: 20px 50px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            font-family: 'Jua', sans-serif;
+            border-radius: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        #startGameBtn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 7px 25px rgba(0,0,0,0.4);
+        }
+
+        #startGameBtn:active {
+            transform: translateY(0) scale(1);
+        }
+
+        #startGameBtn:disabled {
+            background: linear-gradient(135deg, #CCC, #AAA);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        @media screen and (orientation: portrait) {
+            #gameContainer::before {
+                content: "🌸 화면을 가로로 돌려주세요! 🌸";
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #FF69B4, #FFB6C1);
+                color: white;
+                padding: 5vh 10vw;
+                border: 3px solid #FFF;
+                border-radius: 20px;
+                font-size: min(5vw, 20px);
+                z-index: 9999;
+                font-family: 'Jua', sans-serif;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+                text-align: center;
+                line-height: 1.5;
+            }
+            
+            #gameCanvas, #controls, #ui, #questionPanel {
+                display: none !important;
+            }
+        }
+        
+        /* 모바일 가로 모드 최적화 */
+        @media screen and (orientation: landscape) and (max-height: 500px) {
+            #controls {
+                height: 12vh;
+                min-height: 50px;
+            }
+            
+            .control-btn {
+                font-size: min(3vh, 14px) !important;
+                padding: 1vh !important;
+            }
+            
+            #ui {
+                font-size: min(2.5vh, 12px) !important;
+                padding: 1vh 2vw !important;
+            }
+            
+            #questionPanel {
+                padding: 2vh 3vw !important;
+            }
+            
+            #questionText {
+                font-size: min(5vh, 20px) !important;
+            }
+        }
+
+        /* 가로 모드 메뉴 최적화 */
+        @media screen and (orientation: landscape) {
+            #selectMenu {
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 1vh 2vw;
+            }
+
+            #menuTitle {
+                width: 100%;
+                font-size: min(5vh, 28px);
+                margin-bottom: 1vh;
+            }
+
+            #menuSubtitle {
+                width: 100%;
+                font-size: min(3vh, 14px);
+                margin-bottom: 2vh;
+                padding: 0.5vh 2vw;
+            }
+
+            .menu-section {
+                flex: 1;
+                margin: 0 1vw;
+            }
+
+            #danGrid {
+                gap: 1vh;
+            }
+
+            .dan-btn, .operator-btn {
+                padding: 1.5vh 1vw !important;
+                font-size: min(3vh, 16px) !important;
+            }
+
+            #selectedOptions {
+                width: 100%;
+                margin: 1vh 0;
+                padding: 1vh 2vw;
+                font-size: min(3vh, 14px);
+            }
+
+            #startGameBtn {
+                padding: 2vh 4vw;
+                font-size: min(4vh, 20px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+
+        <button id="fullscreenBtn">FULL</button>
+
+        <div id="selectMenu">
+            <div id="menuTitle">🌸 지율이의 수학 모험 🌸</div>
+            <div id="menuSubtitle">공주님! 오늘 공부할 것을 선택해주세요 💕</div>
+            
+            <div class="menu-section" style="position: relative; z-index: 10;">
+                <div style="color: #FF1493; font-size: 18px; margin-bottom: 15px; font-weight: bold;">✨ 구구단 선택</div>
+                <div id="danGrid">
+                    <button class="dan-btn" data-dan="2">2단</button>
+                    <button class="dan-btn" data-dan="3">3단</button>
+                    <button class="dan-btn" data-dan="4">4단</button>
+                    <button class="dan-btn" data-dan="5">5단</button>
+                    <button class="dan-btn" data-dan="6">6단</button>
+                    <button class="dan-btn" data-dan="7">7단</button>
+                    <button class="dan-btn" data-dan="8">8단</button>
+                    <button class="dan-btn" data-dan="9">9단</button>
+                </div>
+            </div>
+
+            <div class="menu-section" style="position: relative; z-index: 10;">
+                <div style="color: #FF1493; font-size: 18px; margin-bottom: 15px; font-weight: bold;">✨ 연산 선택</div>
+                <div id="operatorGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-width: 400px; margin: 0 auto;">
+                    <button class="operator-btn" data-op="add">➕ 더하기</button>
+                    <button class="operator-btn" data-op="sub">➖ 빼기</button>
+                    <button class="operator-btn" data-op="mul">✖️ 곱하기</button>
+                    <button class="operator-btn" data-op="div">➗ 나누기</button>
+                </div>
+            </div>
+
+            <div id="selectedOptions">
+                <div id="selectedDans">선택한 구구단: 없음</div>
+                <div id="selectedOps">선택한 연산: 없음</div>
+            </div>
+            <button id="startGameBtn" disabled>🎮 모험 시작!</button>
+        </div>
+
+        <div id="ui">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>📚 <span id="danText">-</span></div>
+                <div>🏰 스테이지 <span id="stageText">1</span></div>
+                <div>⭐ <span id="score">0</span>점</div>
+                <div>💖 체력: <span id="hp">100</span></div>
+            </div>
+        </div>
+
+        <div id="questionPanel">
+            <div id="questionText">✨ 2 × 3 = ?</div>
+            <div id="enemyInfo">보스 체력: 3/3</div>
+            <div>
+                <input type="number" id="answerInput" placeholder="답은?" inputmode="numeric">
+                <button id="submitBtn">⚡ 공격!</button>
+            </div>
+        </div>
+
+        <div id="controls">
+            <button class="control-btn" id="jumpBtn">🦄 점프!</button>
+            <button class="control-btn" id="menuBtn">🏠 메뉴</button>
+            <button class="control-btn" id="helpBtn">💡 도움</button>
+        </div>
+    </div>
+
+    <script src="characters.js"></script>
+    <script src="math.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
