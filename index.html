@@ -97,15 +97,17 @@
 		  left: 50%;
 		  transform: translate(-50%, -50%);
 		  background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
-		  padding: 3vw;
+		  padding: 1.5vh 3vw;       /* 상하 여백 줄임 */
 		  border: 0.8vw solid #FF69B4;
 		  text-align: center;
 		  font-size: 2.5vw;
 		  color: #D8008B;
 		  display: none;
 		  z-index: 50;
-		  width: 80vw;
-		  max-width: 600px;
+		  width: 90vw;
+		  max-width: 650px;
+		  max-height: 90vh;         /* 화면 초과 방지 */
+		  overflow-y: auto;         /* 넘치면 스크롤 */
 		  font-family: 'Jua', sans-serif;
 		  border-radius: 4vw;
 		  box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
