@@ -641,84 +641,103 @@
         </div>
 
         <div id="questionPanel">
-	  <div id="questionText">✨ 2 × 3 = ?</div>
-	  <div id="enemyInfo">보스 체력: 3/3</div>
-	  <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
-		<input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
-		<button id="submitBtn">⚡ 공격!</button>
-	  </div>
-	  <div id="customKeyboard">
-		<div class="keyboard-row">
-		  <button class="key-btn" data-key="1">1</button>
-		  <button class="key-btn" data-key="2">2</button>
-		  <button class="key-btn" data-key="3">3</button>
-		  <button class="key-btn" data-key="4">4</button>
-		  <button class="key-btn" data-key="5">5</button>
+		  <div id="questionText">✨ 2 × 3 = ?</div>
+		  <div id="enemyInfo">보스 체력: 3/3</div>
+		  <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
+			<input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
+			<button id="submitBtn">⚡ 공격!</button>
+		  </div>
+		  <div id="customKeyboard">
+			<div class="keyboard-row">
+			  <button class="key-btn" data-key="1">1</button>
+			  <button class="key-btn" data-key="2">2</button>
+			  <button class="key-btn" data-key="3">3</button>
+			  <button class="key-btn" data-key="4">4</button>
+			  <button class="key-btn" data-key="5">5</button>
+			</div>
+			<div class="keyboard-row">
+			  <button class="key-btn" data-key="6">6</button>
+			  <button class="key-btn" data-key="7">7</button>
+			  <button class="key-btn" data-key="8">8</button>
+			  <button class="key-btn" data-key="9">9</button>
+			  <button class="key-btn" data-key="0">0</button>
+			</div>
+			<div class="keyboard-row keyboard-controls">
+			  <button class="key-btn key-clear" data-key="clear">💖</button>
+			  <button class="key-btn key-back" data-key="back">⬅️</button>
+			</div>
+		  </div>
 		</div>
-		<div class="keyboard-row">
-		  <button class="key-btn" data-key="6">6</button>
-		  <button class="key-btn" data-key="7">7</button>
-		  <button class="key-btn" data-key="8">8</button>
-		  <button class="key-btn" data-key="9">9</button>
-		  <button class="key-btn" data-key="0">0</button>
-		</div>
-		<div class="keyboard-row keyboard-controls">
-		  <button class="key-btn key-clear" data-key="clear">💖</button>
-		  <button class="key-btn key-back" data-key="back">⬅️</button>
-		</div>
-	  </div>
-	</div>
 
-	<!-- CSS 추가 -->
-	<style>
-	@media screen and (orientation: landscape) {
-	  #questionPanel {
-		width: 90vw;
-		max-width: 700px;
-		padding: 3vh 4vw;
-		font-size: 2.8vw;
-		border-radius: 3vw;
-	  }
+		<!-- CSS 추가 -->
+		<style>
+		@media screen and (orientation: landscape) {
+		  #questionPanel {
+			  position: fixed;
+			  top: 0;
+			  left: 0;
+			  right: 0;
+			  bottom: 0;
+			  margin: auto;
+			  padding: 2vh 3vw;
+			  background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
+			  border: 0.8vw solid #FF69B4;
+			  font-size: 2.5vw;
+			  color: #D8008B;
+			  display: none;
+			  z-index: 50;
+			  width: 100vw;
+			  max-height: 100vh;
+			  overflow-y: auto;
+			  font-family: 'Jua', sans-serif;
+			  border-radius: 4vw;
+			  box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
 
-	  #questionText {
-		font-size: 4vw;
-		margin-bottom: 2vh;
-	  }
+			  display: flex;
+			  flex-direction: column;
+			  align-items: center;
+			  justify-content: flex-start;
+			}
 
-	  #enemyInfo {
-		font-size: 2.5vw;
-		padding: 1vh 2vw;
-		margin: 2vh 0;
-	  }
+		  #questionText {
+			font-size: 4vw;
+			margin-bottom: 2vh;
+		  }
 
-	  #answerInput {
-		width: 200px;
-		font-size: 24px;
-		padding: 1.2vh 1.5vw;
-		margin: 1.5vh 1vw;
-	  }
+		  #enemyInfo {
+			font-size: 2.5vw;
+			padding: 1vh 2vw;
+			margin: 2vh 0;
+		  }
 
-	  #submitBtn {
-		font-size: 2.5vw;
-		padding: 1.2vh 2.5vw;
-		margin: 1.5vh 1vw;
-		min-width: 140px;
-	  }
+		  #answerInput {
+			width: 200px;
+			font-size: 24px;
+			padding: 1.2vh 1.5vw;
+			margin: 1.5vh 1vw;
+		  }
 
-	  #customKeyboard .key-btn {
-		width: 12vw;
-		height: 12vw;
-		font-size: 5vw;
-		max-width: 80px;
-		max-height: 80px;
-	  }
+		  #submitBtn {
+			font-size: 2.5vw;
+			padding: 1.2vh 2.5vw;
+			margin: 1.5vh 1vw;
+			min-width: 140px;
+		  }
 
-	  .keyboard-row {
-		gap: 1.5vw;
-		margin-top: 1vh;
-	  }
-	}
-	</style>
+		  #customKeyboard .key-btn {
+			width: 12vw;
+			height: 12vw;
+			font-size: 5vw;
+			max-width: 80px;
+			max-height: 80px;
+		  }
+
+		  .keyboard-row {
+			gap: 1.5vw;
+			margin-top: 1vh;
+		  }
+		}
+		</style>
 
         <div id="controls">
             <button class="control-btn" id="jumpBtn">🦄 점프!</button>
