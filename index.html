@@ -97,18 +97,18 @@
           left: 50%;
           transform: translate(-50%, -50%);
           background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
-          padding: 20px;
-          border: 4px solid #FF69B4;
+          padding: 2vw;
+          border: 0.6vw solid #FF69B4;
           text-align: center;
-          font-size: 16px;
+          font-size: 2.5vw;
           color: #D8008B;
           display: none; /* 처음에 보이지 않게 설정 */
           z-index: 50;
-          width: 400px;
-          max-width: 90vw;
+          width: 85vw;
+          max-width: 600px;
           font-family: 'Jua', sans-serif;
-          border-radius: 20px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+          border-radius: 3vw;
+          box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
         }
 
         #questionText {
@@ -150,25 +150,26 @@
         
         /* 커스텀 키보드 스타일 추가 */
         #customKeyboard {
-            margin-top: 15px;
+            margin-top: 10px;
             display: flex;
             justify-content: center;
             width: 100%;
-            gap: 8px;
+            max-width: 400px;
+            gap: 10px;
         }
 
         /* 숫자 키패드 영역 */
         .numpad-container {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 4px;
+            gap: 5px;
         }
 
         /* 지우기 버튼 영역 */
         .control-buttons {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 5px;
             justify-content: center;
         }
 
@@ -179,12 +180,12 @@
         }
 
         .key-btn {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             background: linear-gradient(135deg, #FFE4E1, #FFC0CB);
             border: 2px solid #FF69B4;
             color: #FF1493;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
             font-family: 'Jua', sans-serif;
@@ -232,8 +233,8 @@
             background: linear-gradient(135deg, #87CEEB, #98D8E8);
             border-color: #4682B4;
             color: #1E90FF;
-            font-size: 20px;
-            height: 36px;
+            font-size: 24px;
+            height: 40px;
         }
 
         .key-btn.key-clear:active {
@@ -245,8 +246,8 @@
             background: linear-gradient(135deg, #FFB6C1, #FF69B4);
             border-color: #FF1493;
             color: #8B008B;
-            font-size: 16px;
-            height: 36px;
+            font-size: 18px;
+            height: 40px;
         }
 
         .key-btn.key-back:active {
@@ -512,12 +513,6 @@
         }
 
         @media screen and (orientation: portrait) {
-            #questionPanel {
-                width: 320px !important;
-                max-width: 85vw !important;
-                padding: 15px !important;
-            }
-            
             #gameContainer::before {
                 content: "🌸 화면을 가로로 돌려주세요! 🌸";
                 position: fixed;
@@ -671,14 +666,12 @@
         <div id="questionPanel">
           <div id="questionText">✨ 2 × 3 = ?</div>
           <div id="enemyInfo">보스 체력: 3/3</div>
-          <div style="display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 10px;">
-            <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-              <input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
-              <button id="submitBtn">⚡ 공격!</button>
-            </div>
+          <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
+            <button id="submitBtn">⚡ 공격!</button>
           </div>
           
-          <!-- 컴팩트한 키패드 레이아웃 -->
+          <!-- 수정된 키패드 레이아웃 -->
           <div id="customKeyboard">
             <!-- 숫자 영역 -->
             <div class="numpad-container">
@@ -706,87 +699,112 @@
         <style>
         @media screen and (orientation: landscape) {
           #questionPanel {
-              width: 60vw;
-              max-width: 500px;
-              padding: 15px 20px;
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              margin: 0;
+              padding: 1.5vh 2vw;
+              background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
+              border: 0.6vw solid #FF69B4;
+              font-size: 2.5vw;
+              color: #D8008B;
+              display: none; /* 처음에는 보이지 않게 설정 */
+              z-index: 50;
+              width: 85vw;
+              max-width: 95%;
+              height: auto;
+              max-height: 85vh;
+              overflow-y: auto;
+              font-family: 'Jua', sans-serif;
+              border-radius: 3vw;
+              box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
           }
 
           #questionText {
-            font-size: 20px;
-            margin-bottom: 12px;
+            font-size: 3.5vw;
+            margin-bottom: 1vh;
+            line-height: 1.2;
           }
 
           #enemyInfo {
-            font-size: 16px;
-            padding: 6px 15px;
-            margin: 8px 0 12px 0;
+            font-size: 2vw;
+            padding: 0.6vh 1.5vw;
+            margin: 0.5vh 0 1vh 0;
           }
 
           #answerInput {
-            width: 100px;
-            font-size: 18px;
-            padding: 8px 12px;
-            margin: 5px;
+            width: 100px; /* 가로 크기 감소 */
+            min-width: 80px;
+            font-size: 2.5vw;
+            padding: 0.8vh 1vw;
+            margin: 0.5vh 1vw;
+            border-width: 2px;
           }
 
           #submitBtn {
-            font-size: 16px;
-            padding: 10px 20px;
-            margin: 5px;
+            font-size: 2vw;
+            padding: 0.8vh 2vw;
+            margin: 0.5vh 1vw;
+            min-width: 100px;
+            border-width: 2px;
           }
 
           #customKeyboard {
-            margin-top: 10px;
-            gap: 6px;
+            margin-top: 0.8vh;
+            gap: 8px;
           }
           
           .numpad-container {
-            gap: 3px;
+            gap: 4px;
           }
 
           #customKeyboard .key-btn {
-            width: 35px;
-            height: 35px;
-            font-size: 16px;
+            width: 38px;
+            height: 38px;
+            font-size: 18px;
+            max-width: 10vw;
+            max-height: 10vw;
+            min-width: 30px;
+            min-height: 30px;
             border-width: 2px;
             border-radius: 8px;
           }
           
           .control-buttons {
-            gap: 3px;
+            gap: 4px;
           }
           
           .control-buttons .key-btn {
-            width: 40px;
+            width: 45px;
           }
           
           /* 매우 낮은 화면 높이 대응 */
           @media (max-height: 400px) {
             #questionPanel {
-              padding: 10px 15px;
-              width: 50vw;
+              padding: 1vh 2vw;
             }
             
             #questionText {
-              font-size: 18px;
-              margin-bottom: 8px;
+              font-size: 3vw;
+              margin-bottom: 0.5vh;
             }
             
             #enemyInfo {
-              font-size: 14px;
-              padding: 4px 10px;
-              margin: 5px 0 8px 0;
+              font-size: 1.8vw;
+              padding: 0.4vh 1vw;
+              margin: 0.3vh 0 0.5vh 0;
             }
             
             #customKeyboard .key-btn {
-              width: 30px;
-              height: 30px;
-              font-size: 14px;
+              width: 32px;
+              height: 32px;
+              font-size: 16px;
             }
             
             .control-buttons .key-btn {
-              width: 35px;
-              height: 30px;
+              width: 38px;
+              height: 32px;
             }
           }
         }
@@ -802,5 +820,68 @@
     <script src="characters.js"></script>
     <script src="math.js"></script>
     <script src="game.js"></script>
+    
+    <!-- 키패드 입력 문제 해결을 위한 추가 스크립트 -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 모든 키패드 버튼에 이벤트 리스너 추가
+        const keyButtons = document.querySelectorAll('.key-btn');
+        
+        keyButtons.forEach(button => {
+            // 기존 이벤트 제거
+            button.removeEventListener('click', handleKeyPressWrapper);
+            
+            // 새 이벤트 추가
+            button.addEventListener('click', handleKeyPressWrapper);
+        });
+        
+        function handleKeyPressWrapper(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const key = this.getAttribute('data-key');
+            console.log('키 버튼 클릭됨:', key);
+            handleKeyPress(key);
+        }
+        
+        // 기존 함수를 참조하여 직접 정의
+        function handleKeyPress(key) {
+            const answerInput = document.getElementById('answerInput');
+            if (!answerInput) {
+                console.error('입력 필드를 찾을 수 없음');
+                return;
+            }
+            
+            console.log('입력 처리 중:', key);
+            
+            if (key === 'clear') {
+                // 전체 지우기
+                answerInput.value = '';
+                // 효과
+                answerInput.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    answerInput.style.transform = 'scale(1)';
+                }, 200);
+                console.log('모든 입력 지움');
+            } else if (key === 'back') {
+                // 한 글자 지우기
+                answerInput.value = answerInput.value.slice(0, -1);
+                console.log('한 글자 지움, 남은 입력:', answerInput.value);
+            } else {
+                // 숫자 입력 (최대 3자리로 제한)
+                if (answerInput.value.length < 3) {
+                    answerInput.value += key;
+                    // 입력 효과
+                    answerInput.style.backgroundColor = '#FFE4E1';
+                    setTimeout(() => {
+                        answerInput.style.backgroundColor = '#FFF';
+                    }, 100);
+                    console.log('숫자 입력됨:', key, '현재 입력:', answerInput.value);
+                } else {
+                    console.log('최대 3자리 입력 제한');
+                }
+            }
+        }
+    });
+    </script>
 </body>
 </html>
