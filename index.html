@@ -615,6 +615,103 @@
                 padding: 2vh 4vw;
                 font-size: min(4vh, 20px);
             }
+            
+            /* 문제 패널 가로 모드 최적화 */
+            #questionPanel {
+                width: 60vw;
+                max-width: 500px;
+                padding: 15px 20px;
+            }
+
+            #questionText {
+                font-size: 20px;
+                margin-bottom: 12px;
+            }
+
+            #enemyInfo {
+                font-size: 16px;
+                padding: 6px 15px;
+                margin: 8px 0 12px 0;
+            }
+
+            #answerInput {
+                width: 100px;
+                font-size: 16px;
+                padding: 6px 10px;
+                margin: 5px;
+            }
+
+            #submitBtn {
+                font-size: 14px;
+                padding: 8px 18px;
+                margin: 5px;
+            }
+
+            #customKeyboard {
+                margin-top: 10px;
+                gap: 5px;
+            }
+            
+            .numpad-container {
+                gap: 3px;
+            }
+
+            #customKeyboard .key-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 17px;
+                border-width: 2px;
+                border-radius: 8px;
+            }
+            
+            .control-buttons {
+                gap: 3px;
+            }
+            
+            .control-buttons .key-btn {
+                width: 44px;
+                height: 38px;
+            }
+            
+            /* 매우 낮은 화면 높이 대응 */
+            @media (max-height: 400px) {
+                #questionPanel {
+                    padding: 10px 15px;
+                    width: 50vw;
+                }
+                
+                #questionText {
+                    font-size: 18px;
+                    margin-bottom: 8px;
+                }
+                
+                #enemyInfo {
+                    font-size: 14px;
+                    padding: 4px 10px;
+                    margin: 5px 0 8px 0;
+                }
+                
+                #answerInput {
+                    font-size: 14px;
+                    padding: 4px 8px;
+                }
+                
+                #submitBtn {
+                    font-size: 12px;
+                    padding: 6px 15px;
+                }
+                
+                #customKeyboard .key-btn {
+                    width: 32px;
+                    height: 32px;
+                    font-size: 15px;
+                }
+                
+                .control-buttons .key-btn {
+                    width: 37px;
+                    height: 32px;
+                }
+            }
         }
     </style>
 </head>
@@ -701,96 +798,6 @@
             </div>
           </div>
         </div>
-
-        <!-- 모바일 가로 모드 최적화 -->
-        <style>
-        @media screen and (orientation: landscape) {
-          #questionPanel {
-              width: 60vw;
-              max-width: 500px;
-              padding: 15px 20px;
-          }
-
-          #questionText {
-            font-size: 20px;
-            margin-bottom: 12px;
-          }
-
-          #enemyInfo {
-            font-size: 16px;
-            padding: 6px 15px;
-            margin: 8px 0 12px 0;
-          }
-
-          #answerInput {
-            width: 100px;
-            font-size: 18px;
-            padding: 8px 12px;
-            margin: 5px;
-          }
-
-          #submitBtn {
-            font-size: 16px;
-            padding: 10px 20px;
-            margin: 5px;
-          }
-
-          #customKeyboard {
-            margin-top: 10px;
-            gap: 6px;
-          }
-          
-          .numpad-container {
-            gap: 3px;
-          }
-
-          #customKeyboard .key-btn {
-            width: 35px;
-            height: 35px;
-            font-size: 16px;
-            border-width: 2px;
-            border-radius: 8px;
-          }
-          
-          .control-buttons {
-            gap: 3px;
-          }
-          
-          .control-buttons .key-btn {
-            width: 40px;
-          }
-          
-          /* 매우 낮은 화면 높이 대응 */
-          @media (max-height: 400px) {
-            #questionPanel {
-              padding: 10px 15px;
-              width: 50vw;
-            }
-            
-            #questionText {
-              font-size: 18px;
-              margin-bottom: 8px;
-            }
-            
-            #enemyInfo {
-              font-size: 14px;
-              padding: 4px 10px;
-              margin: 5px 0 8px 0;
-            }
-            
-            #customKeyboard .key-btn {
-              width: 30px;
-              height: 30px;
-              font-size: 14px;
-            }
-            
-            .control-buttons .key-btn {
-              width: 35px;
-              height: 30px;
-            }
-          }
-        }
-        </style>
 
         <div id="controls">
             <button class="control-btn" id="jumpBtn">🦄 점프!</button>
