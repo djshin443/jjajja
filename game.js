@@ -1726,7 +1726,7 @@ function setupEventListeners() {
     console.log('모든 이벤트 설정 완료');
 }
 
-javascript// ========== 이벤트 리스너 설정 ==========
+// ========== 이벤트 리스너 설정 ==========
 // DOM이 완전히 로드된 후 한 번만 실행
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupEventListeners);
