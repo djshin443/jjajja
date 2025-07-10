@@ -1725,6 +1725,125 @@ function setupEventListeners() {
     
     console.log('모든 이벤트 설정 완료');
 }
+위 코드를 다음과 같이 수정하세요:
+javascript// ========== 이벤트 리스너 설정 ==========
+// DOM이 완전히 로드된 후 한 번만 실행
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupEventListeners);
+} else {
+    setupEventListeners();
+}
+
+function setupEventListeners() {
+    console.log('이벤트 리스너 설정 시작');
+    
+    // 이미 설정되었는지 확인
+    if (window.eventListenersSetup) {
+        console.log('이벤트 리스너가 이미 설정되어 있음');
+        return;
+    }
+    window.eventListenersSetup = true;
+    
+    // 모바일 키보드 전역 방지
+    document.addEventListener('touchstart', function(e) {
+        if (e.target.id === 'answerInput') {
+            e.preventDefault();
+            e.stopPropagation();
+            document.activeElement.blur();
+        }
+    }, { passive: false });
+    
+    // 구구단 버튼들 - 이벤트 위임 방식 사용
+    const danGrid = document.getElementById('danGrid');
+    if (danGrid) {
+        danGrid.addEventListener('click', function(e) {
+            const button = e.target.closest('.dan-btn');
+            if (button) {
+                e.preventDefault();
+                e.stopPropagation();
+                const dan = parseInt(button.getAttribute('data-dan'));
+                toggleDan(dan);
+            }
+        });
+    }
+
+    // 연산 버튼들 - 이벤트 위임 방식 사용
+    const operatorGrid = document.getElementById('operatorGrid');
+    if (operatorGrid) {
+        operatorGrid.addEventListener('click', function(e) {
+            const button = e.target.closest('.operator-btn');
+            if (button) {
+                e.preventDefault();
+                e.stopPropagation();
+                const op = button.getAttribute('data-op');
+                toggleOperator(op);
+            }
+        });
+    }
+
+    // 기타 버튼들
+    const startBtn = document.getElementById('startGameBtn');
+    if (startBtn) {
+        startBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!this.disabled) {
+                startSelectedGame();
+            }
+        });
+    }
+    
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+    }
+    
+    const jumpBtn = document.getElementById('jumpBtn');
+    if (jumpBtn) {
+        jumpBtn.addEventListener('click', jump);
+    }
+    
+    const menuBtn = document.getElementById('menuBtn');
+    if (menuBtn) {
+        menuBtn.addEventListener('click', showMenu);
+    }
+    
+    const helpBtn = document.getElementById('helpBtn');
+    if (helpBtn) {
+        helpBtn.addEventListener('click', showHelp);
+    }
+    
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', submitAnswer);
+    }
+
+    // 엔터키 이벤트
+    const answerInput = document.getElementById('answerInput');
+    if (answerInput) {
+        answerInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitAnswer();
+            }
+        });
+    }
+
+    // 커스텀 키보드 이벤트 - 이벤트 위임 방식 사용
+    const customKeyboard = document.getElementById('customKeyboard');
+    if (customKeyboard) {
+        customKeyboard.addEventListener('click', function(e) {
+            const keyBtn = e.target.closest('.key-btn');
+            if (keyBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const key = keyBtn.getAttribute('data-key');
+                console.log('키 버튼 클릭:', key);
+                handleKeyPress(key);
+            }
+        });
+    }
+    
+    console.log('모든 이벤트 설정 완료');
+}
 
 // 커스텀 키보드 처리 함수
 function handleKeyPress(key) {
