@@ -641,33 +641,84 @@
         </div>
 
         <div id="questionPanel">
-            <div id="questionText">✨ 2 × 3 = ?</div>
-            <div id="enemyInfo">보스 체력: 3/3</div>
-            <div>
-                <input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
-                <button id="submitBtn">⚡ 공격!</button>
-            </div>
-            <div id="customKeyboard">
-                <div class="keyboard-row">
-                    <button class="key-btn" data-key="1">1</button>
-                    <button class="key-btn" data-key="2">2</button>
-                    <button class="key-btn" data-key="3">3</button>
-                    <button class="key-btn" data-key="4">4</button>
-                    <button class="key-btn" data-key="5">5</button>
-                </div>
-                <div class="keyboard-row">
-                    <button class="key-btn" data-key="6">6</button>
-                    <button class="key-btn" data-key="7">7</button>
-                    <button class="key-btn" data-key="8">8</button>
-                    <button class="key-btn" data-key="9">9</button>
-                    <button class="key-btn" data-key="0">0</button>
-                </div>
-                <div class="keyboard-row keyboard-controls">
-                    <button class="key-btn key-clear" data-key="clear">💖</button>
-                    <button class="key-btn key-back" data-key="back">⬅️</button>
-                </div>
-            </div>
-        </div>
+		  <div id="questionText">✨ 2 × 3 = ?</div>
+		  <div id="enemyInfo">보스 체력: 3/3</div>
+		  <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
+			<input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
+			<button id="submitBtn">⚡ 공격!</button>
+		  </div>
+		  <div id="customKeyboard">
+			<div class="keyboard-row">
+			  <button class="key-btn" data-key="1">1</button>
+			  <button class="key-btn" data-key="2">2</button>
+			  <button class="key-btn" data-key="3">3</button>
+			  <button class="key-btn" data-key="4">4</button>
+			  <button class="key-btn" data-key="5">5</button>
+			</div>
+			<div class="keyboard-row">
+			  <button class="key-btn" data-key="6">6</button>
+			  <button class="key-btn" data-key="7">7</button>
+			  <button class="key-btn" data-key="8">8</button>
+			  <button class="key-btn" data-key="9">9</button>
+			  <button class="key-btn" data-key="0">0</button>
+			</div>
+			<div class="keyboard-row keyboard-controls">
+			  <button class="key-btn key-clear" data-key="clear">💖</button>
+			  <button class="key-btn key-back" data-key="back">⬅️</button>
+			</div>
+		  </div>
+		</div>
+
+		<!-- CSS 추가 -->
+		<style>
+		@media screen and (orientation: landscape) {
+		  #questionPanel {
+			width: 90vw;
+			max-width: 700px;
+			padding: 3vh 4vw;
+			font-size: 2.8vw;
+			border-radius: 3vw;
+		  }
+
+		  #questionText {
+			font-size: 4vw;
+			margin-bottom: 2vh;
+		  }
+
+		  #enemyInfo {
+			font-size: 2.5vw;
+			padding: 1vh 2vw;
+			margin: 2vh 0;
+		  }
+
+		  #answerInput {
+			width: 200px;
+			font-size: 24px;
+			padding: 1.2vh 1.5vw;
+			margin: 1.5vh 1vw;
+		  }
+
+		  #submitBtn {
+			font-size: 2.5vw;
+			padding: 1.2vh 2.5vw;
+			margin: 1.5vh 1vw;
+			min-width: 140px;
+		  }
+
+		  #customKeyboard .key-btn {
+			width: 12vw;
+			height: 12vw;
+			font-size: 5vw;
+			max-width: 80px;
+			max-height: 80px;
+		  }
+
+		  .keyboard-row {
+			gap: 1.5vw;
+			margin-top: 1vh;
+		  }
+		}
+		</style>
 
         <div id="controls">
             <button class="control-btn" id="jumpBtn">🦄 점프!</button>
