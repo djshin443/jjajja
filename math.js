@@ -135,7 +135,8 @@ function submitAnswer() {
     }
     
     answerInput.value = '';
-    answerInput.focus();
+    // 모바일 키보드 방지를 위해 focus 제거
+    answerInput.blur();
     updateUI();
 }
 
@@ -361,15 +362,26 @@ function updateQuestionPanel() {
     answerInput.placeholder = '답은?';
     answerInput.value = '';
     
-    // 모바일 키보드 방지
+    // 모바일 키보드 완전 차단
     answerInput.setAttribute('readonly', 'readonly');
+    answerInput.setAttribute('inputmode', 'none');
     answerInput.addEventListener('click', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         this.blur();
+        document.activeElement.blur();
     });
     answerInput.addEventListener('focus', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         this.blur();
+        document.activeElement.blur();
+    });
+    answerInput.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.blur();
+        document.activeElement.blur();
     });
 }
 // 구구단 선택 함수
