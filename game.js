@@ -605,10 +605,17 @@ function checkCollisions() {
                     updateQuestionPanel();
                     document.getElementById('questionPanel').style.display = 'block';
                     
-                    // 입력창 초기화 및 모바일 키보드 방지
+                    // 입력창 초기화 및 모바일 키보드 완전 차단
                     const answerInput = document.getElementById('answerInput');
                     answerInput.value = '';
                     answerInput.blur(); // 포커스 제거로 모바일 키보드 방지
+                    
+                    // 추가 보안 조치
+                    answerInput.setAttribute('readonly', 'readonly');
+                    answerInput.setAttribute('inputmode', 'none');
+                    
+                    // 모든 포커스 제거
+                    document.activeElement.blur();
                 }
             }
         }
@@ -1591,6 +1598,15 @@ if (document.readyState === 'loading') {
 
 function setupEventListeners() {
     console.log('이벤트 리스너 설정 시작');
+    
+    // 모바일 키보드 전역 방지
+    document.addEventListener('touchstart', function(e) {
+        if (e.target.id === 'answerInput') {
+            e.preventDefault();
+            e.stopPropagation();
+            document.activeElement.blur();
+        }
+    }, { passive: false });
     
     // 구구단 버튼들
     const danButtons = document.querySelectorAll('.dan-btn');
