@@ -1602,6 +1602,13 @@ if (document.readyState === 'loading') {
 function setupEventListeners() {
     console.log('이벤트 리스너 설정 시작');
     
+    // 이미 설정되었는지 확인
+    if (window.eventListenersSetup) {
+        console.log('이벤트 리스너가 이미 설정되어 있음');
+        return;
+    }
+    window.eventListenersSetup = true;
+    
     // 모바일 키보드 전역 방지
     document.addEventListener('touchstart', function(e) {
         if (e.target.id === 'answerInput') {
@@ -1616,6 +1623,12 @@ function setupEventListeners() {
     console.log('구구단 버튼 개수:', danButtons.length);
     
     danButtons.forEach(button => {
+        // 기존 이벤트 제거
+        button.replaceWith(button.cloneNode(true));
+    });
+    
+    // 다시 선택하고 이벤트 추가
+    document.querySelectorAll('.dan-btn').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -1629,6 +1642,12 @@ function setupEventListeners() {
     console.log('연산 버튼 개수:', operatorButtons.length);
     
     operatorButtons.forEach(button => {
+        // 기존 이벤트 제거
+        button.replaceWith(button.cloneNode(true));
+    });
+    
+    // 다시 선택하고 이벤트 추가
+    document.querySelectorAll('.operator-btn').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -1640,7 +1659,9 @@ function setupEventListeners() {
     // 기타 버튼들
     const startBtn = document.getElementById('startGameBtn');
     if (startBtn) {
-        startBtn.addEventListener('click', function(e) {
+        const newStartBtn = startBtn.cloneNode(true);
+        startBtn.replaceWith(newStartBtn);
+        newStartBtn.addEventListener('click', function(e) {
             e.preventDefault();
             if (!this.disabled) {
                 startSelectedGame();
@@ -1683,15 +1704,21 @@ function setupEventListeners() {
         });
     }
 
-    // 커스텀 키보드 이벤트
+    // 커스텀 키보드 이벤트 - 중복 방지를 위해 기존 이벤트 제거
     const keyButtons = document.querySelectorAll('.key-btn');
     console.log('키보드 버튼 개수:', keyButtons.length);
 
     keyButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
+        // 기존 이벤트 리스너 제거를 위해 버튼 복제
+        const newButton = button.cloneNode(true);
+        button.replaceWith(newButton);
+        
+        // 새 이벤트 리스너 추가
+        newButton.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             const key = this.getAttribute('data-key');
+            console.log('키 버튼 클릭:', key);
             handleKeyPress(key);
         });
     });
