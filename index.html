@@ -98,7 +98,7 @@
           transform: translate(-50%, -50%);
           background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
           padding: 2vw;
-          border: 0.8vw solid #FF69B4;
+          border: 0.6vw solid #FF69B4;
           text-align: center;
           font-size: 2.5vw;
           color: #D8008B;
@@ -107,7 +107,7 @@
           width: 85vw;
           max-width: 600px;
           font-family: 'Jua', sans-serif;
-          border-radius: 4vw;
+          border-radius: 3vw;
           box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
         }
 
@@ -151,36 +151,54 @@
         /* 커스텀 키보드 스타일 추가 */
         #customKeyboard {
             margin-top: 10px;
-            display: grid;
-            gap: 6px;
+            display: flex;
             justify-content: center;
             width: 100%;
-            max-width: 350px;
+            max-width: 400px;
+            gap: 10px;
+        }
+
+        /* 숫자 키패드 영역 */
+        .numpad-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+        }
+
+        /* 지우기 버튼 영역 */
+        .control-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            justify-content: center;
         }
 
         .keyboard-row {
             display: flex;
-            gap: 6px;
+            gap: 5px;
             justify-content: center;
         }
 
         .key-btn {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             background: linear-gradient(135deg, #FFE4E1, #FFC0CB);
-            border: 3px solid #FF69B4;
+            border: 2px solid #FF69B4;
             color: #FF1493;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
             font-family: 'Jua', sans-serif;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border-radius: 10px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
             transition: all 0.1s ease;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
             position: relative;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .key-btn:before {
@@ -215,7 +233,8 @@
             background: linear-gradient(135deg, #87CEEB, #98D8E8);
             border-color: #4682B4;
             color: #1E90FF;
-            font-size: 28px;
+            font-size: 24px;
+            height: 40px;
         }
 
         .key-btn.key-clear:active {
@@ -228,6 +247,7 @@
             border-color: #FF1493;
             color: #8B008B;
             font-size: 18px;
+            height: 40px;
         }
 
         .key-btn.key-back:active {
@@ -650,24 +670,27 @@
             <input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
             <button id="submitBtn">⚡ 공격!</button>
           </div>
+          
+          <!-- 수정된 키패드 레이아웃 -->
           <div id="customKeyboard">
-            <div class="keyboard-row">
+            <!-- 숫자 영역 -->
+            <div class="numpad-container">
               <button class="key-btn" data-key="1">1</button>
               <button class="key-btn" data-key="2">2</button>
               <button class="key-btn" data-key="3">3</button>
               <button class="key-btn" data-key="4">4</button>
               <button class="key-btn" data-key="5">5</button>
-            </div>
-            <div class="keyboard-row">
               <button class="key-btn" data-key="6">6</button>
               <button class="key-btn" data-key="7">7</button>
               <button class="key-btn" data-key="8">8</button>
               <button class="key-btn" data-key="9">9</button>
               <button class="key-btn" data-key="0">0</button>
             </div>
-            <div class="keyboard-row keyboard-controls">
-              <button class="key-btn key-clear" data-key="clear">💖</button>
+            
+            <!-- 지우기 버튼 영역 -->
+            <div class="control-buttons">
               <button class="key-btn key-back" data-key="back">⬅️</button>
+              <button class="key-btn key-clear" data-key="clear">💖</button>
             </div>
           </div>
         </div>
@@ -734,12 +757,16 @@
 
           #customKeyboard {
             margin-top: 0.8vh;
+            gap: 8px;
+          }
+          
+          .numpad-container {
             gap: 4px;
           }
 
           #customKeyboard .key-btn {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             font-size: 18px;
             max-width: 10vw;
             max-height: 10vw;
@@ -748,10 +775,13 @@
             border-width: 2px;
             border-radius: 8px;
           }
-
-          .keyboard-row {
+          
+          .control-buttons {
             gap: 4px;
-            margin-top: 0.5vh;
+          }
+          
+          .control-buttons .key-btn {
+            width: 45px;
           }
           
           /* 매우 낮은 화면 높이 대응 */
@@ -772,13 +802,14 @@
             }
             
             #customKeyboard .key-btn {
-              width: 35px;
-              height: 35px;
+              width: 32px;
+              height: 32px;
               font-size: 16px;
             }
             
-            .keyboard-row {
-              margin-top: 0.3vh;
+            .control-buttons .key-btn {
+              width: 38px;
+              height: 32px;
             }
           }
         }
