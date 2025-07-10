@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -92,34 +92,33 @@
         }
 
         #questionPanel {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
-          padding: 20px;
-          border: 4px solid #FF69B4;
-          text-align: center;
-          font-size: 16px;
-          color: #D8008B;
-          display: none; /* 처음에 보이지 않게 설정 */
-          z-index: 50;
-          width: 400px;
-          max-width: 90vw;
-          font-family: 'Jua', sans-serif;
-          border-radius: 20px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
+            padding: 30px;
+            border: 4px solid #FF69B4;
+            text-align: center;
+            font-size: 16px;
+            color: #D8008B;
+            display: none;
+            z-index: 50;
+            min-width: 350px;
+            font-family: 'Jua', sans-serif;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         #questionText {
             font-size: 24px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             color: #FF1493;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
         #enemyInfo {
-            margin: 10px 0;
+            margin: 15px 0;
             font-size: 14px;
             color: #FF69B4;
             background: rgba(255,255,255,0.5);
@@ -129,12 +128,12 @@
         }
 
         #answerInput {
-            padding: 12px 15px;
+            padding: 15px 20px;
             border: 3px solid #FF69B4;
             font-size: 20px;
             text-align: center;
-            margin: 10px 5px;
-            width: 120px; /* 가로 크기를 줄임 */
+            margin: 20px 10px;
+            width: 180px;
             background: #FFF;
             color: #FF1493;
             font-family: 'Jua', sans-serif;
@@ -145,7 +144,6 @@
             user-select: none;
             touch-action: none;
             pointer-events: none;
-            display: inline-block;
         }
         
         /* 커스텀 키보드 스타일 추가 */
@@ -169,12 +167,6 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
-            justify-content: center;
-        }
-
-        .keyboard-row {
-            display: flex;
-            gap: 5px;
             justify-content: center;
         }
 
@@ -252,8 +244,8 @@
         .key-btn.key-back:active {
             background: linear-gradient(135deg, #FF1493, #C71585);
             color: white;
-        }    
-    
+        }
+
         #answerInput:focus {
             outline: none;
             border-color: #FF1493;
@@ -264,7 +256,7 @@
             background: linear-gradient(135deg, #FF1493, #FF69B4);
             color: white;
             border: 3px solid #FFF;
-            padding: 12px 25px;
+            padding: 15px 30px;
             font-size: 16px;
             cursor: pointer;
             margin: 0 10px;
@@ -512,12 +504,6 @@
         }
 
         @media screen and (orientation: portrait) {
-            #questionPanel {
-                width: 320px !important;
-                max-width: 85vw !important;
-                padding: 15px !important;
-            }
-            
             #gameContainer::before {
                 content: "🌸 화면을 가로로 돌려주세요! 🌸";
                 position: fixed;
@@ -561,7 +547,7 @@
             }
             
             #questionPanel {
-                padding: 1.5vh 2vw !important;
+                padding: 2vh 3vw !important;
             }
             
             #questionText {
@@ -766,37 +752,35 @@
         </div>
 
         <div id="questionPanel">
-          <div id="questionText">✨ 2 × 3 = ?</div>
-          <div id="enemyInfo">보스 체력: 3/3</div>
-          <div style="display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 10px;">
-            <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-              <input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
-              <button id="submitBtn">⚡ 공격!</button>
-            </div>
-          </div>
-          
-          <!-- 컴팩트한 키패드 레이아웃 -->
-          <div id="customKeyboard">
-            <!-- 숫자 영역 -->
-            <div class="numpad-container">
-              <button class="key-btn" data-key="1">1</button>
-              <button class="key-btn" data-key="2">2</button>
-              <button class="key-btn" data-key="3">3</button>
-              <button class="key-btn" data-key="4">4</button>
-              <button class="key-btn" data-key="5">5</button>
-              <button class="key-btn" data-key="6">6</button>
-              <button class="key-btn" data-key="7">7</button>
-              <button class="key-btn" data-key="8">8</button>
-              <button class="key-btn" data-key="9">9</button>
-              <button class="key-btn" data-key="0">0</button>
+            <div id="questionText">✨ 2 × 3 = ?</div>
+            <div id="enemyInfo">보스 체력: 3/3</div>
+            <div>
+                <input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
+                <button id="submitBtn">⚡ 공격!</button>
             </div>
             
-            <!-- 지우기 버튼 영역 -->
-            <div class="control-buttons">
-              <button class="key-btn key-back" data-key="back">⬅️</button>
-              <button class="key-btn key-clear" data-key="clear">💖</button>
+            <!-- 커스텀 키보드 추가 -->
+            <div id="customKeyboard">
+                <!-- 숫자 영역 -->
+                <div class="numpad-container">
+                    <button class="key-btn" data-key="1">1</button>
+                    <button class="key-btn" data-key="2">2</button>
+                    <button class="key-btn" data-key="3">3</button>
+                    <button class="key-btn" data-key="4">4</button>
+                    <button class="key-btn" data-key="5">5</button>
+                    <button class="key-btn" data-key="6">6</button>
+                    <button class="key-btn" data-key="7">7</button>
+                    <button class="key-btn" data-key="8">8</button>
+                    <button class="key-btn" data-key="9">9</button>
+                    <button class="key-btn" data-key="0">0</button>
+                </div>
+                
+                <!-- 지우기 버튼 영역 -->
+                <div class="control-buttons">
+                    <button class="key-btn key-back" data-key="back">⬅️</button>
+                    <button class="key-btn key-clear" data-key="clear">💖</button>
+                </div>
             </div>
-          </div>
         </div>
 
         <div id="controls">
