@@ -102,7 +102,7 @@
           text-align: center;
           font-size: 2.5vw;
           color: #D8008B;
-          display: none;
+          display: none; /* 처음에 보이지 않게 설정 */
           z-index: 50;
           width: 85vw;
           max-width: 600px;
@@ -134,7 +134,7 @@
             font-size: 20px;
             text-align: center;
             margin: 10px 5px;
-            width: 180px;
+            width: 120px; /* 가로 크기를 줄임 */
             background: #FFF;
             color: #FF1493;
             font-family: 'Jua', sans-serif;
@@ -709,7 +709,7 @@
               border: 0.6vw solid #FF69B4;
               font-size: 2.5vw;
               color: #D8008B;
-              display: none;
+              display: none; /* 처음에는 보이지 않게 설정 */
               z-index: 50;
               width: 85vw;
               max-width: 95%;
@@ -719,11 +719,6 @@
               font-family: 'Jua', sans-serif;
               border-radius: 3vw;
               box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
-
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
           }
 
           #questionText {
@@ -739,8 +734,8 @@
           }
 
           #answerInput {
-            width: 30%;
-            min-width: 100px;
+            width: 100px; /* 가로 크기 감소 */
+            min-width: 80px;
             font-size: 2.5vw;
             padding: 0.8vh 1vw;
             margin: 0.5vh 1vw;
@@ -825,5 +820,68 @@
     <script src="characters.js"></script>
     <script src="math.js"></script>
     <script src="game.js"></script>
+    
+    <!-- 키패드 입력 문제 해결을 위한 추가 스크립트 -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 모든 키패드 버튼에 이벤트 리스너 추가
+        const keyButtons = document.querySelectorAll('.key-btn');
+        
+        keyButtons.forEach(button => {
+            // 기존 이벤트 제거
+            button.removeEventListener('click', handleKeyPressWrapper);
+            
+            // 새 이벤트 추가
+            button.addEventListener('click', handleKeyPressWrapper);
+        });
+        
+        function handleKeyPressWrapper(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const key = this.getAttribute('data-key');
+            console.log('키 버튼 클릭됨:', key);
+            handleKeyPress(key);
+        }
+        
+        // 기존 함수를 참조하여 직접 정의
+        function handleKeyPress(key) {
+            const answerInput = document.getElementById('answerInput');
+            if (!answerInput) {
+                console.error('입력 필드를 찾을 수 없음');
+                return;
+            }
+            
+            console.log('입력 처리 중:', key);
+            
+            if (key === 'clear') {
+                // 전체 지우기
+                answerInput.value = '';
+                // 효과
+                answerInput.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    answerInput.style.transform = 'scale(1)';
+                }, 200);
+                console.log('모든 입력 지움');
+            } else if (key === 'back') {
+                // 한 글자 지우기
+                answerInput.value = answerInput.value.slice(0, -1);
+                console.log('한 글자 지움, 남은 입력:', answerInput.value);
+            } else {
+                // 숫자 입력 (최대 3자리로 제한)
+                if (answerInput.value.length < 3) {
+                    answerInput.value += key;
+                    // 입력 효과
+                    answerInput.style.backgroundColor = '#FFE4E1';
+                    setTimeout(() => {
+                        answerInput.style.backgroundColor = '#FFF';
+                    }, 100);
+                    console.log('숫자 입력됨:', key, '현재 입력:', answerInput.value);
+                } else {
+                    console.log('최대 3자리 입력 제한');
+                }
+            }
+        }
+    });
+    </script>
 </body>
 </html>
