@@ -372,6 +372,31 @@ function updateQuestionPanel() {
         this.blur();
     });
 }
+// 구구단 선택 함수
+function toggleDan(dan) {
+    console.log('toggleDan 호출됨, dan:', dan);
+    
+    const index = gameState.selectedDans.indexOf(dan);
+    const button = document.querySelector(`[data-dan="${dan}"]`);
+    
+    if (!button) {
+        console.error('버튼을 찾을 수 없음, dan:', dan);
+        return;
+    }
+    
+    if (index === -1) {
+        gameState.selectedDans.push(dan);
+        button.classList.add('selected');
+        console.log('구구단 추가됨:', dan);
+    } else {
+        gameState.selectedDans.splice(index, 1);
+        button.classList.remove('selected');
+        console.log('구구단 제거됨:', dan);
+    }
+    
+    console.log('현재 선택된 구구단:', gameState.selectedDans);
+    updateSelectedDisplay();
+}
 
 // 연산 선택 함수
 function toggleOperator(op) {
