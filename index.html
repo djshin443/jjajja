@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -92,34 +92,33 @@
         }
 
         #questionPanel {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
-          padding: 20px;
-          border: 4px solid #FF69B4;
-          text-align: center;
-          font-size: 16px;
-          color: #D8008B;
-          display: none; /* 처음에 보이지 않게 설정 */
-          z-index: 50;
-          width: 400px;
-          max-width: 90vw;
-          font-family: 'Jua', sans-serif;
-          border-radius: 20px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
+            padding: 30px;
+            border: 4px solid #FF69B4;
+            text-align: center;
+            font-size: 16px;
+            color: #D8008B;
+            display: none;
+            z-index: 50;
+            min-width: 350px;
+            font-family: 'Jua', sans-serif;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         #questionText {
             font-size: 24px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             color: #FF1493;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
         #enemyInfo {
-            margin: 10px 0;
+            margin: 15px 0;
             font-size: 14px;
             color: #FF69B4;
             background: rgba(255,255,255,0.5);
@@ -129,131 +128,19 @@
         }
 
         #answerInput {
-            padding: 12px 15px;
+            padding: 15px 20px;
             border: 3px solid #FF69B4;
             font-size: 20px;
             text-align: center;
-            margin: 10px 5px;
-            width: 120px; /* 가로 크기를 줄임 */
+            margin: 20px 10px;
+            width: 180px;
             background: #FFF;
             color: #FF1493;
             font-family: 'Jua', sans-serif;
             border-radius: 20px;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
-            cursor: default;
-            -webkit-user-select: none;
-            user-select: none;
-            touch-action: none;
-            pointer-events: none;
-            display: inline-block;
-        }
-        
-        /* 커스텀 키보드 스타일 추가 */
-        #customKeyboard {
-            margin-top: 15px;
-            display: flex;
-            justify-content: center;
-            width: 100%;
-            gap: 8px;
         }
 
-        /* 숫자 키패드 영역 */
-        .numpad-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 4px;
-        }
-
-        /* 지우기 버튼 영역 */
-        .control-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            justify-content: center;
-        }
-
-        .keyboard-row {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-        }
-
-        .key-btn {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, #FFE4E1, #FFC0CB);
-            border: 2px solid #FF69B4;
-            color: #FF1493;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: 'Jua', sans-serif;
-            border-radius: 10px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-            transition: all 0.1s ease;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .key-btn:before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%);
-            transform: scale(0);
-            transition: transform 0.3s ease;
-        }
-
-        .key-btn:active:before {
-            transform: scale(1);
-        }
-
-        .key-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-        }
-
-        .key-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            background: linear-gradient(135deg, #FF69B4, #FFB6C1);
-            color: white;
-        }
-
-        .key-btn.key-clear {
-            background: linear-gradient(135deg, #87CEEB, #98D8E8);
-            border-color: #4682B4;
-            color: #1E90FF;
-            font-size: 20px;
-            height: 36px;
-        }
-
-        .key-btn.key-clear:active {
-            background: linear-gradient(135deg, #4682B4, #5F9EA0);
-            color: white;
-        }
-
-        .key-btn.key-back {
-            background: linear-gradient(135deg, #FFB6C1, #FF69B4);
-            border-color: #FF1493;
-            color: #8B008B;
-            font-size: 16px;
-            height: 36px;
-        }
-
-        .key-btn.key-back:active {
-            background: linear-gradient(135deg, #FF1493, #C71585);
-            color: white;
-        }    
-    
         #answerInput:focus {
             outline: none;
             border-color: #FF1493;
@@ -264,7 +151,7 @@
             background: linear-gradient(135deg, #FF1493, #FF69B4);
             color: white;
             border: 3px solid #FFF;
-            padding: 12px 25px;
+            padding: 15px 30px;
             font-size: 16px;
             cursor: pointer;
             margin: 0 10px;
@@ -314,12 +201,12 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
         }
-        
-        .selected {
-            background-color: orange !important;
-            color: white !important;
-        }
-                
+		
+		.selected {
+			background-color: orange !important;
+			color: white !important;
+		}
+				
         .control-btn:active {
             transform: scale(0.95);
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
@@ -512,12 +399,6 @@
         }
 
         @media screen and (orientation: portrait) {
-            #questionPanel {
-                width: 320px !important;
-                max-width: 85vw !important;
-                padding: 15px !important;
-            }
-            
             #gameContainer::before {
                 content: "🌸 화면을 가로로 돌려주세요! 🌸";
                 position: fixed;
@@ -561,7 +442,7 @@
             }
             
             #questionPanel {
-                padding: 1.5vh 2vw !important;
+                padding: 2vh 3vw !important;
             }
             
             #questionText {
@@ -614,103 +495,6 @@
             #startGameBtn {
                 padding: 2vh 4vw;
                 font-size: min(4vh, 20px);
-            }
-            
-            /* 문제 패널 가로 모드 최적화 */
-            #questionPanel {
-                width: 60vw;
-                max-width: 500px;
-                padding: 15px 20px;
-            }
-
-            #questionText {
-                font-size: 20px;
-                margin-bottom: 12px;
-            }
-
-            #enemyInfo {
-                font-size: 16px;
-                padding: 6px 15px;
-                margin: 8px 0 12px 0;
-            }
-
-            #answerInput {
-                width: 100px;
-                font-size: 16px;
-                padding: 6px 10px;
-                margin: 5px;
-            }
-
-            #submitBtn {
-                font-size: 14px;
-                padding: 8px 18px;
-                margin: 5px;
-            }
-
-            #customKeyboard {
-                margin-top: 10px;
-                gap: 5px;
-            }
-            
-            .numpad-container {
-                gap: 3px;
-            }
-
-            #customKeyboard .key-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 17px;
-                border-width: 2px;
-                border-radius: 8px;
-            }
-            
-            .control-buttons {
-                gap: 3px;
-            }
-            
-            .control-buttons .key-btn {
-                width: 44px;
-                height: 38px;
-            }
-            
-            /* 매우 낮은 화면 높이 대응 */
-            @media (max-height: 400px) {
-                #questionPanel {
-                    padding: 10px 15px;
-                    width: 50vw;
-                }
-                
-                #questionText {
-                    font-size: 18px;
-                    margin-bottom: 8px;
-                }
-                
-                #enemyInfo {
-                    font-size: 14px;
-                    padding: 4px 10px;
-                    margin: 5px 0 8px 0;
-                }
-                
-                #answerInput {
-                    font-size: 14px;
-                    padding: 4px 8px;
-                }
-                
-                #submitBtn {
-                    font-size: 12px;
-                    padding: 6px 15px;
-                }
-                
-                #customKeyboard .key-btn {
-                    width: 32px;
-                    height: 32px;
-                    font-size: 15px;
-                }
-                
-                .control-buttons .key-btn {
-                    width: 37px;
-                    height: 32px;
-                }
             }
         }
     </style>
@@ -766,37 +550,12 @@
         </div>
 
         <div id="questionPanel">
-          <div id="questionText">✨ 2 × 3 = ?</div>
-          <div id="enemyInfo">보스 체력: 3/3</div>
-          <div style="display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 10px;">
-            <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-              <input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
-              <button id="submitBtn">⚡ 공격!</button>
+            <div id="questionText">✨ 2 × 3 = ?</div>
+            <div id="enemyInfo">보스 체력: 3/3</div>
+            <div>
+                <input type="number" id="answerInput" placeholder="답은?" inputmode="numeric">
+                <button id="submitBtn">⚡ 공격!</button>
             </div>
-          </div>
-          
-          <!-- 컴팩트한 키패드 레이아웃 -->
-          <div id="customKeyboard">
-            <!-- 숫자 영역 -->
-            <div class="numpad-container">
-              <button class="key-btn" data-key="1">1</button>
-              <button class="key-btn" data-key="2">2</button>
-              <button class="key-btn" data-key="3">3</button>
-              <button class="key-btn" data-key="4">4</button>
-              <button class="key-btn" data-key="5">5</button>
-              <button class="key-btn" data-key="6">6</button>
-              <button class="key-btn" data-key="7">7</button>
-              <button class="key-btn" data-key="8">8</button>
-              <button class="key-btn" data-key="9">9</button>
-              <button class="key-btn" data-key="0">0</button>
-            </div>
-            
-            <!-- 지우기 버튼 영역 -->
-            <div class="control-buttons">
-              <button class="key-btn key-back" data-key="back">⬅️</button>
-              <button class="key-btn key-clear" data-key="clear">💖</button>
-            </div>
-          </div>
         </div>
 
         <div id="controls">
