@@ -604,8 +604,11 @@ function checkCollisions() {
                     generateQuestion();
                     updateQuestionPanel();
                     document.getElementById('questionPanel').style.display = 'block';
-                    document.getElementById('answerInput').value = '';
-                    document.getElementById('answerInput').focus();
+                    
+                    // 입력창 초기화 및 모바일 키보드 방지
+                    const answerInput = document.getElementById('answerInput');
+                    answerInput.value = '';
+                    answerInput.blur(); // 포커스 제거로 모바일 키보드 방지
                 }
             }
         }
@@ -1634,6 +1637,48 @@ function setupEventListeners() {
             }
         });
     }
+
+    // 커스텀 키보드 이벤트
+    const keyButtons = document.querySelectorAll('.key-btn');
+    console.log('키보드 버튼 개수:', keyButtons.length);
+
+    keyButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const key = this.getAttribute('data-key');
+            handleKeyPress(key);
+        });
+    });
     
     console.log('모든 이벤트 설정 완료');
+}
+
+// 커스텀 키보드 처리 함수
+function handleKeyPress(key) {
+    const answerInput = document.getElementById('answerInput');
+    if (!answerInput) return;
+    
+    if (key === 'clear') {
+        // 전체 지우기 (하트 버튼)
+        answerInput.value = '';
+        // 귀여운 효과
+        answerInput.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+            answerInput.style.transform = 'scale(1)';
+        }, 200);
+    } else if (key === 'back') {
+        // 한 글자 지우기
+        answerInput.value = answerInput.value.slice(0, -1);
+    } else {
+        // 숫자 입력 (최대 3자리로 제한)
+        if (answerInput.value.length < 3) {
+            answerInput.value += key;
+            // 입력 효과
+            answerInput.style.backgroundColor = '#FFE4E1';
+            setTimeout(() => {
+                answerInput.style.backgroundColor = '#FFF';
+            }, 100);
+        }
+    }
 }
