@@ -673,132 +673,111 @@
           
           <!-- 수정된 키패드 레이아웃 -->
           <div id="customKeyboard">
-          <!-- 숫자 키패드 (3x4 레이아웃) -->
-          <div class="numpad-container">
-            <button class="key-btn" data-key="1">1</button>
-            <button class="key-btn" data-key="2">2</button>
-            <button class="key-btn" data-key="3">3</button>
-            <button class="key-btn" data-key="4">4</button>
-            <button class="key-btn" data-key="5">5</button>
-            <button class="key-btn" data-key="6">6</button>
-            <button class="key-btn" data-key="7">7</button>
-            <button class="key-btn" data-key="8">8</button>
-            <button class="key-btn" data-key="9">9</button>
-            <div></div> <!-- 빈 공간 -->
-            <button class="key-btn" data-key="0">0</button>
-            <div></div> <!-- 빈 공간 -->
-          </div>
-          
-          <!-- 지우기 버튼들 -->
-          <div class="control-buttons">
-            <button class="key-btn key-back" data-key="back">⬅️</button>
-            <button class="key-btn key-clear" data-key="clear">💖</button>
+            <!-- 숫자 영역 -->
+            <div class="numpad-container">
+              <button class="key-btn" data-key="1">1</button>
+              <button class="key-btn" data-key="2">2</button>
+              <button class="key-btn" data-key="3">3</button>
+              <button class="key-btn" data-key="4">4</button>
+              <button class="key-btn" data-key="5">5</button>
+              <button class="key-btn" data-key="6">6</button>
+              <button class="key-btn" data-key="7">7</button>
+              <button class="key-btn" data-key="8">8</button>
+              <button class="key-btn" data-key="9">9</button>
+              <button class="key-btn" data-key="0">0</button>
+            </div>
+            
+            <!-- 지우기 버튼 영역 -->
+            <div class="control-buttons">
+              <button class="key-btn key-back" data-key="back">⬅️</button>
+              <button class="key-btn key-clear" data-key="clear">💖</button>
+            </div>
           </div>
         </div>
 
-        /* 커스텀 키보드 스타일 개선 */
-        #customKeyboard {
-            margin-top: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            width: 100%;
-            max-width: 280px; /* 가로 길이 줄임 */
-            gap: 15px; /* 간격 늘림 */
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* 숫자 키패드를 3x4 레이아웃으로 변경 */
-        .numpad-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 5열에서 3열로 변경 */
-            grid-template-rows: repeat(4, 1fr);    /* 4행으로 설정 */
-            gap: 8px;
-            justify-items: center;
-        }
-
-        /* 지우기 버튼들을 세로로 배치 */
-        .control-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            justify-content: flex-start;
-            align-items: center;
-        }
-
-        /* 키 버튼 크기 조정 */
-        .key-btn {
-            width: 45px;  /* 크기 증가 */
-            height: 45px; /* 크기 증가 */
-            background: linear-gradient(135deg, #FFE4E1, #FFC0CB);
-            border: 2px solid #FF69B4;
-            color: #FF1493;
-            font-size: 18px; /* 폰트 크기 조정 */
-            font-weight: bold;
-            cursor: pointer;
-            font-family: 'Jua', sans-serif;
-            border-radius: 12px; /* 모서리 더 둥글게 */
-            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-            transition: all 0.2s ease;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* 지우기 버튼들 크기 조정 */
-        .key-btn.key-clear,
-        .key-btn.key-back {
-            width: 50px;
-            height: 45px;
-            font-size: 16px;
-        }
-
-        .key-btn.key-clear {
-            background: linear-gradient(135deg, #87CEEB, #98D8E8);
-            border-color: #4682B4;
-            color: #1E90FF;
-        }
-
-        .key-btn.key-back {
-            background: linear-gradient(135deg, #FFB6C1, #FF69B4);
-            border-color: #FF1493;
-            color: #8B008B;
-        }
-
-        /* 모바일 가로 모드에서의 키보드 최적화 */
+        <!-- 모바일 가로 모드 최적화 -->
+        <style>
         @media screen and (orientation: landscape) {
-            #customKeyboard {
-                max-width: 320px;
-                gap: 12px;
-            }
-            
-            .key-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
-                border-radius: 10px;
-            }
-            
-            .key-btn.key-clear,
-            .key-btn.key-back {
-                width: 45px;
-                height: 40px;
-                font-size: 14px;
-            }
-            
-            .numpad-container {
-                gap: 6px;
-            }
-            
-            .control-buttons {
-                gap: 6px;
-            }
-        }
+          #questionPanel {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              margin: 0;
+              padding: 1.5vh 2vw;
+              background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
+              border: 0.6vw solid #FF69B4;
+              font-size: 2.5vw;
+              color: #D8008B;
+              display: none; /* 처음에는 보이지 않게 설정 */
+              z-index: 50;
+              width: 85vw;
+              max-width: 95%;
+              height: auto;
+              max-height: 85vh;
+              overflow-y: auto;
+              font-family: 'Jua', sans-serif;
+              border-radius: 3vw;
+              box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
+          }
+
+          #questionText {
+            font-size: 3.5vw;
+            margin-bottom: 1vh;
+            line-height: 1.2;
+          }
+
+          #enemyInfo {
+            font-size: 2vw;
+            padding: 0.6vh 1.5vw;
+            margin: 0.5vh 0 1vh 0;
+          }
+
+          #answerInput {
+            width: 100px; /* 가로 크기 감소 */
+            min-width: 80px;
+            font-size: 2.5vw;
+            padding: 0.8vh 1vw;
+            margin: 0.5vh 1vw;
+            border-width: 2px;
+          }
+
+          #submitBtn {
+            font-size: 2vw;
+            padding: 0.8vh 2vw;
+            margin: 0.5vh 1vw;
+            min-width: 100px;
+            border-width: 2px;
+          }
+
+          #customKeyboard {
+            margin-top: 0.8vh;
+            gap: 8px;
+          }
+          
+          .numpad-container {
+            gap: 4px;
+          }
+
+          #customKeyboard .key-btn {
+            width: 38px;
+            height: 38px;
+            font-size: 18px;
+            max-width: 10vw;
+            max-height: 10vw;
+            min-width: 30px;
+            min-height: 30px;
+            border-width: 2px;
+            border-radius: 8px;
+          }
+          
+          .control-buttons {
+            gap: 4px;
+          }
+          
+          .control-buttons .key-btn {
+            width: 45px;
+          }
           
           /* 매우 낮은 화면 높이 대응 */
           @media (max-height: 400px) {
