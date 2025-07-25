@@ -396,6 +396,47 @@
             max-width: min(600px, 90vw);
         }
 
+        .character-btn {
+            background: linear-gradient(135deg, #FFF, #FFE4E1);
+            border: 3px solid #FF69B4;
+            color: #FF1493;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            font-family: 'Jua', sans-serif;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            position: relative;
+            z-index: 100;
+            min-width: 120px;
+        }
+
+        .character-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .character-btn:active {
+            transform: translateY(0);
+            background: linear-gradient(135deg, #FFB6C1, #FF69B4);
+        }
+
+        .character-btn.selected {
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255,20,147,0.5);
+        }
+        
         .dan-btn {
             background: linear-gradient(135deg, #FFF, #FFE4E1);
             border: 3px solid #FF69B4;
@@ -632,6 +673,57 @@
         <div id="selectMenu">
             <div id="menuTitle">🌸 지율이의 수학 모험 🌸</div>
             <div id="menuSubtitle">공주님! 오늘 공부할 것을 선택해주세요 💕</div>
+
+            <!-- ✨ 여기에 캐릭터 선택 섹션을 추가하세요! ✨ -->
+            <div class="menu-section" style="position: relative; z-index: 10;">
+                <div style="color: #FF1493; font-size: 18px; margin-bottom: 15px; font-weight: bold;">🌟 캐릭터 선택</div>
+                <div id="characterGrid" style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="character-btn selected" data-character="jiyul" style="
+                        background: linear-gradient(135deg, #FFB6C1, #FF69B4);
+                        border: 3px solid #FFF;
+                        color: white;
+                        padding: 15px 20px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        font-family: 'Jua', sans-serif;
+                        border-radius: 15px;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+                        transition: all 0.3s ease;
+                        min-width: 120px;
+                    ">👧 지율이</button>
+                    <button class="character-btn" data-character="kiwi" style="
+                        background: linear-gradient(135deg, #FFF8DC, #F5DEB3);
+                        border: 3px solid #FFB6C1;
+                        color: #FF69B4;
+                        padding: 15px 20px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        font-family: 'Jua', sans-serif;
+                        border-radius: 15px;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+                        transition: all 0.3s ease;
+                        min-width: 120px;
+                    ">🦎 키위</button>
+                    <button class="character-btn" data-character="whitehouse" style="
+                        background: linear-gradient(135deg, #FFFFFF, #F5F5F5);
+                        border: 3px solid #87CEEB;
+                        color: #4169E1;
+                        padding: 15px 20px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        font-family: 'Jua', sans-serif;
+                        border-radius: 15px;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+                        transition: all 0.3s ease;
+                        min-width: 120px;
+                    ">🏠 화이트하우스</button>
+                </div>
+            </div>
+            <!-- ✨ 캐릭터 선택 섹션 끝 ✨ -->
+                  
             
             <div class="menu-section" style="position: relative; z-index: 10;">
                 <div style="color: #FF1493; font-size: 18px; margin-bottom: 15px; font-weight: bold;">✨ 구구단 선택</div>
