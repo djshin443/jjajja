@@ -10,6 +10,15 @@ let gameStats = {
 
 // 구구단 문제 생성
 function generateQuestion() {
+    // 보스전인 경우 8단과 9단만 나오게 하기
+    if (gameState.currentEnemy && gameState.currentEnemy.type === 'boss') {
+        const bossDans = [8, 9];
+        const dan = bossDans[Math.floor(Math.random() * bossDans.length)];
+        const num2 = Math.floor(Math.random() * 9) + 1;
+        gameState.currentQuestion = `${dan} × ${num2}`;
+        gameState.correctAnswer = dan * num2;
+        return;
+    }
     if (gameState.selectedOps.length > 0) {
         // 연산 선택된 경우
         const op = gameState.selectedOps[Math.floor(Math.random() * gameState.selectedOps.length)];
@@ -106,22 +115,22 @@ function submitAnswer() {
                 gameState.currentEnemy = null;
                 
                 // 성공 메시지
-                showFloatingText(jiyul.x, jiyul.y - 50, '완료!', '#00FF00');
+                showFloatingText(player.x, player.y - 50, '완료!', '#00FF00');
             } else {
                 // 몬스터가 아직 살아있으면 다음 문제
                 generateQuestion();
                 updateQuestionPanel();
-                showFloatingText(jiyul.x, jiyul.y - 30, '맞았어요!', '#FFD700');
+                showFloatingText(player.x, player.y - 30, '맞았어요!', '#FFD700');
             }
         }
     } else {
         // 오답 - 더 명확한 피드백
         answerInput.style.borderColor = '#FF0000';
-        jiyul.hp -= 15;
-        createParticles(jiyul.x, jiyul.y, 'hurt');
-        showFloatingText(jiyul.x, jiyul.y - 30, `틀렸어요! 정답: ${gameState.correctAnswer}`, '#FF0000');
+        player.hp -= 15;
+        createParticles(player.x, player.y, 'hurt');
+        showFloatingText(player.x, player.y - 30, `틀렸어요! 정답: ${gameState.correctAnswer}`, '#FF0000');
         
-        if (jiyul.hp <= 0) {
+        if (player.hp <= 0) {
             gameOver();
             return;
         }
@@ -511,4 +520,3 @@ function startSelectedGame() {
     
     initGame();
 }
-
