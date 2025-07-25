@@ -150,13 +150,13 @@
         
         /* 커스텀 키보드 스타일 추가 */
         #customKeyboard {
-            margin-top: 15px;
+            margin: 20px auto;             /* 완전 가운데 정렬 */
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100%;
-            max-width: 500px;              /* 400px → 500px */
-            gap: 25px;                     /* 15px → 25px */
+            max-width: 600px;              /* 500px → 600px */
+            gap: 30px;                     /* 25px → 30px */
         }
 
         /* 숫자 키패드 영역 */
@@ -164,17 +164,18 @@
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 15px;                     /* 12px → 15px */
+            gap: 18px;                          /* 15px → 18px */
             justify-items: center;
+            align-items: center;                /* 추가 */
         }
 
         /* 지우기 버튼 영역 */
         .control-buttons {
             display: flex;
             flex-direction: column;
-            gap: 15px;                     /* 5px → 15px */
+            gap: 18px;                          /* 15px → 18px */
             justify-content: center;
-            align-items: center;           /* 추가: 가운데 정렬 */
+            align-items: center;
         }
 
         .keyboard-row {
@@ -184,16 +185,16 @@
         }
 
         .key-btn {
-            width: 65px;                    /* 50px → 65px */
-            height: 65px;                   /* 50px → 65px */
+            width: 70px;                        /* 65px → 70px */
+            height: 70px;                       /* 65px → 70px */
             background: linear-gradient(135deg, #FFE4E1, #FFC0CB);
             border: 2px solid #FF69B4;
             color: #FF1493;
-            font-size: 26px;                /* 22px → 26px */
+            font-size: 28px;                    /* 26px → 28px */
             font-weight: bold;
             cursor: pointer;
             font-family: 'Jua', sans-serif;
-            border-radius: 15px;             /* 12px → 15px */
+            border-radius: 18px;                /* 15px → 18px */
             box-shadow: 0 3px 6px rgba(0,0,0,0.2);
             transition: all 0.1s ease;
             touch-action: manipulation;
@@ -237,9 +238,9 @@
             background: linear-gradient(135deg, #87CEEB, #98D8E8);
             border-color: #4682B4;
             color: #1E90FF;
-            font-size: 32px;                /* 28px → 32px */
-            height: 65px;                   /* 50px → 65px */
-            width: 65px;                    /* 50px → 65px */
+            font-size: 36px;               /* 32px → 36px */
+            height: 70px;                  /* 65px → 70px */
+            width: 70px;                   /* 65px → 70px */
         }
 
         .key-btn.key-clear:active {
@@ -251,9 +252,9 @@
             background: linear-gradient(135deg, #FFB6C1, #FF69B4);
             border-color: #FF1493;
             color: #8B008B;
-            font-size: 24px;                /* 20px → 24px */
-            height: 65px;                   /* 50px → 65px */
-            width: 65px;                    /* 50px → 65px */
+            font-size: 26px;               /* 24px → 26px */
+            height: 70px;                  /* 65px → 70px */
+            width: 70px;                   /* 65px → 70px */
         }
 
         .key-btn.key-back:active {
@@ -849,12 +850,12 @@
           }
 
           #customKeyboard {
-              margin-top: 1vh;
-              gap: 20px;                     /* 12px → 20px */
+              margin: 1.5vh auto;                 /* 가운데 정렬 */
+              gap: 25px;                          /* 20px → 25px */
           }
                       
           .numpad-container {
-              gap: 10px;                     /* 6px → 10px */
+              gap: 12px;                          /* 10px → 12px */
           }
 
           #customKeyboard .key-btn {
@@ -870,20 +871,24 @@
           }
           
           .control-buttons {
-              gap: 10px;                     /* 6px → 10px */
+              gap: 12px;                          /* 10px → 12px */
           }
-          
+                    
           .control-buttons .key-btn {
             width: 50px;
             height: 45px;
           }
           
           .key-btn.key-clear {
-            font-size: 22px;
+              font-size: 36px;                    /* 32px → 36px */
+              height: 70px;                       /* 65px → 70px */
+              width: 70px;                        /* 65px → 70px */
           }
-          
+                      
           .key-btn.key-back {
-            font-size: 18px;
+            font-size: 26px;                    /* 24px → 26px */
+            height: 70px;                       /* 65px → 70px */
+            width: 70px;                        /* 65px → 70px */
           }
           
           /* 매우 낮은 화면 높이 대응 */
