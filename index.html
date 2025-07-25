@@ -150,13 +150,13 @@
         
         /* 커스텀 키보드 스타일 추가 */
         #customKeyboard {
-            margin-top: 10px;
+            margin-top: 15px;
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100%;
-            max-width: 400px;
-            gap: 15px;
+            max-width: 500px;              /* 400px → 500px */
+            gap: 25px;                     /* 15px → 25px */
         }
 
         /* 숫자 키패드 영역 */
@@ -164,7 +164,7 @@
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 12px;                      /* 8px → 12px */
+            gap: 15px;                     /* 12px → 15px */
             justify-items: center;
         }
 
@@ -172,8 +172,9 @@
         .control-buttons {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 15px;                     /* 5px → 15px */
             justify-content: center;
+            align-items: center;           /* 추가: 가운데 정렬 */
         }
 
         .keyboard-row {
@@ -848,12 +849,12 @@
           }
 
           #customKeyboard {
-            margin-top: 0.8vh;
-            gap: 12px;
+              margin-top: 1vh;
+              gap: 20px;                     /* 12px → 20px */
           }
-          
+                      
           .numpad-container {
-            gap: 6px;
+              gap: 10px;                     /* 6px → 10px */
           }
 
           #customKeyboard .key-btn {
@@ -869,7 +870,7 @@
           }
           
           .control-buttons {
-            gap: 6px;
+              gap: 10px;                     /* 6px → 10px */
           }
           
           .control-buttons .key-btn {
