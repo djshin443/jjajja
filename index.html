@@ -162,15 +162,10 @@
         /* 숫자 키패드 영역 */
         .numpad-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
             gap: 8px;
             justify-items: center;
-        }
-
-        /* 0번 버튼을 가운데 배치 */
-        .numpad-container .key-btn[data-key="0"] {
-            grid-column: 2;
         }
 
         /* 지우기 버튼 영역 */
