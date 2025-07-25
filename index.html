@@ -164,7 +164,7 @@
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 8px;
+            gap: 12px;                      /* 8px → 12px */
             justify-items: center;
         }
 
@@ -183,16 +183,16 @@
         }
 
         .key-btn {
-            width: 50px;
-            height: 50px;
+            width: 65px;                    /* 50px → 65px */
+            height: 65px;                   /* 50px → 65px */
             background: linear-gradient(135deg, #FFE4E1, #FFC0CB);
             border: 2px solid #FF69B4;
             color: #FF1493;
-            font-size: 22px;
+            font-size: 26px;                /* 22px → 26px */
             font-weight: bold;
             cursor: pointer;
             font-family: 'Jua', sans-serif;
-            border-radius: 12px;
+            border-radius: 15px;             /* 12px → 15px */
             box-shadow: 0 3px 6px rgba(0,0,0,0.2);
             transition: all 0.1s ease;
             touch-action: manipulation;
@@ -236,9 +236,9 @@
             background: linear-gradient(135deg, #87CEEB, #98D8E8);
             border-color: #4682B4;
             color: #1E90FF;
-            font-size: 28px;
-            height: 50px;
-            width: 50px;
+            font-size: 32px;                /* 28px → 32px */
+            height: 65px;                   /* 50px → 65px */
+            width: 65px;                    /* 50px → 65px */
         }
 
         .key-btn.key-clear:active {
@@ -250,9 +250,9 @@
             background: linear-gradient(135deg, #FFB6C1, #FF69B4);
             border-color: #FF1493;
             color: #8B008B;
-            font-size: 20px;
-            height: 50px;
-            width: 50px;
+            font-size: 24px;                /* 20px → 24px */
+            height: 65px;                   /* 50px → 65px */
+            width: 65px;                    /* 50px → 65px */
         }
 
         .key-btn.key-back:active {
