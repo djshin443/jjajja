@@ -102,7 +102,7 @@
           text-align: center;
           font-size: 16px;
           color: #D8008B;
-          display: none; /* 처음에 보이지 않게 설정 */
+          display: none;
           z-index: 50;
           width: 400px;
           max-width: 90vw;
@@ -134,7 +134,7 @@
             font-size: 20px;
             text-align: center;
             margin: 10px 5px;
-            width: 120px; /* 가로 크기를 줄임 */
+            width: 120px;
             background: #FFF;
             color: #FF1493;
             font-family: 'Jua', sans-serif;
@@ -148,78 +148,52 @@
             display: inline-block;
         }
         
-        /* 커스텀 키보드 스타일 추가 */
+        /* 커스텀 키보드 스타일 */
         #customKeyboard {
-            margin: 20px auto;             /* 완전 가운데 정렬 */
+            margin: 20px auto;
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100%;
-            max-width: 600px;              /* 500px → 600px */
-            gap: 30px;                     /* 25px → 30px */
+            max-width: 600px;
+            gap: 30px;
         }
 
-        /* 숫자 키패드 영역 */
         .numpad-container {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 18px;                          /* 15px → 18px */
+            gap: 18px;
             justify-items: center;
-            align-items: center;                /* 추가 */
+            align-items: center;
         }
 
-        /* 지우기 버튼 영역 */
         .control-buttons {
             display: flex;
             flex-direction: column;
-            gap: 18px;                          /* 15px → 18px */
+            gap: 18px;
             justify-content: center;
             align-items: center;
         }
 
-        .keyboard-row {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-        }
-
         .key-btn {
-            width: 70px;                        /* 65px → 70px */
-            height: 70px;                       /* 65px → 70px */
+            width: 70px;
+            height: 70px;
             background: linear-gradient(135deg, #FFE4E1, #FFC0CB);
             border: 2px solid #FF69B4;
             color: #FF1493;
-            font-size: 28px;                    /* 26px → 28px */
+            font-size: 28px;
             font-weight: bold;
             cursor: pointer;
             font-family: 'Jua', sans-serif;
-            border-radius: 18px;                /* 15px → 18px */
+            border-radius: 18px;
             box-shadow: 0 3px 6px rgba(0,0,0,0.2);
             transition: all 0.1s ease;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
-            position: relative;
-            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .key-btn:before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%);
-            transform: scale(0);
-            transition: transform 0.3s ease;
-        }
-
-        .key-btn:active:before {
-            transform: scale(1);
         }
 
         .key-btn:hover {
@@ -238,34 +212,14 @@
             background: linear-gradient(135deg, #87CEEB, #98D8E8);
             border-color: #4682B4;
             color: #1E90FF;
-            font-size: 36px;               /* 32px → 36px */
-            height: 70px;                  /* 65px → 70px */
-            width: 70px;                   /* 65px → 70px */
-        }
-
-        .key-btn.key-clear:active {
-            background: linear-gradient(135deg, #4682B4, #5F9EA0);
-            color: white;
+            font-size: 36px;
         }
 
         .key-btn.key-back {
             background: linear-gradient(135deg, #FFB6C1, #FF69B4);
             border-color: #FF1493;
             color: #8B008B;
-            font-size: 26px;               /* 24px → 26px */
-            height: 70px;                  /* 65px → 70px */
-            width: 70px;                   /* 65px → 70px */
-        }
-
-        .key-btn.key-back:active {
-            background: linear-gradient(135deg, #FF1493, #C71585);
-            color: white;
-        }    
-    
-        #answerInput:focus {
-            outline: none;
-            border-color: #FF1493;
-            box-shadow: 0 0 10px rgba(255,20,147,0.5);
+            font-size: 26px;
         }
 
         #submitBtn {
@@ -280,16 +234,6 @@
             border-radius: 25px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-
-        #submitBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 20px rgba(0,0,0,0.4);
-        }
-
-        #submitBtn:active {
-            transform: translateY(0);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
         }
 
         #controls {
@@ -322,16 +266,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
         }
-        
-        .selected {
-            background-color: orange !important;
-            color: white !important;
-        }
-                
-        .control-btn:active {
-            transform: scale(0.95);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
 
         #jumpBtn {
             background: linear-gradient(135deg, #FF1493, #FF69B4);
@@ -341,17 +275,14 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        #jumpBtn:active {
-            background: linear-gradient(135deg, #C71585, #FF1493);
-        }
-
+        /* 핑크 테마 메뉴 스타일 */
         #selectMenu {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+            background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 50%, #FFE4E1 100%);
             z-index: 100;
             display: flex;
             justify-content: center;
@@ -362,12 +293,12 @@
         }
 
         .menu-container {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 240, 245, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 24px;
             padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(255, 20, 147, 0.2);
+            border: 3px solid #FF69B4;
             max-width: 800px;
             width: 100%;
             max-height: 90vh;
@@ -381,18 +312,23 @@
 
         #menuTitle {
             font-size: clamp(24px, 5vw, 36px);
-            color: #1e293b;
+            color: #FF1493;
             font-weight: 700;
             margin-bottom: 12px;
             font-family: 'Jua', sans-serif;
             letter-spacing: -0.5px;
+            text-shadow: 2px 2px 0 #FFF, 3px 3px 10px rgba(255, 20, 147, 0.3);
         }
 
         #menuSubtitle {
             font-size: clamp(14px, 3vw, 18px);
-            color: #64748b;
+            color: #8B008B;
             font-weight: 400;
             font-family: 'Jua', sans-serif;
+            background: rgba(255,255,255,0.8);
+            padding: 10px 20px;
+            border-radius: 15px;
+            display: inline-block;
         }
 
         .menu-content {
@@ -402,19 +338,20 @@
         }
 
         .menu-card {
-            background: #ffffff;
+            background: linear-gradient(135deg, #ffffff, #fff0f5);
             border-radius: 16px;
             padding: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.1);
+            border: 2px solid #FFB6C1;
         }
 
         .card-title {
             font-size: 18px;
             font-weight: 600;
-            color: #334155;
+            color: #FF1493;
             margin-bottom: 16px;
             font-family: 'Jua', sans-serif;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
         }
 
         .character-grid {
@@ -438,8 +375,8 @@
         }
 
         .character-btn {
-            background: #ffffff;
-            border: 2px solid #e2e8f0;
+            background: linear-gradient(135deg, #ffffff, #ffe4e1);
+            border: 3px solid #FF69B4;
             border-radius: 12px;
             padding: 16px;
             cursor: pointer;
@@ -448,84 +385,87 @@
             flex-direction: column;
             align-items: center;
             gap: 8px;
-            min-width: 100px;
+            min-width: 120px;
             font-family: 'Jua', sans-serif;
             font-weight: 500;
-            color: #475569;
+            color: #FF1493;
+            box-shadow: 0 4px 10px rgba(255, 105, 180, 0.2);
         }
 
         .character-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            border-color: #94a3b8;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 105, 180, 0.3);
+            border-color: #FF1493;
         }
 
         .character-btn.selected {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            border-color: #3b82f6;
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            border-color: #FF1493;
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 8px 20px rgba(255, 20, 147, 0.4);
+            animation: glow 2s infinite alternate;
         }
 
-        .character-avatar {
+        @keyframes glow {
+            from { box-shadow: 0 8px 20px rgba(255, 20, 147, 0.4); }
+            to { box-shadow: 0 12px 30px rgba(255, 20, 147, 0.6); }
+        }
+
+        .character-pixel {
             width: 48px;
             height: 48px;
-            border-radius: 50%;
-            background-size: cover;
-            background-position: center;
-        }
-
-        .jiyul-avatar {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-        }
-
-        .kiwi-avatar {
-            background: linear-gradient(135deg, #10b981, #059669);
-        }
-
-        .house-avatar {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            margin-bottom: 5px;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.5);
         }
 
         .option-btn {
-            background: #ffffff;
-            border: 2px solid #e2e8f0;
+            background: linear-gradient(135deg, #ffffff, #ffe4e1);
+            border: 2px solid #FFB6C1;
             border-radius: 8px;
             padding: 12px 16px;
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'Jua', sans-serif;
             font-weight: 500;
-            color: #475569;
+            color: #FF1493;
             font-size: 14px;
+            box-shadow: 0 2px 8px rgba(255, 105, 180, 0.1);
         }
 
         .option-btn:hover {
-            border-color: #94a3b8;
-            background: #f8fafc;
+            border-color: #FF69B4;
+            background: linear-gradient(135deg, #fff0f5, #ffe4e1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
         }
 
         .option-btn.selected {
-            background: linear-gradient(135deg, #06b6d4, #0891b2);
-            border-color: #06b6d4;
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            border-color: #FF1493;
             color: white;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
         }
 
         .selection-summary {
-            background: #f1f5f9;
+            background: linear-gradient(135deg, #fff0f5, #ffe4e1);
             border-radius: 12px;
             padding: 20px;
-            border: 1px solid #e2e8f0;
+            border: 2px solid #FFB6C1;
+            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.1);
         }
 
         .selection-item {
             font-family: 'Jua', sans-serif;
-            color: #64748b;
+            color: #8B008B;
             margin-bottom: 8px;
             font-size: 14px;
+            font-weight: 500;
         }
 
         .selection-item:last-child {
@@ -533,8 +473,8 @@
         }
 
         .start-btn {
-            background: linear-gradient(135deg, #10b981, #059669);
-            border: none;
+            background: linear-gradient(135deg, #32CD32, #90EE90);
+            border: 3px solid #FFF;
             border-radius: 12px;
             padding: 16px 32px;
             color: white;
@@ -545,15 +485,18 @@
             transition: all 0.2s ease;
             align-self: center;
             min-width: 200px;
+            box-shadow: 0 6px 15px rgba(50, 205, 50, 0.3);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
 
         .start-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(50, 205, 50, 0.4);
         }
 
         .start-btn:disabled {
-            background: #cbd5e1;
+            background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
+            color: #8B008B;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
@@ -575,11 +518,11 @@
             }
 
             .character-btn {
-                min-width: 80px;
+                min-width: 100px;
                 padding: 12px;
             }
 
-            .character-avatar {
+            .character-pixel {
                 width: 40px;
                 height: 40px;
             }
@@ -680,7 +623,7 @@
             }
         }
         
-        /* 모바일 가로 모드 최적화 */
+        /* 모바일 최적화 */
         @media screen and (orientation: landscape) and (max-height: 500px) {
             #controls {
                 height: 12vh;
@@ -699,145 +642,28 @@
             
             #questionPanel {
                 padding: 1.5vh 2vw !important;
+                width: 85vw;
+                max-height: 85vh;
+                border-width: 0.6vw;
+                border-radius: 3vw;
             }
             
             #questionText {
-                font-size: min(5vh, 20px) !important;
+                font-size: 3.5vw !important;
+                margin-bottom: 1vh;
             }
-        }
 
-        /* 모바일 가로 모드 최적화 */
-        @media screen and (orientation: landscape) {
-          #questionPanel {
-              position: fixed;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              margin: 0;
-              padding: 1.5vh 2vw;
-              background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
-              border: 0.6vw solid #FF69B4;
-              font-size: 2.5vw;
-              color: #D8008B;
-              display: none; /* 처음에는 보이지 않게 설정 */
-              z-index: 50;
-              width: 85vw;
-              max-width: 95%;
-              height: auto;
-              max-height: 85vh;
-              overflow-y: auto;
-              font-family: 'Jua', sans-serif;
-              border-radius: 3vw;
-              box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
-          }
-
-          #questionText {
-            font-size: 3.5vw;
-            margin-bottom: 1vh;
-            line-height: 1.2;
-          }
-
-          #enemyInfo {
-            font-size: 2vw;
-            padding: 0.6vh 1.5vw;
-            margin: 0.5vh 0 1vh 0;
-          }
-
-          #answerInput {
-            width: 100px; /* 가로 크기 감소 */
-            min-width: 80px;
-            font-size: 2.5vw;
-            padding: 0.8vh 1vw;
-            margin: 0.5vh 1vw;
-            border-width: 2px;
-          }
-
-          #submitBtn {
-            font-size: 2vw;
-            padding: 0.8vh 2vw;
-            margin: 0.5vh 1vw;
-            min-width: 100px;
-            border-width: 2px;
-          }
-
-          #customKeyboard {
-              margin: 1.5vh auto;                 /* 가운데 정렬 */
-              gap: 25px;                          /* 20px → 25px */
-          }
-                      
-          .numpad-container {
-              gap: 12px;                          /* 10px → 12px */
-          }
-
-          #customKeyboard .key-btn {
-            width: 45px;
-            height: 45px;
-            font-size: 20px;
-            max-width: 10vw;
-            max-height: 10vw;
-            min-width: 35px;
-            min-height: 35px;
-            border-width: 2px;
-            border-radius: 10px;
-          }
-          
-          .control-buttons {
-              gap: 12px;                          /* 10px → 12px */
-          }
-                    
-          .control-buttons .key-btn {
-            width: 50px;
-            height: 45px;
-          }
-          
-          .key-btn.key-clear {
-              font-size: 36px;                    /* 32px → 36px */
-              height: 70px;                       /* 65px → 70px */
-              width: 70px;                        /* 65px → 70px */
-          }
-                      
-          .key-btn.key-back {
-            font-size: 26px;                    /* 24px → 26px */
-            height: 70px;                       /* 65px → 70px */
-            width: 70px;                        /* 65px → 70px */
-          }
-          
-          /* 매우 낮은 화면 높이 대응 */
-          @media (max-height: 400px) {
-            #questionPanel {
-              padding: 1vh 2vw;
-            }
-            
-            #questionText {
-              font-size: 3vw;
-              margin-bottom: 0.5vh;
-            }
-            
-            #enemyInfo {
-              font-size: 1.8vw;
-              padding: 0.4vh 1vw;
-              margin: 0.3vh 0 0.5vh 0;
-            }
-            
             #customKeyboard .key-btn {
-              width: 38px;
-              height: 38px;
-              font-size: 18px;
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                border-radius: 10px;
             }
-            
+
             .control-buttons .key-btn {
-              width: 42px;
-              height: 38px;
+                width: 50px;
+                height: 45px;
             }
-            
-            .key-btn.key-clear {
-              font-size: 20px;
-            }
-            
-            .key-btn.key-back {
-              font-size: 16px;
-            }
-          }
         }
     </style>
 </head>
@@ -850,25 +676,25 @@
         <div id="selectMenu">
             <div class="menu-container">
                 <div class="menu-header">
-                    <h1 id="menuTitle">지율이의 수학 게임</h1>
-                    <p id="menuSubtitle">원하는 학습 내용을 선택해주세요</p>
+                    <h1 id="menuTitle">🌸 지율이의 픽셀 수학 게임 🌸</h1>
+                    <p id="menuSubtitle">공주님! 원하는 학습 내용을 선택해주세요 💕</p>
                 </div>
 
                 <div class="menu-content">
                     <!-- 캐릭터 선택 카드 -->
                     <div class="menu-card">
-                        <h3 class="card-title">캐릭터 선택</h3>
+                        <h3 class="card-title">✨ 캐릭터 선택</h3>
                         <div id="characterGrid" class="character-grid">
                             <button class="character-btn selected" data-character="jiyul">
-                                <div class="character-avatar jiyul-avatar"></div>
+                                <canvas class="character-pixel" width="48" height="48"></canvas>
                                 <span>지율이</span>
                             </button>
                             <button class="character-btn" data-character="kiwi">
-                                <div class="character-avatar kiwi-avatar"></div>
+                                <canvas class="character-pixel" width="48" height="48"></canvas>
                                 <span>키위</span>
                             </button>
                             <button class="character-btn" data-character="whitehouse">
-                                <div class="character-avatar house-avatar"></div>
+                                <canvas class="character-pixel" width="48" height="48"></canvas>
                                 <span>화이트하우스</span>
                             </button>
                         </div>
@@ -876,7 +702,7 @@
 
                     <!-- 구구단 선택 카드 -->
                     <div class="menu-card">
-                        <h3 class="card-title">구구단 선택</h3>
+                        <h3 class="card-title">📚 구구단 선택</h3>
                         <div id="danGrid" class="grid-container">
                             <button class="option-btn dan-btn" data-dan="2">2단</button>
                             <button class="option-btn dan-btn" data-dan="3">3단</button>
@@ -891,23 +717,23 @@
 
                     <!-- 연산 선택 카드 -->
                     <div class="menu-card">
-                        <h3 class="card-title">연산 선택</h3>
+                        <h3 class="card-title">🔢 연산 선택</h3>
                         <div id="operatorGrid" class="grid-container operator-grid">
-                            <button class="option-btn operator-btn" data-op="add">더하기</button>
-                            <button class="option-btn operator-btn" data-op="sub">빼기</button>
-                            <button class="option-btn operator-btn" data-op="mul">곱하기</button>
-                            <button class="option-btn operator-btn" data-op="div">나누기</button>
+                            <button class="option-btn operator-btn" data-op="add">➕ 더하기</button>
+                            <button class="option-btn operator-btn" data-op="sub">➖ 빼기</button>
+                            <button class="option-btn operator-btn" data-op="mul">✖️ 곱하기</button>
+                            <button class="option-btn operator-btn" data-op="div">➗ 나누기</button>
                         </div>
                     </div>
 
                     <!-- 선택된 내용 표시 -->
                     <div class="selection-summary">
-                        <div id="selectedDans" class="selection-item">선택한 구구단: 없음</div>
-                        <div id="selectedOps" class="selection-item">선택한 연산: 없음</div>
+                        <div id="selectedDans" class="selection-item">💕 선택한 구구단: 없음</div>
+                        <div id="selectedOps" class="selection-item">💕 선택한 연산: 없음</div>
                     </div>
 
                     <!-- 시작 버튼 -->
-                    <button id="startGameBtn" class="start-btn" disabled>게임 시작</button>
+                    <button id="startGameBtn" class="start-btn" disabled>🎮 게임 시작!</button>
                 </div>
             </div>
         </div>
@@ -960,8 +786,138 @@
         </div>
     </div>
 
+    <!-- 픽셀 캐릭터 데이터와 렌더링 -->
+    <script>
+        // 픽셀 데이터
+        const pixelData = {
+            jiyul: {
+                idle: [
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
+                    [0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],
+                    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+                    [0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0],
+                    [0,1,2,5,4,2,2,2,2,5,4,2,2,1,0,0],
+                    [0,1,2,5,5,2,2,2,2,5,5,2,2,1,0,0],
+                    [0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0],
+                    [0,0,2,2,2,6,6,6,6,2,2,2,2,0,0,0],
+                    [0,0,0,3,3,3,3,3,3,3,3,0,0,0,0,0],
+                    [0,0,3,3,3,3,3,3,3,3,3,3,0,0,0,0],
+                    [0,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0],
+                    [0,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0],
+                    [0,0,3,3,3,0,0,0,0,3,3,3,0,0,0,0],
+                    [0,0,2,2,2,0,0,0,0,2,2,2,0,0,0,0],
+                    [0,0,7,7,7,0,0,0,0,7,7,7,0,0,0,0]
+                ],
+                colorMap: {
+                    0: null,
+                    1: "#2C1810",
+                    2: "#FFE0BD",
+                    3: "#FF69B4",
+                    4: "#FFFFFF",
+                    5: "#4169E1",
+                    6: "#FF1493",
+                    7: "#8B4513"
+                }
+            },
+            kiwi: {
+                idle: [
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0],
+                    [0,0,0,0,0,0,1,2,2,2,2,1,0,0,0,0],
+                    [0,1,1,1,1,1,2,2,2,4,2,2,1,0,0,0],
+                    [1,2,2,2,2,2,2,2,2,4,2,2,2,1,1,0],
+                    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1],
+                    [0,1,2,2,2,2,2,2,2,2,1,1,1,1,1,1],
+                    [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
+                    [0,0,8,8,0,0,0,0,8,8,0,0,0,0,0,0],
+                    [0,0,8,8,0,0,0,0,8,8,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                ],
+                colorMap: {
+                    0: null,
+                    1: "#CC5500",
+                    2: "#FF8C00",
+                    4: "#000000",
+                    8: "#8B4513"
+                }
+            },
+            whitehouse: {
+                idle: [
+                    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+                    [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
+                    [0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],
+                    [0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],
+                    [0,0,1,2,2,2,2,2,2,2,2,2,2,1,0,0],
+                    [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
+                    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+                    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1],
+                    [1,3,4,4,3,3,5,5,5,3,3,4,4,3,3,1],
+                    [1,3,4,6,3,3,5,7,5,3,3,4,6,3,3,1],
+                    [1,3,4,4,3,3,5,5,5,3,3,4,4,3,3,1],
+                    [1,3,3,3,3,3,3,5,3,3,3,3,3,3,3,1],
+                    [1,3,3,3,3,3,3,5,3,3,3,3,3,3,3,1],
+                    [1,3,3,3,3,3,3,5,3,3,3,3,3,3,3,1],
+                    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+                ],
+                colorMap: {
+                    0: null,
+                    1: "#808080",
+                    2: "#F5F5F5",
+                    3: "#FFFFFF",
+                    4: "#87CEEB",
+                    5: "#8B4513",
+                    6: "#4169E1",
+                    7: "#FFD700"
+                }
+            }
+        };
+
+        // 픽셀 스프라이트 그리기 함수
+        function drawPixelSprite(ctx, sprite, colorMap, scale = 3) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.imageSmoothingEnabled = false;
+            
+            for (let row = 0; row < sprite.length; row++) {
+                for (let col = 0; col < sprite[row].length; col++) {
+                    const pixel = sprite[row][col];
+                    if (pixel !== 0 && colorMap[pixel]) {
+                        ctx.fillStyle = colorMap[pixel];
+                        ctx.fillRect(col * scale, row * scale, scale, scale);
+                    }
+                }
+            }
+        }
+
+        // 캐릭터 픽셀 아트 그리기
+        function drawCharacterPixels() {
+            const characterButtons = document.querySelectorAll('.character-btn');
+            characterButtons.forEach(button => {
+                const canvas = button.querySelector('.character-pixel');
+                const character = button.getAttribute('data-character');
+                const ctx = canvas.getContext('2d');
+                
+                if (pixelData[character]) {
+                    drawPixelSprite(ctx, pixelData[character].idle, pixelData[character].colorMap, 3);
+                }
+            });
+        }
+
+        // 페이지 로드 완료 후 픽셀 아트 그리기
+        document.addEventListener('DOMContentLoaded', function() {
+            drawCharacterPixels();
+        });
+    </script>
+
+    <!-- 기존 게임 스크립트 파일들 로드 -->
     <script src="characters.js"></script>
     <script src="math.js"></script>
-    <script src="game.js"></script>       
+    <script src="game.js"></script>
 </body>
 </html>
