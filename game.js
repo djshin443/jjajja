@@ -235,27 +235,6 @@ function checkIOSFullscreen() {
 // 게임 시작 시 iOS 체크 추가
 window.addEventListener('load', checkIOSFullscreen);
 
-// 캐릭터 선택 함수
-function selectCharacter(character) {
-    gameState.selectedCharacter = character;
-    
-    // 모든 캐릭터 버튼의 선택 상태 초기화
-    document.querySelectorAll('.character-btn').forEach(btn => {
-        btn.classList.remove('selected');
-    });
-    
-    // 선택된 캐릭터 버튼에 선택 표시
-    const selectedBtn = document.querySelector(`[data-character="${character}"]`);
-    if (selectedBtn) {
-        selectedBtn.classList.add('selected');
-    }
-    
-    // 플레이어 스프라이트 변경
-    player.sprite = character;
-    
-    console.log('캐릭터 선택됨:', character);
-}
-
 // 게임 초기화
 function initGame() {
     gameState.running = true;
@@ -1468,9 +1447,46 @@ function drawMagicalParticles() {
 // 메뉴 표시
 function showMenu() {
     gameState.running = false;
-    document.getElementById('selectMenu').style.display = 'flex';
+    document.getElementById('characterSelectMenu').style.display = 'flex';
+    document.getElementById('mathSelectMenu').style.display = 'none';
     document.getElementById('ui').style.display = 'none';
     document.getElementById('questionPanel').style.display = 'none';
+}
+
+// 새로운 화면 전환 함수들 추가
+function showMathSelectMenu() {
+    document.getElementById('characterSelectMenu').style.display = 'none';
+    document.getElementById('mathSelectMenu').style.display = 'flex';
+    updateSelectedCharacterDisplay();
+}
+
+function showCharacterSelectMenu() {
+    document.getElementById('mathSelectMenu').style.display = 'none';
+    document.getElementById('characterSelectMenu').style.display = 'flex';
+}
+
+function updateSelectedCharacterDisplay() {
+    const selectedCharacterPixel = document.getElementById('selectedCharacterPixel');
+    const selectedCharacterName = document.getElementById('selectedCharacterName');
+    
+    if (selectedCharacterPixel && characterPixelData[gameState.selectedCharacter]) {
+        const ctx = selectedCharacterPixel.getContext('2d');
+        drawCharacterPixelSprite(
+            ctx, 
+            characterPixelData[gameState.selectedCharacter].idle, 
+            characterPixelData[gameState.selectedCharacter].colorMap, 
+            4  // 더 큰 스케일로 표시
+        );
+    }
+    
+    if (selectedCharacterName) {
+        const characterNames = {
+            'jiyul': '지율이',
+            'kiwi': '키위',
+            'whitehouse': '화이트하우스'
+        };
+        selectedCharacterName.textContent = characterNames[gameState.selectedCharacter] || '지율이';
+    }
 }
 
 // 도움말 표시
@@ -1484,31 +1500,6 @@ function showHelp() {
           '💕 지율이 화이팅! 💕');
 }
 
-// 구구단 선택 함수
-function toggleDan(dan) {
-    console.log('toggleDan 호출됨, dan:', dan);
-    
-    const index = gameState.selectedDans.indexOf(dan);
-    const button = document.querySelector(`[data-dan="${dan}"]`);
-    
-    if (!button) {
-        console.error('버튼을 찾을 수 없음, dan:', dan);
-        return;
-    }
-    
-    if (index === -1) {
-        gameState.selectedDans.push(dan);
-        button.classList.add('selected');
-        console.log('구구단 추가됨:', dan);
-    } else {
-        gameState.selectedDans.splice(index, 1);
-        button.classList.remove('selected');
-        console.log('구구단 제거됨:', dan);
-    }
-    
-    console.log('현재 선택된 구구단:', gameState.selectedDans);
-    updateSelectedDisplay();
-}
 
 // 게임 오버
 function gameOver() {
@@ -1689,7 +1680,25 @@ function setupEventListeners() {
     if (submitBtn) {
         submitBtn.addEventListener('click', submitAnswer);
     }
-
+	
+	// 다음 버튼 (캐릭터 선택 -> 수학 선택)
+    const nextToMathBtn = document.getElementById('nextToMathBtn');
+    if (nextToMathBtn) {
+        nextToMathBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showMathSelectMenu();
+        });
+    }
+    
+    // 이전 버튼 (수학 선택 -> 캐릭터 선택)
+    const backToCharacterBtn = document.getElementById('backToCharacterBtn');
+    if (backToCharacterBtn) {
+        backToCharacterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showCharacterSelectMenu();
+        });
+    }
+	
     // 엔터키 이벤트
     const answerInput = document.getElementById('answerInput');
     if (answerInput) {
@@ -1730,8 +1739,9 @@ function setupEventListeners() {
 	}
 	
     console.log('모든 이벤트 설정 완료');
-    // 기본 캐릭터 선택 (지율이)
-    selectCharacter('jiyul');
+	
+	// 기본 캐릭터 선택 (지율이)
+	selectCharacter('jiyul');
 }
 
 // 커스텀 키보드 처리 함수
