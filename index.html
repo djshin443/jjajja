@@ -502,6 +502,66 @@
             box-shadow: none;
         }
 
+        /* 구구단 버튼 스타일 추가 */
+        .dan-btn {
+            background: linear-gradient(135deg, #ffffff, #ffe4e1);
+            border: 2px solid #FFB6C1;
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Jua', sans-serif;
+            font-weight: 500;
+            color: #FF1493;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(255, 105, 180, 0.1);
+        }
+
+        .dan-btn:hover {
+            border-color: #FF69B4;
+            background: linear-gradient(135deg, #fff0f5, #ffe4e1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
+        }
+
+        .dan-btn.selected {
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            border-color: #FF1493;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
+        }
+
+        /* 연산 버튼 스타일 추가 */
+        .operator-btn {
+            background: linear-gradient(135deg, #ffffff, #f0e68c);
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Jua', sans-serif;
+            font-weight: 500;
+            color: #FF8C00;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(255, 140, 0, 0.1);
+        }
+
+        .operator-btn:hover {
+            border-color: #FF8C00;
+            background: linear-gradient(135deg, #fff8dc, #f0e68c);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.2);
+        }
+
+        .operator-btn.selected {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-color: #FF8C00;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+
         /* 반응형 디자인 */
         @media screen and (max-width: 768px) {
             .menu-container {
@@ -909,10 +969,102 @@
             });
         }
 
-        // 페이지 로드 완료 후 픽셀 아트 그리기
+        // 메뉴 이벤트 리스너들
+        let selectedCharacter = 'jiyul';
+        let selectedDans = [];
+        let selectedOps = [];
+
+        // 캐릭터 선택 이벤트
         document.addEventListener('DOMContentLoaded', function() {
             drawCharacterPixels();
+            
+            // 캐릭터 선택
+            document.querySelectorAll('.character-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.character-btn').forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedCharacter = this.getAttribute('data-character');
+                });
+            });
+
+            // 구구단 선택
+            document.querySelectorAll('.dan-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const dan = this.getAttribute('data-dan');
+                    if (this.classList.contains('selected')) {
+                        this.classList.remove('selected');
+                        selectedDans = selectedDans.filter(d => d !== dan);
+                    } else {
+                        this.classList.add('selected');
+                        selectedDans.push(dan);
+                    }
+                    updateSelection();
+                });
+            });
+
+            // 연산 선택
+            document.querySelectorAll('.operator-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const op = this.getAttribute('data-op');
+                    if (this.classList.contains('selected')) {
+                        this.classList.remove('selected');
+                        selectedOps = selectedOps.filter(o => o !== op);
+                    } else {
+                        this.classList.add('selected');
+                        selectedOps.push(op);
+                    }
+                    updateSelection();
+                });
+            });
+
+            // 게임 시작 버튼
+            document.getElementById('startGameBtn').addEventListener('click', function() {
+                if (selectedDans.length > 0 && selectedOps.length > 0) {
+                    startGame();
+                }
+            });
         });
+
+        function updateSelection() {
+            const danText = selectedDans.length > 0 ? selectedDans.map(d => d + '단').join(', ') : '없음';
+            const opText = selectedOps.length > 0 ? selectedOps.map(op => {
+                switch(op) {
+                    case 'add': return '더하기';
+                    case 'sub': return '빼기';
+                    case 'mul': return '곱하기';
+                    case 'div': return '나누기';
+                    default: return op;
+                }
+            }).join(', ') : '없음';
+
+            document.getElementById('selectedDans').textContent = `💕 선택한 구구단: ${danText}`;
+            document.getElementById('selectedOps').textContent = `💕 선택한 연산: ${opText}`;
+
+            const startBtn = document.getElementById('startGameBtn');
+            if (selectedDans.length > 0 && selectedOps.length > 0) {
+                startBtn.disabled = false;
+            } else {
+                startBtn.disabled = true;
+            }
+        }
+
+        function startGame() {
+            // 선택된 설정을 전역 변수에 저장
+            window.gameSettings = {
+                character: selectedCharacter,
+                dans: selectedDans,
+                operators: selectedOps
+            };
+            
+            // 메뉴 숨기기
+            document.getElementById('selectMenu').style.display = 'none';
+            document.getElementById('ui').style.display = 'block';
+            
+            // 게임 초기화 (game.js에서 정의된 함수)
+            if (typeof initGame === 'function') {
+                initGame();
+            }
+        }
     </script>
 
     <!-- 기존 게임 스크립트 파일들 로드 -->
