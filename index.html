@@ -276,7 +276,7 @@
         }
 
         /* 핑크 테마 메뉴 스타일 */
-        #selectMenu {
+        #characterSelectMenu, #mathSelectMenu {
             position: fixed;
             top: 0;
             left: 0;
@@ -359,6 +359,34 @@
             justify-content: center;
             gap: 16px;
             flex-wrap: wrap;
+        }
+
+        .character-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffffff, #ffe4e1);
+            border-radius: 16px;
+            border: 2px solid #FF69B4;
+            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
+        }
+
+        #selectedCharacterPixel {
+            border-radius: 12px;
+            background: rgba(255,255,255,0.5);
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        #selectedCharacterName {
+            font-family: 'Jua', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #FF1493;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
         }
 
         .grid-container {
@@ -472,6 +500,14 @@
             margin-bottom: 0;
         }
 
+        .button-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
         .start-btn {
             background: linear-gradient(135deg, #32CD32, #90EE90);
             border: 3px solid #FFF;
@@ -500,6 +536,27 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #FFB6C1, #FF69B4);
+            border: 3px solid #FFF;
+            border-radius: 12px;
+            padding: 16px 32px;
+            color: white;
+            font-family: 'Jua', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 180px;
+            box-shadow: 0 6px 15px rgba(255, 105, 180, 0.3);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 105, 180, 0.4);
         }
 
         /* 구구단과 연산 버튼 스타일 */
@@ -560,6 +617,22 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
         }
+		
+		.character-greeting {
+			background: linear-gradient(135deg, #FFE4E1, #FFF0F5);
+			border: 2px solid #FF69B4;
+			border-radius: 15px;
+			padding: 12px 20px;
+			margin-top: 10px;
+			font-family: 'Jua', sans-serif;
+			color: #FF1493;
+			font-size: 16px;
+			text-align: center;
+			box-shadow: 0 2px 8px rgba(255, 105, 180, 0.2);
+			max-width: 90%; /* 부모 요소의 90%까지 */
+			width: 100%;
+			min-width: 400px; /* 최소 너비 지정 */
+		}
 
         /* 반응형 디자인 */
         @media screen and (max-width: 768px) {
@@ -593,6 +666,16 @@
             .operator-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .button-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .back-btn, .start-btn {
+                min-width: auto;
+                width: 100%;
+            }
         }
 
         @media screen and (orientation: landscape) and (max-height: 600px) {
@@ -612,6 +695,11 @@
             .menu-card {
                 padding: 16px;
             }
+
+            .button-group {
+                flex-direction: row;
+                gap: 15px;
+            }
         }
 
         /* 가로 모드 최적화 */
@@ -630,15 +718,26 @@
                 align-items: start;
             }
 
-            .menu-card:first-child {
+            /* 캐릭터 선택 화면 */
+            #characterSelectMenu .menu-card:first-child {
                 grid-column: 1 / -1;
             }
 
-            .selection-summary {
+            #characterSelectMenu .start-btn {
+                grid-column: 1 / -1;
+                justify-self: center;
+            }
+
+            /* 수학 선택 화면 */
+            #mathSelectMenu .menu-card:first-child {
                 grid-column: 1 / -1;
             }
 
-            .start-btn {
+            #mathSelectMenu .selection-summary {
+                grid-column: 1 / -1;
+            }
+
+            #mathSelectMenu .button-group {
                 grid-column: 1 / -1;
                 justify-self: center;
             }
@@ -732,11 +831,12 @@
 
         <button id="fullscreenBtn">FULL</button>
 
-        <div id="selectMenu">
+        <!-- 1단계: 캐릭터 선택 화면 -->
+        <div id="characterSelectMenu">
             <div class="menu-container">
                 <div class="menu-header">
                     <h1 id="menuTitle">🌸 지율이의 픽셀 수학 게임 🌸</h1>
-                    <p id="menuSubtitle">공주님! 원하는 학습 내용을 선택해주세요 💕</p>
+                    <p id="menuSubtitle">공주님! 함께 모험할 캐릭터를 선택해주세요 💕</p>
                 </div>
 
                 <div class="menu-content">
@@ -758,6 +858,27 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- 다음 버튼 -->
+                    <button id="nextToMathBtn" class="start-btn">🎯 다음: 학습 선택</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2단계: 구구단과 연산 선택 화면 -->
+        <div id="mathSelectMenu" style="display: none;">
+            <div class="menu-container">
+                <div class="menu-content">
+                    <!-- 선택된 캐릭터 표시 -->
+                    <div class="menu-card">
+						<h3 class="card-title">👑 선택된 캐릭터</h3>
+						<div id="selectedCharacterDisplay" class="character-display">
+							<canvas id="selectedCharacterPixel" width="64" height="64"></canvas>
+							<span id="selectedCharacterName">지율이</span>
+							<div id="characterGreeting" class="character-greeting">
+							</div>
+						</div>
+					</div>
 
                     <!-- 구구단 선택 카드 -->
                     <div class="menu-card">
@@ -791,8 +912,11 @@
                         <div id="selectedOps" class="selection-item">💕 선택한 연산: 없음</div>
                     </div>
 
-                    <!-- 시작 버튼 -->
-                    <button id="startGameBtn" class="start-btn" disabled>🎮 게임 시작!</button>
+                    <!-- 버튼들 -->
+                    <div class="button-group">
+                        <button id="backToCharacterBtn" class="back-btn">⬅️ 이전: 캐릭터 선택</button>
+                        <button id="startGameBtn" class="start-btn" disabled>🎮 게임 시작!</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -967,10 +1091,90 @@
             });
         }
 
+        // 캐릭터별 인사말 데이터
+        const characterGreetings = {
+			jiyul: "안녕! 나는 지율이야! 🌸 오늘도 구구단 연습하러 왔어! 키위랑 화이트하우스도 함께할까? 💖",
+			kiwi: "키위키위~! 🥝 나는 지율이가 키우는 크레스티드게코 키위야! 구구단 외우면서 같이 신나게 놀자! 깜깜한 곳에서도 구구단 척척! ✨",
+			whitehouse: "안녕! 나는 화이트하우스 텐트야! 🏕️ 지율이만의 비밀 아지트! 내 안에서 구구단 공부하고 재밌는 놀이도 해보자! 우리만의 특별한 공간이야! 🎪"
+		};
+
+        // selectCharacter 함수
+		function selectCharacter(characterName) {
+			console.log('selectCharacter 호출됨:', characterName);
+			
+			// gameState에 선택된 캐릭터 저장 (게임 로직에서 사용)
+			if (typeof gameState !== 'undefined') {
+				gameState.selectedCharacter = characterName;
+			}
+			
+			// 캐릭터 이름 업데이트
+			const nameElement = document.getElementById('selectedCharacterName');
+			if (nameElement) {
+				nameElement.textContent = characterName === 'jiyul' ? '지율이' : 
+										characterName === 'kiwi' ? '키위' : '화이트하우스';
+				console.log('캐릭터 이름 업데이트됨:', nameElement.textContent);
+			}
+			
+			// 인사말 업데이트
+			const greetingElement = document.getElementById('characterGreeting');
+			console.log('인사말 요소:', greetingElement);
+			console.log('캐릭터 인사말 데이터:', characterGreetings[characterName]);
+			
+			if (greetingElement) {
+				if (characterGreetings[characterName]) {
+					greetingElement.textContent = characterGreetings[characterName];
+					console.log('인사말 업데이트됨:', greetingElement.textContent);
+				} else {
+					greetingElement.textContent = '안녕하세요! 함께 모험을 떠나볼까요? 💕';
+					console.log('기본 인사말 설정됨');
+				}
+			}
+			
+			// 캐릭터 픽셀 업데이트
+			const pixelCanvas = document.getElementById('selectedCharacterPixel');
+			if (pixelCanvas && characterPixelData[characterName]) {
+				const ctx = pixelCanvas.getContext('2d');
+				drawCharacterPixelSprite(ctx, characterPixelData[characterName].idle, characterPixelData[characterName].colorMap, 4);
+				console.log('캐릭터 픽셀 업데이트됨');
+			}
+		}
+
+        // 🔥 이 부분을 추가하세요 🔥
+        function setupCharacterSelection() {
+            const characterButtons = document.querySelectorAll('.character-btn');
+            characterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 기존 선택 해제
+                    characterButtons.forEach(btn => btn.classList.remove('selected'));
+                    // 새로운 선택
+                    this.classList.add('selected');
+                    
+                    // 캐릭터 선택 함수 호출
+                    const characterName = this.getAttribute('data-character');
+                    selectCharacter(characterName);
+                });
+            });
+        }
+
         // DOM 로드 후 캐릭터 그리기
-        document.addEventListener('DOMContentLoaded', function() {
-            drawCharacterPixels();
-        });
+		document.addEventListener('DOMContentLoaded', function() {
+			drawCharacterPixels();
+			setupCharacterSelection();
+			
+			// 다음 버튼 이벤트 추가
+			document.getElementById('nextToMathBtn').addEventListener('click', function() {
+				const selectedCharacterBtn = document.querySelector('.character-btn.selected');
+				const selectedCharacter = selectedCharacterBtn.getAttribute('data-character');
+				
+				document.getElementById('characterSelectMenu').style.display = 'none';
+				document.getElementById('mathSelectMenu').style.display = 'flex';
+				
+				// 화면이 바뀐 후에 약간의 지연을 두고 캐릭터 정보 업데이트
+				setTimeout(() => {
+					selectCharacter(selectedCharacter);
+				}, 100);
+			});
+		});
     </script>
 
     <!-- 기존 게임 스크립트 파일들 로드 -->
