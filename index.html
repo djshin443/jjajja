@@ -845,10 +845,9 @@
         </div>
     </div>
 
-    <!-- 캐릭터 픽셀 데이터와 렌더링 -->
     <script>
         // 캐릭터 픽셀 데이터
-        const menuPixelData = {
+        const characterPixelData = {
             jiyul: {
                 idle: [
                     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -939,7 +938,7 @@
         };
 
         // 픽셀 스프라이트 그리기 함수
-        function drawMenuPixelSprite(ctx, sprite, colorMap, scale = 3) {
+        function drawCharacterPixelSprite(ctx, sprite, colorMap, scale = 3) {
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
             ctx.imageSmoothingEnabled = false;
             
@@ -961,193 +960,17 @@
                 const canvas = button.querySelector('.character-pixel');
                 const character = button.getAttribute('data-character');
                 
-                if (canvas && menuPixelData[character]) {
+                if (canvas && characterPixelData[character]) {
                     const ctx = canvas.getContext('2d');
-                    drawMenuPixelSprite(ctx, menuPixelData[character].idle, menuPixelData[character].colorMap, 3);
+                    drawCharacterPixelSprite(ctx, characterPixelData[character].idle, characterPixelData[character].colorMap, 3);
                 }
             });
         }
 
-        // 게임 상태 변수들
-        let gameState = {
-            running: false,
-            score: 0,
-            stage: 1,
-            selectedDans: [],
-            selectedOps: [],
-            selectedCharacter: 'jiyul',
-            distance: 0,
-            speed: 4,
-            questionActive: false,
-            currentEnemy: null,
-            backgroundOffset: 0,
-            currentQuestion: '',
-            correctAnswer: 0,
-            isMoving: true,
-            cameraX: 0,
-            screenShake: 0,
-            shakeTimer: 0
-        };
-
-        // DOM 로드 후 초기화
+        // DOM 로드 후 캐릭터 그리기
         document.addEventListener('DOMContentLoaded', function() {
-            // 캐릭터 그리기
             drawCharacterPixels();
-            
-            // 이벤트 리스너 설정
-            setupMenuEventListeners();
         });
-
-        // 메뉴 이벤트 리스너 설정
-        function setupMenuEventListeners() {
-            // 캐릭터 선택
-            document.querySelectorAll('.character-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.character-btn').forEach(b => b.classList.remove('selected'));
-                    this.classList.add('selected');
-                    gameState.selectedCharacter = this.getAttribute('data-character');
-                });
-            });
-
-            // 구구단 선택
-            document.querySelectorAll('.dan-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const dan = parseInt(this.getAttribute('data-dan'));
-                    toggleMenuDan(dan);
-                });
-            });
-
-            // 연산 선택
-            document.querySelectorAll('.operator-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const op = this.getAttribute('data-op');
-                    toggleMenuOperator(op);
-                });
-            });
-
-            // 게임 시작 버튼
-            document.getElementById('startGameBtn').addEventListener('click', function() {
-                if (!this.disabled) {
-                    startSelectedGame();
-                }
-            });
-        }
-
-        // 구구단 선택 토글 함수
-        function toggleMenuDan(dan) {
-            const index = gameState.selectedDans.indexOf(dan);
-            const button = document.querySelector(`[data-dan="${dan}"]`);
-            
-            if (index === -1) {
-                gameState.selectedDans.push(dan);
-                button.classList.add('selected');
-            } else {
-                gameState.selectedDans.splice(index, 1);
-                button.classList.remove('selected');
-            }
-            
-            updateMenuSelectedDisplay();
-        }
-
-        // 연산 선택 토글 함수
-        function toggleMenuOperator(op) {
-            const index = gameState.selectedOps.indexOf(op);
-            const button = document.querySelector(`[data-op="${op}"]`);
-            
-            if (index === -1) {
-                gameState.selectedOps.push(op);
-                button.classList.add('selected');
-            } else {
-                gameState.selectedOps.splice(index, 1);
-                button.classList.remove('selected');
-            }
-            
-            updateMenuSelectedDisplay();
-        }
-
-        // 선택된 내용 표시 업데이트
-        function updateMenuSelectedDisplay() {
-            const selectedDansElement = document.getElementById('selectedDans');
-            const selectedOpsElement = document.getElementById('selectedOps');
-            const startButton = document.getElementById('startGameBtn');
-            
-            // 구구단 표시
-            if (gameState.selectedDans.length > 0) {
-                const sortedDans = gameState.selectedDans.sort((a, b) => a - b);
-                selectedDansElement.textContent = `💕 선택한 구구단: ${sortedDans.join(', ')}단`;
-            } else {
-                selectedDansElement.textContent = '💕 선택한 구구단: 없음';
-            }
-            
-            // 연산 표시
-            if (gameState.selectedOps.length > 0) {
-                const opNames = {
-                    'add': '더하기',
-                    'sub': '빼기',
-                    'mul': '곱하기',
-                    'div': '나누기'
-                };
-                const selectedOpNames = gameState.selectedOps.map(op => opNames[op]);
-                selectedOpsElement.textContent = `💕 선택한 연산: ${selectedOpNames.join(', ')}`;
-            } else {
-                selectedOpsElement.textContent = '💕 선택한 연산: 없음';
-            }
-            
-            // 시작 버튼 활성화 조건
-            startButton.disabled = gameState.selectedDans.length === 0 && gameState.selectedOps.length === 0;
-        }
-
-        // 게임 시작 함수
-        function startSelectedGame() {
-            if (gameState.selectedDans.length === 0 && gameState.selectedOps.length === 0) {
-                alert('구구단이나 연산을 하나 이상 선택해주세요!');
-                return;
-            }
-            
-            document.getElementById('selectMenu').style.display = 'none';
-            document.getElementById('ui').style.display = 'block';
-            
-            // UI 텍스트 업데이트
-            let displayText = '';
-            if (gameState.selectedDans.length > 0) {
-                const sortedDans = gameState.selectedDans.sort((a, b) => a - b);
-                displayText = sortedDans.join(',') + '단';
-            }
-            if (gameState.selectedOps.length > 0) {
-                const opSymbols = {
-                    'add': '+',
-                    'sub': '-',
-                    'mul': '×',
-                    'div': '÷'
-                };
-                const symbols = gameState.selectedOps.map(op => opSymbols[op]).join(',');
-                displayText += (displayText ? ' ' : '') + symbols;
-            }
-            document.getElementById('danText').textContent = displayText;
-            
-            // 게임 초기화 (game.js의 initGame 함수 호출)
-            if (typeof initGame === 'function') {
-                initGame();
-            }
-        }
-
-        // 기타 더미 함수들 (game.js에서 정의된 함수들을 호출하기 위한)
-        function showMenu() {
-            gameState.running = false;
-            document.getElementById('selectMenu').style.display = 'flex';
-            document.getElementById('ui').style.display = 'none';
-            document.getElementById('questionPanel').style.display = 'none';
-        }
-
-        function showHelp() {
-            alert('🌸 지율이의 픽셀 수학 게임 도움말 🌸\n\n' +
-                  '1. 구구단이나 연산을 선택하고 시작하세요!\n' +
-                  '2. 점프 버튼으로 장애물을 뛰어넘으세요!\n' +
-                  '3. 장애물에 막히면 화면이 멈춰요!\n' +
-                  '4. 움직이는 몬스터를 만나면 수학 문제를 풀어요!\n' +
-                  '5. 정답을 맞추면 몬스터를 물리칠 수 있어요!\n\n' +
-                  '💕 지율이 화이팅! 💕');
-        }
     </script>
 
     <!-- 기존 게임 스크립트 파일들 로드 -->
