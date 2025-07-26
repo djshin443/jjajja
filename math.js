@@ -497,7 +497,8 @@ function startSelectedGame() {
     gameStats.correctAnswers = 0;
     gameStats.totalQuestions = 0;
     
-    document.getElementById('selectMenu').style.display = 'none';
+    document.getElementById('characterSelectMenu').style.display = 'none';
+    document.getElementById('mathSelectMenu').style.display = 'none';
     document.getElementById('ui').style.display = 'block';
     
     // UI 텍스트 업데이트
