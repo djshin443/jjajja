@@ -647,8 +647,7 @@ function render() {
         }
     });
     
-    // 렌더링 함수의 캐릭터 그리기 부분을 완전히 교체
-	if (typeof pixelData !== 'undefined' && pixelData[player.sprite]) {
+    if (typeof pixelData !== 'undefined' && pixelData[player.sprite]) {
 		// 지율이가 탈것을 타고 있는 경우
 		if (player.sprite === 'jiyul' && gameState.selectedVehicle !== 'none') {
 			// 먼저 탈것 그리기
@@ -669,25 +668,12 @@ function render() {
 					kiwiSprite = kiwiData.idle;
 				}
 				
-				// 디바이스별로 다른 오프셋 적용
-				let kiwiOffsetY, jiyulOffsetY;
-				
-				if (isMobileDevice()) {
-					// 모바일: 더 가깝게
-					kiwiOffsetY = PIXEL_SCALE * 2;
-					jiyulOffsetY = PIXEL_SCALE * 3;
-				} else {
-					// PC: 적당한 간격 유지
-					kiwiOffsetY = PIXEL_SCALE * 7;
-					jiyulOffsetY = PIXEL_SCALE * 7;
-				}
-				
-				// 키위 그리기
-				drawPixelSprite(kiwiSprite, kiwiData.colorMap, player.x, player.y - player.height + kiwiOffsetY);
+				// 키위를 약간 아래에 그리기
+				drawPixelSprite(kiwiSprite, kiwiData.colorMap, player.x, player.y - player.height + 20);
 				
 				// 지율이를 키위 위에 그리기
 				const jiyulData = pixelData.jiyul;
-				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height - jiyulOffsetY);
+				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height - 20);
 				
 			} else if (gameState.selectedVehicle === 'whitehouse' && pixelData.whitehouse) {
 				const whData = pixelData.whitehouse;
@@ -709,12 +695,9 @@ function render() {
 				// 화이트하우스 그리기
 				drawPixelSprite(whSprite, whData.colorMap, player.x, player.y - player.height);
 				
-				// PIXEL_SCALE에 비례하여 오프셋 조정
-				const jiyulOffsetY = PIXEL_SCALE * 10; // 30 대신 PIXEL_SCALE * 10
-				
 				// 지율이를 화이트하우스 위에 그리기
 				const jiyulData = pixelData.jiyul;
-				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height - jiyulOffsetY);
+				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height - 30);
 			}
 		} else {
 			// 일반적인 캐릭터 그리기
