@@ -1,1185 +1,523 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <title>지율이의 픽셀 수학 게임</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+// 수학 연산 관련 함수들
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            margin: 0;
-            padding: 0;
-        }
+// 이스터에그 관련 변수들
+let gameStats = {
+    startTime: null,
+    correctAnswers: 0,
+    totalQuestions: 0,
+    requiredCorrectAnswers: 0
+};
 
-        body {
-            background: #000;
-            font-family: 'Jua', sans-serif;
-            overflow: hidden;
-            touch-action: none;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        #gameContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #5C94FC;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #gameCanvas {
-            flex: 1;
-            display: block;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
-        }
-
-        /* 공주님을 위한 예쁜 UI */
-        #fullscreenBtn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: linear-gradient(135deg, #FF69B4, #FFB6C1);
-            border: 3px solid #FFF;
-            color: white;
-            padding: 10px 15px;
-            font-size: 12px;
-            cursor: pointer;
-            z-index: 1000;
-            font-family: 'Jua', sans-serif;
-            border-radius: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        #ui {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 120px;
-            color: white;
-            font-size: 14px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            z-index: 10;
-            background: linear-gradient(135deg, rgba(255,105,180,0.9), rgba(255,182,193,0.9));
-            border: 3px solid #FFF;
-            padding: 12px 20px;
-            display: none;
-            font-family: 'Jua', sans-serif;
-            border-radius: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        #questionPanel {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
-          padding: 20px;
-          border: 4px solid #FF69B4;
-          text-align: center;
-          font-size: 16px;
-          color: #D8008B;
-          display: none;
-          z-index: 50;
-          width: 400px;
-          max-width: 90vw;
-          font-family: 'Jua', sans-serif;
-          border-radius: 20px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        #questionText {
-            font-size: 24px;
-            margin-bottom: 10px;
-            color: #FF1493;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-        }
-
-        #enemyInfo {
-            margin: 10px 0;
-            font-size: 14px;
-            color: #FF69B4;
-            background: rgba(255,255,255,0.5);
-            padding: 8px 15px;
-            border-radius: 15px;
-            display: inline-block;
-        }
-
-        #answerInput {
-            padding: 12px 15px;
-            border: 3px solid #FF69B4;
-            font-size: 20px;
-            text-align: center;
-            margin: 10px 5px;
-            width: 120px;
-            background: #FFF;
-            color: #FF1493;
-            font-family: 'Jua', sans-serif;
-            border-radius: 20px;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
-            cursor: default;
-            -webkit-user-select: none;
-            user-select: none;
-            touch-action: none;
-            pointer-events: none;
-            display: inline-block;
+// 구구단 문제 생성
+function generateQuestion() {
+    // 보스전인 경우 8단과 9단만 나오게 하기
+    if (gameState.currentEnemy && gameState.currentEnemy.type === 'boss') {
+        const bossDans = [8, 9];
+        const dan = bossDans[Math.floor(Math.random() * bossDans.length)];
+        const num2 = Math.floor(Math.random() * 9) + 1;
+        gameState.currentQuestion = `${dan} × ${num2}`;
+        gameState.correctAnswer = dan * num2;
+        return;
+    }
+    if (gameState.selectedOps.length > 0) {
+        // 연산 선택된 경우
+        const op = gameState.selectedOps[Math.floor(Math.random() * gameState.selectedOps.length)];
+        let num1, num2, questionText, answer;
+        
+        switch(op) {
+            case 'add':
+                num1 = Math.floor(Math.random() * 50) + 1;
+                num2 = Math.floor(Math.random() * 50) + 1;
+                questionText = `${num1} + ${num2}`;
+                answer = num1 + num2;
+                break;
+            case 'sub':
+                num1 = Math.floor(Math.random() * 50) + 20;
+                num2 = Math.floor(Math.random() * num1) + 1;
+                questionText = `${num1} - ${num2}`;
+                answer = num1 - num2;
+                break;
+            case 'mul':
+                if (gameState.selectedDans.length > 0) {
+                    // 구구단도 선택된 경우
+                    num1 = gameState.selectedDans[Math.floor(Math.random() * gameState.selectedDans.length)];
+                    num2 = Math.floor(Math.random() * 9) + 1;
+                } else {
+                    num1 = Math.floor(Math.random() * 9) + 1;
+                    num2 = Math.floor(Math.random() * 9) + 1;
+                }
+                questionText = `${num1} × ${num2}`;
+                answer = num1 * num2;
+                break;
+            case 'div':
+                num2 = Math.floor(Math.random() * 9) + 1;
+                answer = Math.floor(Math.random() * 9) + 1;
+                num1 = num2 * answer;
+                questionText = `${num1} ÷ ${num2}`;
+                break;
         }
         
-        /* 커스텀 키보드 스타일 */
-        #customKeyboard {
-            margin: 20px auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            max-width: 600px;
-            gap: 30px;
-        }
-
-        .numpad-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            grid-template-rows: repeat(2, 1fr);
-            gap: 18px;
-            justify-items: center;
-            align-items: center;
-        }
-
-        .control-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .key-btn {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, #FFE4E1, #FFC0CB);
-            border: 2px solid #FF69B4;
-            color: #FF1493;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: 'Jua', sans-serif;
-            border-radius: 18px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-            transition: all 0.1s ease;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .key-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-        }
-
-        .key-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            background: linear-gradient(135deg, #FF69B4, #FFB6C1);
-            color: white;
-        }
-
-        .key-btn.key-clear {
-            background: linear-gradient(135deg, #87CEEB, #98D8E8);
-            border-color: #4682B4;
-            color: #1E90FF;
-            font-size: 36px;
-        }
-
-        .key-btn.key-back {
-            background: linear-gradient(135deg, #FFB6C1, #FF69B4);
-            border-color: #FF1493;
-            color: #8B008B;
-            font-size: 26px;
-        }
-
-        #submitBtn {
-            background: linear-gradient(135deg, #FF1493, #FF69B4);
-            color: white;
-            border: 3px solid #FFF;
-            padding: 12px 25px;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 0 10px;
-            font-family: 'Jua', sans-serif;
-            border-radius: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-
-        #controls {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            gap: 2%;
-            z-index: 10;
-            height: 15vh;
-            min-height: 60px;
-            max-height: 80px;
-            padding: 0 2%;
-            background: rgba(0,0,0,0.2);
-        }
-
-        .control-btn {
-            background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
-            border: 3px solid #FFF;
-            color: #FF1493;
-            padding: 15px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            touch-action: manipulation;
-            flex: 1;
-            font-family: 'Jua', sans-serif;
-            border-radius: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
-        }
-
-        #jumpBtn {
-            background: linear-gradient(135deg, #FF1493, #FF69B4);
-            color: white;
-            flex: 2;
-            font-size: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        /* 핑크 테마 메뉴 스타일 */
-        #characterSelectMenu, #mathSelectMenu {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 50%, #FFE4E1 100%);
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .menu-container {
-            background: rgba(255, 240, 245, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(255, 20, 147, 0.2);
-            border: 3px solid #FF69B4;
-            max-width: 800px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .menu-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        #menuTitle {
-            font-size: clamp(24px, 5vw, 36px);
-            color: #FF1493;
-            font-weight: 700;
-            margin-bottom: 12px;
-            font-family: 'Jua', sans-serif;
-            letter-spacing: -0.5px;
-            text-shadow: 2px 2px 0 #FFF, 3px 3px 10px rgba(255, 20, 147, 0.3);
-        }
-
-        #menuSubtitle {
-            font-size: clamp(14px, 3vw, 18px);
-            color: #8B008B;
-            font-weight: 400;
-            font-family: 'Jua', sans-serif;
-            background: rgba(255,255,255,0.8);
-            padding: 10px 20px;
-            border-radius: 15px;
-            display: inline-block;
-        }
-
-        .menu-content {
-            display: flex;
-            flex-direction: column;
-            gap: 32px;
-        }
-
-        .menu-card {
-            background: linear-gradient(135deg, #ffffff, #fff0f5);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.1);
-            border: 2px solid #FFB6C1;
-        }
-
-        .card-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #FF1493;
-            margin-bottom: 16px;
-            font-family: 'Jua', sans-serif;
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
-        }
-
-        .character-grid {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .character-display {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            padding: 20px;
-            background: linear-gradient(135deg, #ffffff, #ffe4e1);
-            border-radius: 16px;
-            border: 2px solid #FF69B4;
-            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
-        }
-
-        #selectedCharacterPixel {
-            border-radius: 12px;
-            background: rgba(255,255,255,0.5);
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
-        }
-
-        #selectedCharacterName {
-            font-family: 'Jua', sans-serif;
-            font-size: 18px;
-            font-weight: 600;
-            color: #FF1493;
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
-        }
-
-        .grid-container {
-            display: grid;
-            gap: 12px;
-        }
-
-        #danGrid {
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-        }
-
-        .operator-grid {
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        }
-
-        .character-btn {
-            background: linear-gradient(135deg, #ffffff, #ffe4e1);
-            border: 3px solid #FF69B4;
-            border-radius: 12px;
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            min-width: 120px;
-            font-family: 'Jua', sans-serif;
-            font-weight: 500;
-            color: #FF1493;
-            box-shadow: 0 4px 10px rgba(255, 105, 180, 0.2);
-        }
-
-        .character-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(255, 105, 180, 0.3);
-            border-color: #FF1493;
-        }
-
-        .character-btn.selected {
-            background: linear-gradient(135deg, #FF69B4, #FF1493);
-            border-color: #FF1493;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 20, 147, 0.4);
-            animation: glow 2s infinite alternate;
-        }
-
-        @keyframes glow {
-            from { box-shadow: 0 8px 20px rgba(255, 20, 147, 0.4); }
-            to { box-shadow: 0 12px 30px rgba(255, 20, 147, 0.6); }
-        }
-
-        .character-pixel {
-            width: 48px;
-            height: 48px;
-            margin-bottom: 5px;
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.5);
-        }
-
-        .option-btn {
-            background: linear-gradient(135deg, #ffffff, #ffe4e1);
-            border: 2px solid #FFB6C1;
-            border-radius: 8px;
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: 'Jua', sans-serif;
-            font-weight: 500;
-            color: #FF1493;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(255, 105, 180, 0.1);
-        }
-
-        .option-btn:hover {
-            border-color: #FF69B4;
-            background: linear-gradient(135deg, #fff0f5, #ffe4e1);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
-        }
-
-        .option-btn.selected {
-            background: linear-gradient(135deg, #FF69B4, #FF1493);
-            border-color: #FF1493;
-            color: white;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
-        }
-
-        .selection-summary {
-            background: linear-gradient(135deg, #fff0f5, #ffe4e1);
-            border-radius: 12px;
-            padding: 20px;
-            border: 2px solid #FFB6C1;
-            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.1);
-        }
-
-        .selection-item {
-            font-family: 'Jua', sans-serif;
-            color: #8B008B;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .selection-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .start-btn {
-            background: linear-gradient(135deg, #32CD32, #90EE90);
-            border: 3px solid #FFF;
-            border-radius: 12px;
-            padding: 16px 32px;
-            color: white;
-            font-family: 'Jua', sans-serif;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            align-self: center;
-            min-width: 200px;
-            box-shadow: 0 6px 15px rgba(50, 205, 50, 0.3);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-
-        .start-btn:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(50, 205, 50, 0.4);
-        }
-
-        .start-btn:disabled {
-            background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
-            color: #8B008B;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .back-btn {
-            background: linear-gradient(135deg, #FFB6C1, #FF69B4);
-            border: 3px solid #FFF;
-            border-radius: 12px;
-            padding: 16px 32px;
-            color: white;
-            font-family: 'Jua', sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            min-width: 180px;
-            box-shadow: 0 6px 15px rgba(255, 105, 180, 0.3);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-
-        .back-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(255, 105, 180, 0.4);
-        }
-
-        /* 구구단과 연산 버튼 스타일 */
-        .dan-btn {
-            background: linear-gradient(135deg, #ffffff, #ffe4e1);
-            border: 2px solid #FFB6C1;
-            border-radius: 8px;
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: 'Jua', sans-serif;
-            font-weight: 500;
-            color: #FF1493;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(255, 105, 180, 0.1);
-        }
-
-        .dan-btn:hover {
-            border-color: #FF69B4;
-            background: linear-gradient(135deg, #fff0f5, #ffe4e1);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
-        }
-
-        .dan-btn.selected {
-            background: linear-gradient(135deg, #FF69B4, #FF1493);
-            border-color: #FF1493;
-            color: white;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
-        }
-
-        .operator-btn {
-            background: linear-gradient(135deg, #ffffff, #f0e68c);
-            border: 2px solid #FFD700;
-            border-radius: 8px;
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: 'Jua', sans-serif;
-            font-weight: 500;
-            color: #FF8C00;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(255, 140, 0, 0.1);
-        }
-
-        .operator-btn:hover {
-            border-color: #FF8C00;
-            background: linear-gradient(135deg, #fff8dc, #f0e68c);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.2);
-        }
-
-        .operator-btn.selected {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            border-color: #FF8C00;
-            color: white;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
-        }
-		
-		.character-greeting {
-			background: linear-gradient(135deg, #FFE4E1, #FFF0F5);
-			border: 2px solid #FF69B4;
-			border-radius: 15px;
-			padding: 12px 20px;
-			margin-top: 10px;
-			font-family: 'Jua', sans-serif;
-			color: #FF1493;
-			font-size: 16px;
-			text-align: center;
-			box-shadow: 0 2px 8px rgba(255, 105, 180, 0.2);
-			max-width: 90%; /* 부모 요소의 90%까지 */
-			width: 100%;
-			min-width: 400px; /* 최소 너비 지정 */
-		}
-
-        /* 반응형 디자인 */
-        @media screen and (max-width: 768px) {
-            .menu-container {
-                padding: 24px;
-                margin: 10px;
-            }
-
-            .menu-content {
-                gap: 24px;
-            }
-
-            .menu-card {
-                padding: 20px;
-            }
-
-            .character-btn {
-                min-width: 100px;
-                padding: 12px;
-            }
-
-            .character-pixel {
-                width: 40px;
-                height: 40px;
-            }
-
-            #danGrid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-
-            .operator-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .button-group {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .back-btn, .start-btn {
-                min-width: auto;
-                width: 100%;
-            }
-        }
-
-        @media screen and (orientation: landscape) and (max-height: 600px) {
-            .menu-container {
-                max-height: 95vh;
-                padding: 20px;
-            }
-
-            .menu-header {
-                margin-bottom: 20px;
-            }
-
-            .menu-content {
-                gap: 20px;
-            }
-
-            .menu-card {
-                padding: 16px;
-            }
-
-            .button-group {
-                flex-direction: row;
-                gap: 15px;
-            }
-        }
-
-        /* 가로 모드 최적화 */
-        @media screen and (orientation: landscape) {
-            .menu-container {
-                display: flex;
-                flex-direction: column;
-                max-width: 1000px;
-                padding: 24px;
-            }
-
-            .menu-content {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 24px;
-                align-items: start;
-            }
-
-            /* 캐릭터 선택 화면 */
-            #characterSelectMenu .menu-card:first-child {
-                grid-column: 1 / -1;
-            }
-
-            #characterSelectMenu .start-btn {
-                grid-column: 1 / -1;
-                justify-self: center;
-            }
-
-            /* 수학 선택 화면 */
-            #mathSelectMenu .menu-card:first-child {
-                grid-column: 1 / -1;
-            }
-
-            #mathSelectMenu .selection-summary {
-                grid-column: 1 / -1;
-            }
-
-            #mathSelectMenu .button-group {
-                grid-column: 1 / -1;
-                justify-self: center;
-            }
-
-            .character-grid {
-                justify-content: center;
-            }
-
-            #danGrid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-
-            .operator-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media screen and (orientation: portrait) {
-            #gameContainer::before {
-                content: "🌸 화면을 가로로 돌려주세요! 🌸";
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: linear-gradient(135deg, #FF69B4, #FFB6C1);
-                color: white;
-                padding: 5vh 10vw;
-                border: 3px solid #FFF;
-                border-radius: 20px;
-                font-size: min(5vw, 20px);
-                z-index: 9999;
-                font-family: 'Jua', sans-serif;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-                box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-                text-align: center;
-                line-height: 1.5;
-            }
-            
-            #gameCanvas, #controls, #ui, #questionPanel {
-                display: none !important;
-            }
-        }
+        gameState.currentQuestion = questionText;
+        gameState.correctAnswer = answer;
+    } else {
+        // 구구단만 선택된 경우
+        const dan = gameState.selectedDans[Math.floor(Math.random() * gameState.selectedDans.length)];
+        const num2 = Math.floor(Math.random() * 9) + 1;
+        gameState.currentQuestion = `${dan} × ${num2}`;
+        gameState.correctAnswer = dan * num2;
+    }
+}
+
+// 답 제출 (개선된 버전)
+function submitAnswer() {
+    const answerInput = document.getElementById('answerInput');
+    const userAnswer = parseInt(answerInput.value);
+    
+    if (isNaN(userAnswer)) {
+        // 입력 오류시 힌트 표시
+        answerInput.style.borderColor = '#FF0000';
+        answerInput.placeholder = '숫자만 입력하세요!';
+        setTimeout(() => {
+            answerInput.style.borderColor = '#FF69B4';
+            answerInput.placeholder = '답은?';
+        }, 1000);
+        return;
+    }
+    
+    // 통계 업데이트
+    gameStats.totalQuestions++;
+    
+    if (userAnswer === gameState.correctAnswer) {
+        // 정답! 더 화려한 효과
+        gameState.score += 20;
+        answerInput.style.borderColor = '#00FF00';
+        gameStats.correctAnswers++;
         
-        /* 모바일 최적화 */
-        @media screen and (orientation: landscape) and (max-height: 500px) {
-            #controls {
-                height: 12vh;
-                min-height: 50px;
-            }
+        // 이스터에그 체크
+        checkEasterEgg();
+        
+        if (gameState.currentEnemy) {
+            gameState.currentEnemy.hp -= 1;
+            const enemyScreenX = gameState.currentEnemy.x - gameState.cameraX;
+            createParticles(enemyScreenX, gameState.currentEnemy.y, 'hit');
             
-            .control-btn {
-                font-size: min(3vh, 14px) !important;
-                padding: 1vh !important;
-            }
-            
-            #ui {
-                font-size: min(2.5vh, 12px) !important;
-                padding: 1vh 2vw !important;
-            }
-            
-            #questionPanel {
-                padding: 1.5vh 2vw !important;
-                width: 85vw;
-                max-height: 85vh;
-                border-width: 0.6vw;
-                border-radius: 3vw;
-            }
-            
-            #questionText {
-                font-size: 3.5vw !important;
-                margin-bottom: 1vh;
-            }
-
-            #customKeyboard .key-btn {
-                width: 45px;
-                height: 45px;
-                font-size: 20px;
-                border-radius: 10px;
-            }
-
-            .control-buttons .key-btn {
-                width: 50px;
-                height: 45px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div id="gameContainer">
-        <canvas id="gameCanvas"></canvas>
-
-        <button id="fullscreenBtn">FULL</button>
-
-        <!-- 1단계: 캐릭터 선택 화면 -->
-        <div id="characterSelectMenu">
-            <div class="menu-container">
-                <div class="menu-header">
-                    <h1 id="menuTitle">🌸 지율이의 픽셀 수학 게임 🌸</h1>
-                    <p id="menuSubtitle">공주님! 함께 모험할 캐릭터를 선택해주세요 💕</p>
-                </div>
-
-                <div class="menu-content">
-                    <!-- 캐릭터 선택 카드 -->
-                    <div class="menu-card">
-                        <h3 class="card-title">✨ 캐릭터 선택</h3>
-                        <div id="characterGrid" class="character-grid">
-                            <button class="character-btn selected" data-character="jiyul">
-                                <canvas class="character-pixel" width="48" height="48"></canvas>
-                                <span>지율이</span>
-                            </button>
-                            <button class="character-btn" data-character="kiwi">
-                                <canvas class="character-pixel" width="48" height="48"></canvas>
-                                <span>키위</span>
-                            </button>
-                            <button class="character-btn" data-character="whitehouse">
-                                <canvas class="character-pixel" width="48" height="48"></canvas>
-                                <span>화이트하우스</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 다음 버튼 -->
-                    <button id="nextToMathBtn" class="start-btn">🎯 다음: 학습 선택</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2단계: 구구단과 연산 선택 화면 -->
-        <div id="mathSelectMenu" style="display: none;">
-            <div class="menu-container">
-                <div class="menu-content">
-                    <!-- 선택된 캐릭터 표시 -->
-                    <div class="menu-card">
-						<h3 class="card-title">👑 선택된 캐릭터</h3>
-						<div id="selectedCharacterDisplay" class="character-display">
-							<canvas id="selectedCharacterPixel" width="64" height="64"></canvas>
-							<span id="selectedCharacterName">지율이</span>
-							<div id="characterGreeting" class="character-greeting">
-							</div>
-						</div>
-					</div>
-
-                    <!-- 구구단 선택 카드 -->
-                    <div class="menu-card">
-                        <h3 class="card-title">📚 구구단 선택</h3>
-                        <div id="danGrid" class="grid-container">
-                            <button class="option-btn dan-btn" data-dan="2">2단</button>
-                            <button class="option-btn dan-btn" data-dan="3">3단</button>
-                            <button class="option-btn dan-btn" data-dan="4">4단</button>
-                            <button class="option-btn dan-btn" data-dan="5">5단</button>
-                            <button class="option-btn dan-btn" data-dan="6">6단</button>
-                            <button class="option-btn dan-btn" data-dan="7">7단</button>
-                            <button class="option-btn dan-btn" data-dan="8">8단</button>
-                            <button class="option-btn dan-btn" data-dan="9">9단</button>
-                        </div>
-                    </div>
-
-                    <!-- 연산 선택 카드 -->
-                    <div class="menu-card">
-                        <h3 class="card-title">🔢 연산 선택</h3>
-                        <div id="operatorGrid" class="grid-container operator-grid">
-                            <button class="option-btn operator-btn" data-op="add">➕ 더하기</button>
-                            <button class="option-btn operator-btn" data-op="sub">➖ 빼기</button>
-                            <button class="option-btn operator-btn" data-op="mul">✖️ 곱하기</button>
-                            <button class="option-btn operator-btn" data-op="div">➗ 나누기</button>
-                        </div>
-                    </div>
-
-                    <!-- 선택된 내용 표시 -->
-                    <div class="selection-summary">
-                        <div id="selectedDans" class="selection-item">💕 선택한 구구단: 없음</div>
-                        <div id="selectedOps" class="selection-item">💕 선택한 연산: 없음</div>
-                    </div>
-
-                    <!-- 버튼들 -->
-                    <div class="button-group">
-                        <button id="backToCharacterBtn" class="back-btn">⬅️ 이전: 캐릭터 선택</button>
-                        <button id="startGameBtn" class="start-btn" disabled>🎮 게임 시작!</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="ui">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>📚 <span id="danText">-</span></div>
-                <div>🏰 스테이지 <span id="stageText">1</span></div>
-                <div>⭐ <span id="score">0</span>점</div>
-                <div>💖 체력: <span id="hp">100</span></div>
-            </div>
-        </div>
-
-        <div id="questionPanel">
-          <div id="questionText">✨ 2 × 3 = ?</div>
-          <div id="enemyInfo">보스 체력: 3/3</div>
-          <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
-            <input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
-            <button id="submitBtn">⚡ 공격!</button>
-          </div>
-          
-          <!-- 수정된 키패드 레이아웃 -->
-          <div id="customKeyboard">
-            <!-- 숫자 영역 -->
-            <div class="numpad-container">
-              <button class="key-btn" data-key="1">1</button>
-              <button class="key-btn" data-key="2">2</button>
-              <button class="key-btn" data-key="3">3</button>
-              <button class="key-btn" data-key="4">4</button>
-              <button class="key-btn" data-key="5">5</button>
-              <button class="key-btn" data-key="6">6</button>
-              <button class="key-btn" data-key="7">7</button>
-              <button class="key-btn" data-key="8">8</button>
-              <button class="key-btn" data-key="9">9</button>
-              <button class="key-btn" data-key="0">0</button>
-            </div>
-            
-            <!-- 지우기 버튼 영역 -->
-            <div class="control-buttons">
-              <button class="key-btn key-back" data-key="back">⬅️</button>
-              <button class="key-btn key-clear" data-key="clear">💖</button>
-            </div>
-          </div>
-        </div>
-
-        <div id="controls">
-            <button class="control-btn" id="jumpBtn">🦄 점프!</button>
-            <button class="control-btn" id="menuBtn">🏠 메뉴</button>
-            <button class="control-btn" id="helpBtn">💡 도움</button>
-        </div>
-    </div>
-
-    <script>
-        // 캐릭터 픽셀 데이터
-        const characterPixelData = {
-            jiyul: {
-                idle: [
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
-                    [0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],
-                    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
-                    [0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0],
-                    [0,1,2,5,4,2,2,2,2,5,4,2,2,1,0,0],
-                    [0,1,2,5,5,2,2,2,2,5,5,2,2,1,0,0],
-                    [0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0],
-                    [0,0,2,2,2,6,6,6,6,2,2,2,2,0,0,0],
-                    [0,0,0,3,3,3,3,3,3,3,3,0,0,0,0,0],
-                    [0,0,3,3,3,3,3,3,3,3,3,3,0,0,0,0],
-                    [0,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0],
-                    [0,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0],
-                    [0,0,3,3,3,0,0,0,0,3,3,3,0,0,0,0],
-                    [0,0,2,2,2,0,0,0,0,2,2,2,0,0,0,0],
-                    [0,0,7,7,7,0,0,0,0,7,7,7,0,0,0,0]
-                ],
-                colorMap: {
-                    0: null,
-                    1: "#2C1810",
-                    2: "#FFE0BD",
-                    3: "#FF69B4",
-                    4: "#FFFFFF",
-                    5: "#4169E1",
-                    6: "#FF1493",
-                    7: "#8B4513"
-                }
-            },
-            kiwi: {
-                idle: [
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0],
-                    [0,0,0,0,0,0,1,2,2,2,2,1,0,0,0,0],
-                    [0,1,1,1,1,1,2,2,2,4,2,2,1,0,0,0],
-                    [1,2,2,2,2,2,2,2,2,4,2,2,2,1,1,0],
-                    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1],
-                    [0,1,2,2,2,2,2,2,2,2,1,1,1,1,1,1],
-                    [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
-                    [0,0,8,8,0,0,0,0,8,8,0,0,0,0,0,0],
-                    [0,0,8,8,0,0,0,0,8,8,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-                ],
-                colorMap: {
-                    0: null,
-                    1: "#CC5500",
-                    2: "#FF8C00",
-                    4: "#000000",
-                    8: "#8B4513"
-                }
-            },
-            whitehouse: {
-                idle: [
-                    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
-                    [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
-                    [0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],
-                    [0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],
-                    [0,0,1,2,2,2,2,2,2,2,2,2,2,1,0,0],
-                    [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
-                    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-                    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1],
-                    [1,3,4,4,3,3,5,5,5,3,3,4,4,3,3,1],
-                    [1,3,4,6,3,3,5,7,5,3,3,4,6,3,3,1],
-                    [1,3,4,4,3,3,5,5,5,3,3,4,4,3,3,1],
-                    [1,3,3,3,3,3,3,5,3,3,3,3,3,3,3,1],
-                    [1,3,3,3,3,3,3,5,3,3,3,3,3,3,3,1],
-                    [1,3,3,3,3,3,3,5,3,3,3,3,3,3,3,1],
-                    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1],
-                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-                ],
-                colorMap: {
-                    0: null,
-                    1: "#808080",
-                    2: "#F5F5F5",
-                    3: "#FFFFFF",
-                    4: "#87CEEB",
-                    5: "#8B4513",
-                    6: "#4169E1",
-                    7: "#FFD700"
-                }
-            }
-        };
-
-        // 픽셀 스프라이트 그리기 함수
-        function drawCharacterPixelSprite(ctx, sprite, colorMap, scale = 3) {
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.imageSmoothingEnabled = false;
-            
-            for (let row = 0; row < sprite.length; row++) {
-                for (let col = 0; col < sprite[row].length; col++) {
-                    const pixel = sprite[row][col];
-                    if (pixel !== 0 && colorMap[pixel]) {
-                        ctx.fillStyle = colorMap[pixel];
-                        ctx.fillRect(col * scale, row * scale, scale, scale);
-                    }
-                }
-            }
-        }
-
-        // 캐릭터 픽셀 아트 그리기
-        function drawCharacterPixels() {
-            const characterButtons = document.querySelectorAll('.character-btn');
-            characterButtons.forEach(button => {
-                const canvas = button.querySelector('.character-pixel');
-                const character = button.getAttribute('data-character');
+            if (gameState.currentEnemy.hp <= 0) {
+                gameState.currentEnemy.alive = false;
+                gameState.score += gameState.currentEnemy.type === 'boss' ? 100 : 50;
+                createParticles(enemyScreenX, gameState.currentEnemy.y, 'defeat');
                 
-                if (canvas && characterPixelData[character]) {
-                    const ctx = canvas.getContext('2d');
-                    drawCharacterPixelSprite(ctx, characterPixelData[character].idle, characterPixelData[character].colorMap, 3);
+                // 몬스터 처치 시 화면 이동 재개
+                gameState.isMoving = true;
+                
+                // 전투 종료
+                document.getElementById('questionPanel').style.display = 'none';
+                gameState.questionActive = false;
+                gameState.currentEnemy = null;
+                
+                // 성공 메시지
+                showFloatingText(player.x, player.y - 50, '완료!', '#00FF00');
+            } else {
+                // 몬스터가 아직 살아있으면 다음 문제
+                generateQuestion();
+                updateQuestionPanel();
+                showFloatingText(player.x, player.y - 30, '맞았어요!', '#FFD700');
+            }
+        }
+    } else {
+        // 오답 - 더 명확한 피드백
+        answerInput.style.borderColor = '#FF0000';
+        player.hp -= 15;
+        createParticles(player.x, player.y, 'hurt');
+        showFloatingText(player.x, player.y - 30, `틀렸어요! 정답: ${gameState.correctAnswer}`, '#FF0000');
+        
+        if (player.hp <= 0) {
+            gameOver();
+            return;
+        }
+        
+        // 틀렸을 때 힌트 제공
+        setTimeout(() => {
+            answerInput.style.borderColor = '#FF69B4';
+            generateQuestion(); // 새 문제 생성
+            updateQuestionPanel();
+        }, 1500);
+    }
+    
+    answerInput.value = '';
+    // 모바일 키보드 방지를 위해 focus 제거
+    answerInput.blur();
+    updateUI();
+}
+
+// 이스터에그 체크 함수
+function checkEasterEgg() {
+    // 2~9단이 모두 선택되었는지 확인
+    const allDansSelected = [2, 3, 4, 5, 6, 7, 8, 9].every(dan => gameState.selectedDans.includes(dan));
+    
+    if (!allDansSelected) return;
+    
+    // 20분(1200초) 이내인지 확인
+    const currentTime = Date.now();
+    const elapsedTime = (currentTime - gameStats.startTime) / 1000;
+    
+    if (elapsedTime > 1200) return; // 20분 초과
+    
+    // 100% 정답률인지 확인 (최소 50문제 이상)
+    if (gameStats.totalQuestions >= 50 && gameStats.correctAnswers === gameStats.totalQuestions) {
+        showEasterEggMessage();
+    }
+}
+
+// 이스터에그 메시지 표시
+function showEasterEggMessage() {
+    // 게임 일시정지
+    gameState.running = false;
+    gameState.isMoving = false;
+    
+    // 축하 카드 생성
+    const easterEggCard = document.createElement('div');
+    easterEggCard.id = 'easterEggCard';
+    easterEggCard.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #FFD700, #FFA500, #FF69B4);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Jua', sans-serif;
+        text-align: center;
+        padding: 20px;
+        animation: sparkle 2s infinite;
+    `;
+    
+    easterEggCard.innerHTML = `
+        <div style="background: rgba(255,255,255,0.95); padding: 40px; border-radius: 30px; border: 5px solid #FF1493; box-shadow: 0 0 50px rgba(255,215,0,0.8); max-width: 90vw; max-height: 90vh; overflow-y: auto;">
+            <h1 style="font-size: min(8vw, 48px); color: #FF1493; margin-bottom: 30px; text-shadow: 3px 3px 0 #FFD700;">🎉 축하해요! 🎉</h1>
+            <h2 style="font-size: min(6vw, 32px); color: #8B008B; margin-bottom: 30px;">미션을 통과했어요!</h2>
+            <div style="font-size: min(4vw, 24px); color: #FF69B4; margin-bottom: 30px; line-height: 1.5;">
+                🌟 2~9단 모든 문제를 20분 안에 100% 정답! 🌟<br>
+                정말 대단해요! 💕
+            </div>
+            <div style="background: linear-gradient(135deg, #E6E6FA, #FFE4E1); padding: 30px; border-radius: 20px; margin: 20px 0; border: 3px solid #FF69B4;">
+                <div style="font-size: min(4vw, 20px); color: #4B0082; font-weight: bold; margin-bottom: 15px;">💌 특별한 메시지 💌</div>
+                <div style="font-size: min(3.5vw, 18px); color: #8B008B; line-height: 1.6;">
+                    "July 18th, 2017 was the most blessed day<br>
+                    from Mom and Dad for you!" ✨<br><br>
+                    <span style="color: #FF1493;">2017년 07월 18일은 엄마와 아빠한테<br>
+                    가장 축복받은 날이야! 💖</span>
+                </div>
+            </div>
+            <button onclick="closeEasterEgg()" style="
+                background: linear-gradient(135deg, #32CD32, #90EE90);
+                border: 3px solid #FFF;
+                color: white;
+                padding: 15px 30px;
+                font-size: min(4vw, 20px);
+                font-weight: bold;
+                cursor: pointer;
+                font-family: 'Jua', sans-serif;
+                border-radius: 25px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                margin-top: 20px;
+            ">🎮 게임 계속하기</button>
+        </div>
+    `;
+    
+    // CSS 애니메이션 추가
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes sparkle {
+            0%, 100% { filter: brightness(1) saturate(1); }
+            50% { filter: brightness(1.2) saturate(1.3); }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(easterEggCard);
+    
+    // 축하 파티클 효과
+    createCelebrationParticles();
+}
+
+// 이스터에그 닫기
+function closeEasterEgg() {
+    const easterEggCard = document.getElementById('easterEggCard');
+    if (easterEggCard) {
+        easterEggCard.remove();
+    }
+    
+    // 게임 재개
+    gameState.running = true;
+    gameState.isMoving = true;
+    gameLoop();
+}
+
+// 축하 파티클 효과
+function createCelebrationParticles() {
+    for (let i = 0; i < 100; i++) {
+        setTimeout(() => {
+            const colors = ['#FFD700', '#FF69B4', '#00FF00', '#FF6347', '#9370DB', '#FF1493'];
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight;
+            
+            const particle = document.createElement('div');
+            particle.style.cssText = `
+                position: fixed;
+                left: ${x}px;
+                top: ${y}px;
+                width: 10px;
+                height: 10px;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 10000;
+                animation: celebrate 3s ease-out forwards;
+            `;
+            
+            document.body.appendChild(particle);
+            
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
                 }
-            });
+            }, 3000);
+        }, i * 50);
+    }
+    
+    // 축하 애니메이션 CSS
+    const celebrateStyle = document.createElement('style');
+    celebrateStyle.textContent = `
+        @keyframes celebrate {
+            0% {
+                transform: scale(0) translateY(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1) translateY(-100px);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0) translateY(-200px);
+                opacity: 0;
+            }
         }
+    `;
+    document.head.appendChild(celebrateStyle);
+}
 
-        // 캐릭터별 인사말 데이터
-        const characterGreetings = {
-			jiyul: "안녕! 나는 지율이야! 🌸 오늘도 구구단 연습하러 왔어! 키위랑 화이트하우스도 함께할까? 💖",
-			kiwi: "키위키위~! 🥝 나는 지율이가 키우는 크레스티드게코 키위야! 구구단 외우면서 같이 신나게 놀자! 깜깜한 곳에서도 구구단 척척! ✨",
-			whitehouse: "안녕! 나는 화이트하우스 텐트야! 🏕️ 지율이만의 비밀 아지트! 내 안에서 구구단 공부하고 재밌는 놀이도 해보자! 우리만의 특별한 공간이야! 🎪"
-		};
+// 떠다니는 텍스트 효과 (새 기능)
+function showFloatingText(x, y, text, color) {
+    const textParticle = {
+        x: x,
+        y: y,
+        text: text,
+        color: color,
+        life: 60,
+        vy: -2,
+        alpha: 1.0
+    };
+    
+    // 텍스트 파티클을 별도로 관리
+    if (!window.textParticles) {
+        window.textParticles = [];
+    }
+    window.textParticles.push(textParticle);
+}
 
-        // selectCharacter 함수
-		function selectCharacter(characterName) {
-			console.log('selectCharacter 호출됨:', characterName);
-			
-			// gameState에 선택된 캐릭터 저장 (게임 로직에서 사용)
-			if (typeof gameState !== 'undefined') {
-				gameState.selectedCharacter = characterName;
-			}
-			
-			// 캐릭터 이름 업데이트
-			const nameElement = document.getElementById('selectedCharacterName');
-			if (nameElement) {
-				nameElement.textContent = characterName === 'jiyul' ? '지율이' : 
-										characterName === 'kiwi' ? '키위' : '화이트하우스';
-				console.log('캐릭터 이름 업데이트됨:', nameElement.textContent);
-			}
-			
-			// 인사말 업데이트
-			const greetingElement = document.getElementById('characterGreeting');
-			console.log('인사말 요소:', greetingElement);
-			console.log('캐릭터 인사말 데이터:', characterGreetings[characterName]);
-			
-			if (greetingElement) {
-				if (characterGreetings[characterName]) {
-					greetingElement.textContent = characterGreetings[characterName];
-					console.log('인사말 업데이트됨:', greetingElement.textContent);
-				} else {
-					greetingElement.textContent = '안녕하세요! 함께 모험을 떠나볼까요? 💕';
-					console.log('기본 인사말 설정됨');
-				}
-			}
-			
-			// 캐릭터 픽셀 업데이트
-			const pixelCanvas = document.getElementById('selectedCharacterPixel');
-			if (pixelCanvas && characterPixelData[characterName]) {
-				const ctx = pixelCanvas.getContext('2d');
-				drawCharacterPixelSprite(ctx, characterPixelData[characterName].idle, characterPixelData[characterName].colorMap, 4);
-				console.log('캐릭터 픽셀 업데이트됨');
-			}
-		}
-
-        // 🔥 이 부분을 추가하세요 🔥
-        function setupCharacterSelection() {
-            const characterButtons = document.querySelectorAll('.character-btn');
-            characterButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // 기존 선택 해제
-                    characterButtons.forEach(btn => btn.classList.remove('selected'));
-                    // 새로운 선택
-                    this.classList.add('selected');
-                    
-                    // 캐릭터 선택 함수 호출
-                    const characterName = this.getAttribute('data-character');
-                    selectCharacter(characterName);
-                });
-            });
+// 텍스트 파티클 업데이트 (render 함수에서 호출해야 함)
+function updateTextParticles(ctx) {
+    if (!window.textParticles) return;
+    
+    window.textParticles = window.textParticles.filter(particle => {
+        particle.y += particle.vy;
+        particle.life--;
+        particle.alpha = particle.life / 60;
+        
+        if (particle.life > 0) {
+            ctx.save();
+            ctx.globalAlpha = particle.alpha;
+            ctx.fillStyle = particle.color;
+            ctx.font = 'bold 16px Jua';
+            ctx.textAlign = 'center';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeText(particle.text, particle.x, particle.y);
+            ctx.fillText(particle.text, particle.x, particle.y);
+            ctx.restore();
         }
+        
+        return particle.life > 0;
+    });
+}
 
-        // DOM 로드 후 캐릭터 그리기
-		document.addEventListener('DOMContentLoaded', function() {
-			drawCharacterPixels();
-			setupCharacterSelection();
-			
-			// 다음 버튼 이벤트 추가
-			document.getElementById('nextToMathBtn').addEventListener('click', function() {
-				const selectedCharacterBtn = document.querySelector('.character-btn.selected');
-				const selectedCharacter = selectedCharacterBtn.getAttribute('data-character');
-				
-				document.getElementById('characterSelectMenu').style.display = 'none';
-				document.getElementById('mathSelectMenu').style.display = 'flex';
-				
-				// 화면이 바뀐 후에 약간의 지연을 두고 캐릭터 정보 업데이트
-				setTimeout(() => {
-					selectCharacter(selectedCharacter);
-				}, 100);
-			});
-		});
-    </script>
 
-    <!-- 기존 게임 스크립트 파일들 로드 -->
-    <script src="characters.js"></script>
-    <script src="math.js"></script>
-    <script src="game.js"></script>
-</body>
-</html>
+function updateQuestionPanel() {
+    // 추가: 질문이 활성화된 상태일 때만 계속 진행
+    if (!gameState.questionActive) return;
+    
+    document.getElementById('questionText').textContent = `✨ ${gameState.currentQuestion} = ?`;
+    if (gameState.currentEnemy) {
+        const enemyName = gameState.currentEnemy.type === 'boss' ? '👑 보스' : 
+                         gameState.currentEnemy.type === 'slime' ? '💧 슬라임' : '👹 고블린';
+        document.getElementById('enemyInfo').textContent = 
+            `${enemyName} 체력: ${gameState.currentEnemy.hp}/${gameState.currentEnemy.maxHp}`;
+    }
+    
+    // 입력창 스타일 초기화
+    const answerInput = document.getElementById('answerInput');
+    answerInput.style.borderColor = '#FF69B4';
+    answerInput.placeholder = '답은?';
+    answerInput.value = '';
+    
+    // 모바일 키보드 완전 차단
+    answerInput.setAttribute('readonly', 'readonly');
+    answerInput.setAttribute('inputmode', 'none');
+    answerInput.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.blur();
+        document.activeElement.blur();
+    });
+    answerInput.addEventListener('focus', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.blur();
+        document.activeElement.blur();
+    });
+    answerInput.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.blur();
+        document.activeElement.blur();
+    });
+}
+// 구구단 선택 함수
+function toggleDan(dan) {
+    console.log('toggleDan 호출됨, dan:', dan);
+    
+    const index = gameState.selectedDans.indexOf(dan);
+    const button = document.querySelector(`[data-dan="${dan}"]`);
+    
+    if (!button) {
+        console.error('버튼을 찾을 수 없음, dan:', dan);
+        return;
+    }
+    
+    if (index === -1) {
+        gameState.selectedDans.push(dan);
+        button.classList.add('selected');
+        console.log('구구단 추가됨:', dan);
+    } else {
+        gameState.selectedDans.splice(index, 1);
+        button.classList.remove('selected');
+        console.log('구구단 제거됨:', dan);
+    }
+    
+    console.log('현재 선택된 구구단:', gameState.selectedDans);
+    updateSelectedDisplay();
+}
+
+// 연산 선택 함수
+function toggleOperator(op) {
+    console.log('toggleOperator 호출됨, op:', op);
+    
+    const index = gameState.selectedOps.indexOf(op);
+    const button = document.querySelector(`[data-op="${op}"]`);
+    
+    if (!button) {
+        console.error('버튼을 찾을 수 없음, op:', op);
+        return;
+    }
+    
+    if (index === -1) {
+        gameState.selectedOps.push(op);
+        button.classList.add('selected');
+        console.log('연산 추가됨:', op);
+    } else {
+        gameState.selectedOps.splice(index, 1);
+        button.classList.remove('selected');
+        console.log('연산 제거됨:', op);
+    }
+    
+    console.log('현재 선택된 연산:', gameState.selectedOps);
+    updateSelectedDisplay();
+}
+
+// 선택한 내용 표시 업데이트
+function updateSelectedDisplay() {
+    const selectedDansElement = document.getElementById('selectedDans');
+    const selectedOpsElement = document.getElementById('selectedOps');
+    const startButton = document.getElementById('startGameBtn');
+    
+    // 구구단 표시
+    if (gameState.selectedDans.length > 0) {
+        const sortedDans = gameState.selectedDans.sort((a, b) => a - b);
+        selectedDansElement.textContent = `선택한 구구단: ${sortedDans.join(', ')}단`;
+    } else {
+        selectedDansElement.textContent = '선택한 구구단: 없음';
+    }
+    
+    // 연산 표시
+    if (gameState.selectedOps.length > 0) {
+        const opNames = {
+            'add': '더하기',
+            'sub': '빼기',
+            'mul': '곱하기',
+            'div': '나누기'
+        };
+        const selectedOpNames = gameState.selectedOps.map(op => opNames[op]);
+        selectedOpsElement.textContent = `선택한 연산: ${selectedOpNames.join(', ')}`;
+    } else {
+        selectedOpsElement.textContent = '선택한 연산: 없음';
+    }
+    
+    // 시작 버튼 활성화 조건
+    startButton.disabled = gameState.selectedDans.length === 0 && gameState.selectedOps.length === 0;
+    
+    console.log('선택 표시 업데이트 완료');
+    console.log('구구단:', gameState.selectedDans);
+    console.log('연산:', gameState.selectedOps);
+    console.log('시작 버튼 비활성화:', startButton.disabled);
+}
+
+// 게임 시작
+function startSelectedGame() {
+    if (gameState.selectedDans.length === 0 && gameState.selectedOps.length === 0) {
+        alert('구구단이나 연산을 하나 이상 선택해주세요!');
+        return;
+    }
+    
+    // 게임 통계 초기화
+    gameStats.startTime = Date.now();
+    gameStats.correctAnswers = 0;
+    gameStats.totalQuestions = 0;
+    
+    document.getElementById('characterSelectMenu').style.display = 'none';
+    document.getElementById('mathSelectMenu').style.display = 'none';
+    document.getElementById('ui').style.display = 'block';
+    
+    // UI 텍스트 업데이트
+    let displayText = '';
+    if (gameState.selectedDans.length > 0) {
+        const sortedDans = gameState.selectedDans.sort((a, b) => a - b);
+        displayText = sortedDans.join(',') + '단';
+    }
+    if (gameState.selectedOps.length > 0) {
+        const opSymbols = {
+            'add': '+',
+            'sub': '-',
+            'mul': '×',
+            'div': '÷'
+        };
+        const symbols = gameState.selectedOps.map(op => opSymbols[op]).join(',');
+        displayText += (displayText ? ' ' : '') + symbols;
+    }
+    document.getElementById('danText').textContent = displayText;
+    
+    initGame();
+}
