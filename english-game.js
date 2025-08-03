@@ -673,7 +673,7 @@ function render() {
 				
 				// 지율이를 키위 위에 그리기
 				const jiyulData = pixelData.jiyul;
-				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height - 20);
+				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height - 7);
 				
 			} else if (gameState.selectedVehicle === 'whitehouse' && pixelData.whitehouse) {
 				const whData = pixelData.whitehouse;
