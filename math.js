@@ -38,18 +38,37 @@ function generateQuestion() {
                 answer = num1 - num2;
                 break;
             case 'mul':
-                if (gameState.selectedDans.length > 0) {
-                    // 구구단도 선택된 경우: 2~9단 사용
-                    num1 = gameState.selectedDans[Math.floor(Math.random() * gameState.selectedDans.length)];
-                } else {
-                    // 구구단 선택 안된 경우: 2~9단 중 랜덤
-                    num1 = Math.floor(Math.random() * 8) + 2; // 2~9
-                }
-                num2 = Math.floor(Math.random() * 9) + 1; // 1~9
-                const result = num1 * num2;
-                questionText = `${num1} × ㅁ = ${result}`;
-                answer = num2; // 빈 칸에 들어갈 수가 정답
-                break;
+				// 곱하기 연산에서는 빈칸 형태로 생성
+				if (gameState.selectedDans.length > 0) {
+					// 구구단도 선택된 경우
+					const dan = gameState.selectedDans[Math.floor(Math.random() * gameState.selectedDans.length)];
+					const num2 = Math.floor(Math.random() * 9) + 1;
+					const result = dan * num2;
+					
+					// 50% 확률로 첫 번째 또는 두 번째 숫자를 빈칸으로
+					if (Math.random() < 0.5) {
+						questionText = `<span class="blank-box">?</span> × ${num2} = ${result}`;
+						answer = dan;
+					} else {
+						questionText = `${dan} × <span class="blank-box">?</span> = ${result}`;
+						answer = num2;
+					}
+				} else {
+					// 일반 곱셈 (구구단 선택 안된 경우)
+					num1 = Math.floor(Math.random() * 9) + 1;
+					num2 = Math.floor(Math.random() * 9) + 1;
+					const result = num1 * num2;
+					
+					// 50% 확률로 첫 번째 또는 두 번째 숫자를 빈칸으로
+					if (Math.random() < 0.5) {
+						questionText = `<span class="blank-box">?</span> × ${num2} = ${result}`;
+						answer = num1;
+					} else {
+						questionText = `${num1} × <span class="blank-box">?</span> = ${result}`;
+						answer = num2;
+					}
+				}
+				break;
             case 'div':
                 num2 = Math.floor(Math.random() * 9) + 1;
                 answer = Math.floor(Math.random() * 9) + 1;
@@ -361,7 +380,7 @@ function updateQuestionPanel() {
     // 추가: 질문이 활성화된 상태일 때만 계속 진행
     if (!gameState.questionActive) return;
     
-    document.getElementById('questionText').textContent = `✨ ${gameState.currentQuestion} = ?`;
+    document.getElementById('questionText').innerHTML = `✨ ${gameState.currentQuestion}`;
     if (gameState.currentEnemy) {
         const enemyName = gameState.currentEnemy.type === 'boss' ? '👑 보스' : 
                          gameState.currentEnemy.type === 'slime' ? '💧 슬라임' : '👹 고블린';
