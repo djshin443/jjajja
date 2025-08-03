@@ -39,15 +39,16 @@ function generateQuestion() {
                 break;
             case 'mul':
                 if (gameState.selectedDans.length > 0) {
-                    // 구구단도 선택된 경우
+                    // 구구단도 선택된 경우: 2~9단 사용
                     num1 = gameState.selectedDans[Math.floor(Math.random() * gameState.selectedDans.length)];
-                    num2 = Math.floor(Math.random() * 9) + 1;
                 } else {
-                    num1 = Math.floor(Math.random() * 9) + 1;
-                    num2 = Math.floor(Math.random() * 9) + 1;
+                    // 구구단 선택 안된 경우: 2~9단 중 랜덤
+                    num1 = Math.floor(Math.random() * 8) + 2; // 2~9
                 }
-                questionText = `${num1} × ${num2}`;
-                answer = num1 * num2;
+                num2 = Math.floor(Math.random() * 9) + 1; // 1~9
+                const result = num1 * num2;
+                questionText = `${num1} × ㅁ = ${result}`;
+                answer = num2; // 빈 칸에 들어갈 수가 정답
                 break;
             case 'div':
                 num2 = Math.floor(Math.random() * 9) + 1;
