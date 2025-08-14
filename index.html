@@ -732,30 +732,35 @@
         }
 
         @media screen and (orientation: portrait) {
-            #gameContainer::before {
-                content: "💜 화면을 가로로 돌려주세요! 💜";
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: linear-gradient(135deg, #9370DB, #DDA0DD);
-                color: white;
-                padding: 5vh 10vw;
-                border: 3px solid #FFF;
-                border-radius: 20px;
-                font-size: min(5vw, 20px);
-                z-index: 9999;
-                font-family: 'Jua', sans-serif;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-                box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-                text-align: center;
-                line-height: 1.5;
-            }
-            
-            #gameCanvas, #controls, #ui, #questionPanel {
-                display: none !important;
-            }
-        }
+			/* 메뉴가 아닌 게임 중일 때만 세로 모드 경고 표시 */
+			#gameContainer:not(.menu-mode)::before {
+				content: "💜 화면을 가로로 돌려주세요! 💜";
+				position: fixed;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				background: linear-gradient(135deg, #9370DB, #DDA0DD);
+				color: white;
+				padding: 5vh 10vw;
+				border: 3px solid #FFF;
+				border-radius: 20px;
+				font-size: min(5vw, 20px);
+				z-index: 9999;
+				font-family: 'Jua', sans-serif;
+				text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+				box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+				text-align: center;
+				line-height: 1.5;
+			}
+			
+			/* 게임 중일 때만 UI 숨김 */
+			#gameContainer:not(.menu-mode) #gameCanvas,
+			#gameContainer:not(.menu-mode) #controls,
+			#gameContainer:not(.menu-mode) #ui,
+			#gameContainer:not(.menu-mode) #questionPanel {
+				display: none !important;
+			}
+		}
         
         /* 모바일 최적화 */
         @media screen and (orientation: landscape) and (max-height: 500px) {
@@ -860,11 +865,11 @@
                                 </button>
                                 <button class="vehicle-btn" data-vehicle="kiwi">
                                     <canvas class="vehicle-pixel" width="32" height="32"></canvas>
-                                    <span>With. 키위</span>
+                                    <span>키위 타고</span>
                                 </button>
                                 <button class="vehicle-btn" data-vehicle="whitehouse">
                                     <canvas class="vehicle-pixel" width="32" height="32"></canvas>
-                                    <span>With. 화이트 하우스</span>
+                                    <span>화이트하우스 타고</span>
                                 </button>
                             </div>
                         </div>
@@ -872,7 +877,7 @@
 
                     <!-- Unit 선택 카드 -->
                     <div class="menu-card">
-                        <h3 class="card-title">📚 Unit 선택</h3>
+                        <h3 class="card-title">📚 Unit 선택 (Lesson 1~5 모두 포함)</h3>
                         <div id="unitGrid" class="grid-container">
                             <button class="unit-btn" data-unit="Unit1">Unit 1</button>
                             <button class="unit-btn" data-unit="Unit2">Unit 2</button>
@@ -1163,9 +1168,13 @@
     </script>
 
     <!-- 게임 스크립트 파일들 로드 -->
-    <script src="characters.js"></script>
+	<script src="characters.js"></script>
     <script src="words.js"></script>
-    <script src="english-game.js"></script>
+	<script src="particles.js"></script>
+	<script src="background.js"></script>
+	<script src="ending.js"></script>
+	<script src="opening.js"></script>
+	<script src="main.js"></script>
 
     <!-- 이벤트 리스너 설정 스크립트 -->
     <script>
