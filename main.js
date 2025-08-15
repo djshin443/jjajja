@@ -102,23 +102,41 @@ function resizeCanvas() {
     canvas.width = screenWidth;
     canvas.height = screenHeight;
     
-    if (screenWidth > screenHeight) {
+    // 화면 비율에 따른 PIXEL_SCALE 조정
+    const aspectRatio = screenWidth / screenHeight;
+    
+    if (aspectRatio > 1.5) {
+        // 와이드 스크린 (가로모드)
+        PIXEL_SCALE = Math.floor(screenHeight / 150);
+    } else if (aspectRatio > 1) {
+        // 일반 가로모드
         PIXEL_SCALE = Math.floor(screenHeight / 120);
-        if (PIXEL_SCALE < 2) PIXEL_SCALE = 2;
-        if (PIXEL_SCALE > 4) PIXEL_SCALE = 4;
     } else {
-        PIXEL_SCALE = 3;
+        // 세로모드
+        PIXEL_SCALE = Math.floor(screenWidth / 150);
     }
     
+    // PIXEL_SCALE 범위 제한
+    PIXEL_SCALE = Math.max(2, Math.min(4, PIXEL_SCALE));
+    
+    // 플레이어 크기 업데이트
     if (player) {
         player.width = 16 * PIXEL_SCALE;
         player.height = 16 * PIXEL_SCALE;
     }
     
-    GROUND_Y = screenHeight - (screenHeight * 0.25);
+    // GROUND_Y 위치를 화면 비율에 맞게 조정
+    const groundRatio = aspectRatio > 1 ? 0.7 : 0.75;
+    GROUND_Y = screenHeight * groundRatio;
     
+    // 플레이어 위치 재조정 (공중에 떠있는 버그 방지)
     if (player && gameState && !gameState.questionActive) {
-        player.y = GROUND_Y;
+        if (player.onGround || player.y > GROUND_Y) {
+            player.y = GROUND_Y;
+            player.velocityY = 0;
+            player.onGround = true;
+            player.isJumping = false;
+        }
     }
 }
 
@@ -751,7 +769,7 @@ function render() {
 				let kiwiSprite;
 				
 				if (player.isJumping) {
-					kiwiSprite = kiwiData.jump;
+					kiwiSprite = kiwiData.jump || kiwiData.idle;
 				} else if (gameState.isMoving && !gameState.questionActive) {
 					if (kiwiData.walking1 && kiwiData.walking2) {
 						kiwiSprite = player.animFrame === 1 ? kiwiData.walking1 : 
@@ -763,19 +781,21 @@ function render() {
 					kiwiSprite = kiwiData.idle;
 				}
 				
-				// 키위를 약간 아래에 그리기
-				drawPixelSprite(kiwiSprite, kiwiData.colorMap, player.x, player.y - player.height + 20);
+				// 키위 위치 조정 (화면 중앙에 맞게)
+				const kiwiOffsetY = PIXEL_SCALE * 2; // 더 적절한 오프셋
+				drawPixelSprite(kiwiSprite, kiwiData.colorMap, player.x, player.y - player.height + kiwiOffsetY);
 				
 				// 지율이를 키위 위에 그리기
 				const jiyulData = pixelData.jiyul;
-				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height - 6);
+				const jiyulOffsetY = -PIXEL_SCALE * 4; // 키위 위 적절한 위치
+				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height + jiyulOffsetY);
 				
 			} else if (gameState.selectedVehicle === 'whitehouse' && pixelData.whitehouse) {
 				const whData = pixelData.whitehouse;
 				let whSprite;
 				
 				if (player.isJumping) {
-					whSprite = whData.jump;
+					whSprite = whData.jump || whData.idle;
 				} else if (gameState.isMoving && !gameState.questionActive) {
 					if (whData.walking1 && whData.walking2) {
 						whSprite = player.animFrame === 1 ? whData.walking1 : 
@@ -787,20 +807,21 @@ function render() {
 					whSprite = whData.idle;
 				}
 				
-				// 화이트하우스 그리기
+				// 화이트하우스 위치 조정
 				drawPixelSprite(whSprite, whData.colorMap, player.x, player.y - player.height);
 				
 				// 지율이를 화이트하우스 위에 그리기
 				const jiyulData = pixelData.jiyul;
-				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height - 30);
+				const jiyulOffsetY = -PIXEL_SCALE * 8; // 화이트하우스 위 적절한 위치
+				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height + jiyulOffsetY);
 			}
 		} else {
-			// 일반적인 캐릭터 그리기
+			// 일반적인 캐릭터 그리기 (기존 코드 유지)
 			const playerData = pixelData[player.sprite];
 			let sprite;
 			
 			if (player.isJumping) {
-				sprite = playerData.jump;
+				sprite = playerData.jump || playerData.idle;
 			} else if (gameState.isMoving && !gameState.questionActive) {
 				if (playerData.walking1 && playerData.walking2) {
 					if (player.animFrame === 1) {
