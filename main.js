@@ -1,4 +1,4 @@
-// 영어 게임 로직 - 메인 파일 (완전 수정된 버전)
+// 영어 게임 로직 - 메인 파일 (모바일 최적화 수정된 버전)
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -7,7 +7,7 @@ ctx.imageSmoothingEnabled = false;
 // 픽셀 스케일과 물리 상수
 let PIXEL_SCALE = 3;
 const GRAVITY = 0.8;
-const JUMP_POWER = -18;
+let JUMP_POWER = -18;
 const JUMP_FORWARD_SPEED = 6;
 let GROUND_Y = 240;
 
@@ -25,16 +25,16 @@ function isMobileDevice() {
 function getJumpPower() {
     let basePower;
     if (isMobileDevice()) {
-        basePower = -14;
+        basePower = -22; // 모바일에서 더 강한 점프력
     } else {
         basePower = -18;
     }
     
     // 탈것을 탄 경우 점프력 증가
     if (gameState.selectedVehicle === 'kiwi') {
-        basePower *= 1.2;
+        basePower *= 1.3;
     } else if (gameState.selectedVehicle === 'whitehouse') {
-        basePower *= 1.1;
+        basePower *= 1.2;
     }
     
     return basePower;
@@ -98,39 +98,65 @@ let enemies = [];
 let isFullscreenDesired = false;
 let isUserExiting = false;
 
-// 캔버스 크기 조정
+// 캔버스 크기 조정 (모바일 최적화)
 function resizeCanvas() {
     const container = document.getElementById('gameContainer');
     const controls = document.getElementById('controls');
     const controlsHeight = controls ? controls.offsetHeight : 0;
     
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight - controlsHeight;
+    let screenWidth = window.innerWidth;
+    let screenHeight = window.innerHeight - controlsHeight;
+    
+    // 모바일에서 실제 화면 크기 사용
+    if (isMobileDevice()) {
+        screenWidth = Math.max(window.innerWidth, window.screen.width);
+        screenHeight = Math.max(window.innerHeight - controlsHeight, window.screen.height - controlsHeight);
+        
+        // 모바일에서 최소 크기 보장
+        if (screenWidth < 320) screenWidth = 320;
+        if (screenHeight < 240) screenHeight = 240;
+    }
     
     canvas.width = screenWidth;
     canvas.height = screenHeight;
     
-    // 화면 비율에 따른 PIXEL_SCALE 조정
+    // 화면 비율과 크기에 따른 PIXEL_SCALE 조정
     const aspectRatio = screenWidth / screenHeight;
     
-    if (aspectRatio > 1.5) {
-        PIXEL_SCALE = Math.floor(screenHeight / 150);
-    } else if (aspectRatio > 1) {
-        PIXEL_SCALE = Math.floor(screenHeight / 120);
+    if (isMobileDevice()) {
+        // 모바일에서는 더 큰 픽셀 스케일 사용
+        if (screenWidth < 480) {
+            PIXEL_SCALE = 2;
+        } else if (screenWidth < 768) {
+            PIXEL_SCALE = 3;
+        } else {
+            PIXEL_SCALE = 4;
+        }
     } else {
-        PIXEL_SCALE = Math.floor(screenWidth / 150);
+        // 데스크톱 로직
+        if (aspectRatio > 1.5) {
+            PIXEL_SCALE = Math.floor(screenHeight / 150);
+        } else if (aspectRatio > 1) {
+            PIXEL_SCALE = Math.floor(screenHeight / 120);
+        } else {
+            PIXEL_SCALE = Math.floor(screenWidth / 150);
+        }
     }
     
-    PIXEL_SCALE = Math.max(2, Math.min(4, PIXEL_SCALE));
+    // 픽셀 스케일 범위 제한
+    PIXEL_SCALE = Math.max(2, Math.min(6, PIXEL_SCALE));
     
+    // 플레이어 크기 업데이트
     if (player) {
         player.width = 16 * PIXEL_SCALE;
         player.height = 16 * PIXEL_SCALE;
     }
     
-    const groundRatio = aspectRatio > 1 ? 0.7 : 0.75;
+    // 지면 위치 조정
+    const groundRatio = isMobileDevice() ? 0.75 : (aspectRatio > 1 ? 0.7 : 0.75);
     GROUND_Y = screenHeight * groundRatio;
     
+    // 장애물 위치 업데이트
     if (obstacles && obstacles.length > 0) {
         obstacles.forEach(obstacle => {
             obstacle.y = GROUND_Y - (16 * PIXEL_SCALE);
@@ -139,6 +165,7 @@ function resizeCanvas() {
         });
     }
     
+    // 적 위치 업데이트
     if (enemies && enemies.length > 0) {
         enemies.forEach(enemy => {
             enemy.y = GROUND_Y;
@@ -147,12 +174,15 @@ function resizeCanvas() {
         });
     }
     
+    // 플레이어 위치 재설정
     if (player && gameState && !gameState.questionActive) {
         player.y = GROUND_Y;
         player.velocityY = 0;
         player.onGround = true;
         player.isJumping = false;
     }
+    
+    console.log(`화면 크기 조정: ${screenWidth}x${screenHeight}, PIXEL_SCALE: ${PIXEL_SCALE}, GROUND_Y: ${GROUND_Y}`);
 }
 
 // 전체화면 기능
@@ -383,9 +413,11 @@ function generateLevel() {
     generateMoreEnemies();
 }
 
-// 초기 장애물 생성
+// 초기 장애물 생성 (모바일 최적화)
 function generateInitialObstacles() {
-    const obstacleSpacing = 200 + Math.random() * 150;
+    const baseSpacing = isMobileDevice() ? 250 : 200; // 모바일에서 장애물 간격 증가
+    const obstacleSpacing = baseSpacing + Math.random() * 150;
+    
     for (let i = 0; i < 12; i++) {
         const types = ['rock', 'spike', 'pipe'];
         const type = types[Math.floor(Math.random() * types.length)];
@@ -566,7 +598,7 @@ function update() {
     }
 }
 
-// 동적 장애물 생성 함수
+// 동적 장애물 생성 함수 (모바일 최적화)
 function generateObstaclesIfNeeded() {
     const aheadObstacles = obstacles.filter(obstacle => 
         obstacle.x > player.worldX && obstacle.x < player.worldX + 1500
@@ -595,7 +627,9 @@ function generateObstaclesIfNeeded() {
                 type = weightedRandomChoice(easyTypes, weights);
             }
             
-            const spacing = 150 + Math.random() * 200 + (gameState.stage * 10);
+            // 모바일에서 장애물 간격 증가
+            const baseSpacing = isMobileDevice() ? 200 : 150;
+            const spacing = baseSpacing + Math.random() * 200 + (gameState.stage * 10);
             const obstacleX = startX + i * spacing;
             
             obstacles.push({
@@ -627,7 +661,7 @@ function weightedRandomChoice(choices, weights) {
     return choices[0];
 }
 
-// 플레이어 물리 업데이트
+// 플레이어 물리 업데이트 (모바일 최적화)
 function updatePlayerPhysics() {
     if (!player.onGround) {
         player.velocityY += GRAVITY;
@@ -699,7 +733,7 @@ function updateEnemyPhysics() {
                 }
                 
                 if (Math.random() < 0.005 && enemy.onGround && enemy.jumpCooldown <= 0) {
-                    enemy.velocityY = JUMP_POWER * 0.7;
+                    enemy.velocityY = getJumpPower() * 0.7;
                     enemy.isJumping = true;
                     enemy.onGround = false;
                     enemy.jumpCooldown = 90 + Math.random() * 60;
@@ -712,22 +746,22 @@ function updateEnemyPhysics() {
         }
         
         if (!enemy.onGround) {
-			enemy.velocityY += GRAVITY;
-			enemy.y += enemy.velocityY;
-			
-			if (enemy.y >= GROUND_Y) {
-				enemy.y = GROUND_Y;
-				enemy.velocityY = 0;
-				enemy.onGround = true;
-				enemy.isJumping = false;
-			}
-		} else {
-			enemy.y = GROUND_Y;
-		}
+            enemy.velocityY += GRAVITY;
+            enemy.y += enemy.velocityY;
+            
+            if (enemy.y >= GROUND_Y) {
+                enemy.y = GROUND_Y;
+                enemy.velocityY = 0;
+                enemy.onGround = true;
+                enemy.isJumping = false;
+            }
+        } else {
+            enemy.y = GROUND_Y;
+        }
     });
 }
 
-// 충돌 체크
+// 충돌 체크 (모바일 최적화)
 function checkCollisions() {
     // 장애물 충돌 검사
     obstacles.forEach(obstacle => {
@@ -926,132 +960,134 @@ function render() {
     
     // 장애물 렌더링
     obstacles.forEach(obstacle => {
-		const screenX = obstacle.x - gameState.cameraX;
-		if (screenX > -100 && screenX < canvas.width + 100) {
-			if (typeof pixelData !== 'undefined' && pixelData[obstacle.type]) {
-				const data = pixelData[obstacle.type];
-				drawPixelSprite(data.sprite, data.colorMap, screenX, obstacle.y);
-			}
-			
-			if (gameState.isBlocked && Math.abs(player.worldX - obstacle.x) < 100) {
-				ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
-				ctx.fillRect(screenX, obstacle.y - 10, obstacle.width, 5);
-			}
-		}
-	});
+        const screenX = obstacle.x - gameState.cameraX;
+        if (screenX > -100 && screenX < canvas.width + 100) {
+            if (typeof pixelData !== 'undefined' && pixelData[obstacle.type]) {
+                const data = pixelData[obstacle.type];
+                drawPixelSprite(data.sprite, data.colorMap, screenX, obstacle.y);
+            }
+            
+            if (gameState.isBlocked && Math.abs(player.worldX - obstacle.x) < 100) {
+                ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                ctx.fillRect(screenX, obstacle.y - 10, obstacle.width, 5);
+            }
+        }
+    });
     
     // 적 렌더링
     enemies.forEach(enemy => {
-		if (!enemy.alive) return;
-		const screenX = enemy.x - gameState.cameraX;
-		if (screenX > -100 && screenX < canvas.width + 100) {
-			if (enemy.type === 'boss') {
-				if (typeof pixelData !== 'undefined' && pixelData.boss) {
-					const data = pixelData.boss;
-					drawPixelSprite(data.idle, data.colorMap, screenX, enemy.y - 16 * PIXEL_SCALE);
-				}
-			} else {
-				if (typeof alphabetMonsters !== 'undefined' && alphabetMonsters[enemy.type]) {
-					const data = alphabetMonsters[enemy.type];
-					drawPixelSprite(data.idle, data.colorMap, screenX, enemy.y - 16 * PIXEL_SCALE);
-				}
-			}
-			
-			if (enemy.isBoss && enemy.isAggro) {
-				ctx.fillStyle = 'red';
-				ctx.fillRect(screenX, enemy.y - 16 * PIXEL_SCALE - 15, enemy.width, 3);
-				
-				ctx.fillStyle = 'rgba(0,0,0,0.5)';
-				ctx.fillRect(screenX - 10, enemy.y - 16 * PIXEL_SCALE - 25, enemy.width + 20, 8);
-				ctx.fillStyle = '#FF0000';
-				const healthPercent = enemy.hp / enemy.maxHp;
-				ctx.fillRect(screenX - 8, enemy.y - 16 * PIXEL_SCALE - 23, (enemy.width + 16) * healthPercent, 4);
-			}
-		}
-	});
+        if (!enemy.alive) return;
+        const screenX = enemy.x - gameState.cameraX;
+        if (screenX > -100 && screenX < canvas.width + 100) {
+            if (enemy.type === 'boss') {
+                if (typeof pixelData !== 'undefined' && pixelData.boss) {
+                    const data = pixelData.boss;
+                    drawPixelSprite(data.idle, data.colorMap, screenX, enemy.y - 16 * PIXEL_SCALE);
+                }
+            } else {
+                if (typeof alphabetMonsters !== 'undefined' && alphabetMonsters[enemy.type]) {
+                    const data = alphabetMonsters[enemy.type];
+                    drawPixelSprite(data.idle, data.colorMap, screenX, enemy.y - 16 * PIXEL_SCALE);
+                }
+            }
+            
+            if (enemy.isBoss && enemy.isAggro) {
+                ctx.fillStyle = 'red';
+                ctx.fillRect(screenX, enemy.y - 16 * PIXEL_SCALE - 15, enemy.width, 3);
+                
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.fillRect(screenX - 10, enemy.y - 16 * PIXEL_SCALE - 25, enemy.width + 20, 8);
+                ctx.fillStyle = '#FF0000';
+                const healthPercent = enemy.hp / enemy.maxHp;
+                ctx.fillRect(screenX - 8, enemy.y - 16 * PIXEL_SCALE - 23, (enemy.width + 16) * healthPercent, 4);
+            }
+        }
+    });
     
     // 플레이어 렌더링
     if (typeof characterPixelData !== 'undefined' && characterPixelData[player.sprite]) {
-		if (player.sprite === 'jiyul' && gameState.selectedVehicle !== 'none') {
-			if (gameState.selectedVehicle === 'kiwi' && characterPixelData.kiwi) {
-				const kiwiData = characterPixelData.kiwi;
-				let kiwiSprite;
-				
-				if (player.isJumping) {
-					kiwiSprite = kiwiData.jump || kiwiData.idle;
-				} else if (gameState.isMoving && !gameState.questionActive) {
-					if (kiwiData.walking1 && kiwiData.walking2) {
-						kiwiSprite = player.animFrame === 1 ? kiwiData.walking1 : 
-									player.animFrame === 2 ? kiwiData.walking2 : kiwiData.idle;
-					} else {
-						kiwiSprite = kiwiData.idle;
-					}
-				} else {
-					kiwiSprite = kiwiData.idle;
-				}
-				
-				drawPixelSprite(kiwiSprite, kiwiData.colorMap, player.x, player.y - 16 * PIXEL_SCALE);
-				
-				const jiyulData = characterPixelData.jiyul;
-				const jiyulOffsetY = -PIXEL_SCALE * 20;
-				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 16 * PIXEL_SCALE + jiyulOffsetY);
-				
-			} else if (gameState.selectedVehicle === 'whitehouse' && characterPixelData.whitehouse) {
-				const whData = characterPixelData.whitehouse;
-				let whSprite;
-				
-				if (player.isJumping) {
-					whSprite = whData.jump || whData.idle;
-				} else if (gameState.isMoving && !gameState.questionActive) {
-					if (whData.walking1 && whData.walking2) {
-						whSprite = player.animFrame === 1 ? whData.walking1 : 
-								   player.animFrame === 2 ? whData.walking2 : whData.idle;
-					} else {
-						whSprite = whData.idle;
-					}
-				} else {
-					whSprite = whData.idle;
-				}
-				
-				drawPixelSprite(whSprite, whData.colorMap, player.x, player.y - 16 * PIXEL_SCALE);
-				
-				const jiyulData = characterPixelData.jiyul;
-				const jiyulOffsetY = -PIXEL_SCALE * 24;
-				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 16 * PIXEL_SCALE + jiyulOffsetY);
-			}
-		} else {
-			const playerData = characterPixelData[player.sprite];
-			let sprite;
-			
-			if (player.isJumping) {
-				sprite = playerData.jump || playerData.idle;
-			} else if (gameState.isMoving && !gameState.questionActive) {
-				if (playerData.walking1 && playerData.walking2) {
-					if (player.animFrame === 1) {
-						sprite = playerData.walking1;
-					} else if (player.animFrame === 2) {
-						sprite = playerData.walking2;
-					} else {
-						sprite = playerData.idle;
-					}
-				} else {
-					sprite = playerData.idle;
-				}
-			} else {
-				sprite = playerData.idle;
-			}
-			
-			drawPixelSprite(sprite, playerData.colorMap, player.x, player.y - 16 * PIXEL_SCALE);
-		}
-	}
+        if (player.sprite === 'jiyul' && gameState.selectedVehicle !== 'none') {
+            if (gameState.selectedVehicle === 'kiwi' && characterPixelData.kiwi) {
+                const kiwiData = characterPixelData.kiwi;
+                let kiwiSprite;
+                
+                if (player.isJumping) {
+                    kiwiSprite = kiwiData.jump || kiwiData.idle;
+                } else if (gameState.isMoving && !gameState.questionActive) {
+                    if (kiwiData.walking1 && kiwiData.walking2) {
+                        kiwiSprite = player.animFrame === 1 ? kiwiData.walking1 : 
+                                    player.animFrame === 2 ? kiwiData.walking2 : kiwiData.idle;
+                    } else {
+                        kiwiSprite = kiwiData.idle;
+                    }
+                } else {
+                    kiwiSprite = kiwiData.idle;
+                }
+                
+                drawPixelSprite(kiwiSprite, kiwiData.colorMap, player.x, player.y - 16 * PIXEL_SCALE);
+                
+                const jiyulData = characterPixelData.jiyul;
+                const jiyulOffsetY = -PIXEL_SCALE * 20;
+                drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 16 * PIXEL_SCALE + jiyulOffsetY);
+                
+            } else if (gameState.selectedVehicle === 'whitehouse' && characterPixelData.whitehouse) {
+                const whData = characterPixelData.whitehouse;
+                let whSprite;
+                
+                if (player.isJumping) {
+                    whSprite = whData.jump || whData.idle;
+                } else if (gameState.isMoving && !gameState.questionActive) {
+                    if (whData.walking1 && whData.walking2) {
+                        whSprite = player.animFrame === 1 ? whData.walking1 : 
+                                   player.animFrame === 2 ? whData.walking2 : whData.idle;
+                    } else {
+                        whSprite = whData.idle;
+                    }
+                } else {
+                    whSprite = whData.idle;
+                }
+                
+                drawPixelSprite(whSprite, whData.colorMap, player.x, player.y - 16 * PIXEL_SCALE);
+                
+                const jiyulData = characterPixelData.jiyul;
+                const jiyulOffsetY = -PIXEL_SCALE * 24;
+                drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 16 * PIXEL_SCALE + jiyulOffsetY);
+            }
+        } else {
+            const playerData = characterPixelData[player.sprite];
+            let sprite;
+            
+            if (player.isJumping) {
+                sprite = playerData.jump || playerData.idle;
+            } else if (gameState.isMoving && !gameState.questionActive) {
+                if (playerData.walking1 && playerData.walking2) {
+                    if (player.animFrame === 1) {
+                        sprite = playerData.walking1;
+                    } else if (player.animFrame === 2) {
+                        sprite = playerData.walking2;
+                    } else {
+                        sprite = playerData.idle;
+                    }
+                } else {
+                    sprite = playerData.idle;
+                }
+            } else {
+                sprite = playerData.idle;
+            }
+            
+            drawPixelSprite(sprite, playerData.colorMap, player.x, player.y - 16 * PIXEL_SCALE);
+        }
+    }
     
     if (typeof renderAllParticles === 'function') {
         renderAllParticles(ctx);
     }
     
     if (gameState.isBlocked && !gameState.questionActive) {
+        // 모바일에서 더 큰 폰트 사용
+        const fontSize = isMobileDevice() ? '24px' : '18px';
         ctx.fillStyle = 'rgba(255, 255, 0, 0.8)';
-        ctx.font = 'bold 18px Jua';
+        ctx.font = `bold ${fontSize} Jua`;
         ctx.textAlign = 'center';
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;
@@ -1059,8 +1095,8 @@ function render() {
         ctx.fillText('점프로 장애물을 뛰어넘으세요!', canvas.width / 2, 50);
     }
     
-	renderFloatingTexts(ctx);
-	
+    renderFloatingTexts(ctx);
+    
     ctx.restore();
 }
 
@@ -1089,20 +1125,20 @@ function updateQuestionPanel() {
     
     document.getElementById('questionText').innerHTML = `✨ ${gameState.currentQuestion.question}`;
     
-	if (gameState.currentEnemy) {
-		let enemyName;
-		if (gameState.currentEnemy.type === 'boss') {
-			enemyName = '👑 보스';
-		} else if (gameState.currentEnemy.type.startsWith('alphabet')) {
-			const letter = gameState.currentEnemy.type.replace('alphabet', '');
-			enemyName = `🔤 ${letter} 몬스터`;
-		} else {
-			enemyName = '👹 몬스터';
-		}
-		
-		document.getElementById('enemyInfo').textContent = 
-			`${enemyName} 체력: ${gameState.currentEnemy.hp}/${gameState.currentEnemy.maxHp}`;
-	}
+    if (gameState.currentEnemy) {
+        let enemyName;
+        if (gameState.currentEnemy.type === 'boss') {
+            enemyName = '👑 보스';
+        } else if (gameState.currentEnemy.type.startsWith('alphabet')) {
+            const letter = gameState.currentEnemy.type.replace('alphabet', '');
+            enemyName = `🔤 ${letter} 몬스터`;
+        } else {
+            enemyName = '👹 몬스터';
+        }
+        
+        document.getElementById('enemyInfo').textContent = 
+            `${enemyName} 체력: ${gameState.currentEnemy.hp}/${gameState.currentEnemy.maxHp}`;
+    }
     
     updateChoiceButtons();
 }
@@ -1159,37 +1195,37 @@ function selectChoice(choiceIndex) {
                     showFloatingText(player.x, player.y - 50, '완료!', '#00FF00');
                 }
             } else {
-				if (gameState.currentEnemy.type === 'boss' && gameState.currentEnemy.hp === 2) {
-					document.getElementById('ui').style.display = 'none';
-					document.getElementById('controls').style.display = 'none';
-					document.getElementById('questionPanel').style.display = 'none';
-					gameState.isMoving = false;
-					
-					if (typeof startBossDialogue === 'function') {
-						startBossDialogue(canvas, ctx, gameState.selectedCharacter, gameState.currentEnemy.hp, gameState.currentEnemy.maxHp, function() {
-							gameState.questionActive = true;
-							
-							document.getElementById('ui').style.display = 'block';
-							document.getElementById('controls').style.display = 'flex';
-							
-							generateEnglishQuestion();
-							updateQuestionPanel();
-							document.getElementById('questionPanel').style.display = 'block';
-						}, true);
-					} else {
-						setTimeout(() => {
-							generateEnglishQuestion();
-							updateQuestionPanel();
-						}, 1000);
-					}
-				} else {
-					generateEnglishQuestion();
-					updateQuestionPanel();
-					if (typeof showFloatingText === 'function') {
-						showFloatingText(player.x, player.y - 30, '맞았어요!', '#FFD700');
-					}
-				}
-			}
+                if (gameState.currentEnemy.type === 'boss' && gameState.currentEnemy.hp === 2) {
+                    document.getElementById('ui').style.display = 'none';
+                    document.getElementById('controls').style.display = 'none';
+                    document.getElementById('questionPanel').style.display = 'none';
+                    gameState.isMoving = false;
+                    
+                    if (typeof startBossDialogue === 'function') {
+                        startBossDialogue(canvas, ctx, gameState.selectedCharacter, gameState.currentEnemy.hp, gameState.currentEnemy.maxHp, function() {
+                            gameState.questionActive = true;
+                            
+                            document.getElementById('ui').style.display = 'block';
+                            document.getElementById('controls').style.display = 'flex';
+                            
+                            generateEnglishQuestion();
+                            updateQuestionPanel();
+                            document.getElementById('questionPanel').style.display = 'block';
+                        }, true);
+                    } else {
+                        setTimeout(() => {
+                            generateEnglishQuestion();
+                            updateQuestionPanel();
+                        }, 1000);
+                    }
+                } else {
+                    generateEnglishQuestion();
+                    updateQuestionPanel();
+                    if (typeof showFloatingText === 'function') {
+                        showFloatingText(player.x, player.y - 30, '맞았어요!', '#FFD700');
+                    }
+                }
+            }
         }
     } else {
         player.hp -= 15;
@@ -1294,7 +1330,7 @@ function startSelectedGame() {
 // 메뉴 표시
 function showMenu() {
     gameState.running = false;
-	document.getElementById('gameContainer').classList.add('menu-mode');
+    document.getElementById('gameContainer').classList.add('menu-mode');
     document.getElementById('characterSelectMenu').style.display = 'flex';
     document.getElementById('unitSelectMenu').style.display = 'none';
     document.getElementById('ui').style.display = 'none';
@@ -1303,14 +1339,14 @@ function showMenu() {
 
 // 화면 전환 함수들
 function showUnitSelectMenu() {
-	document.getElementById('gameContainer').classList.add('menu-mode');
+    document.getElementById('gameContainer').classList.add('menu-mode');
     document.getElementById('characterSelectMenu').style.display = 'none';
     document.getElementById('unitSelectMenu').style.display = 'flex';
     updateSelectedCharacterDisplay();
 }
 
 function showCharacterSelectMenu() {
-	document.getElementById('gameContainer').classList.add('menu-mode');
+    document.getElementById('gameContainer').classList.add('menu-mode');
     document.getElementById('unitSelectMenu').style.display = 'none';
     document.getElementById('characterSelectMenu').style.display = 'flex';
 }
@@ -1389,7 +1425,8 @@ function nextStage() {
 // 새 스테이지용 장애물 생성 함수
 function generateNewStageObstacles() {
     const startX = player.worldX + 400;
-    const obstacleSpacing = 180 + Math.random() * 120;
+    const baseSpacing = isMobileDevice() ? 220 : 180; // 모바일에서 간격 증가
+    const obstacleSpacing = baseSpacing + Math.random() * 120;
     const obstacleCount = Math.min(15, 8 + gameState.stage); 
     
     for (let i = 0; i < obstacleCount; i++) {
@@ -1412,7 +1449,7 @@ function generateNewStageObstacles() {
             type = types[Math.floor(Math.random() * types.length)];
         }
         
-        const spacing = 150 + Math.random() * 200 + (gameState.stage * 10);
+        const spacing = baseSpacing + Math.random() * 200 + (gameState.stage * 10);
         const obstacleX = startX + i * spacing;
         
         obstacles.push({
@@ -1431,13 +1468,14 @@ function generateNewStageObstacles() {
     );
 }
 
-// 점프 함수
+// 점프 함수 (모바일 최적화)
 function jump() {
     if (player.onGround && !gameState.questionActive) {
         const jumpPower = getJumpPower();
         player.velocityY = jumpPower;
         
-        const forwardSpeed = isMobileDevice() ? JUMP_FORWARD_SPEED * 2.0 : JUMP_FORWARD_SPEED * 2.5;
+        // 모바일에서 더 강한 전진력
+        const forwardSpeed = isMobileDevice() ? JUMP_FORWARD_SPEED * 3.0 : JUMP_FORWARD_SPEED * 2.5;
         player.velocityX = forwardSpeed;
         
         player.isJumping = true;
@@ -1452,6 +1490,8 @@ function jump() {
         }
         gameState.score += 1;
         updateUI();
+        
+        console.log(`점프! velocityY: ${player.velocityY}, velocityX: ${player.velocityX}, 디바이스: ${isMobileDevice() ? '모바일' : '데스크톱'}`);
     }
 }
 
@@ -1502,7 +1542,8 @@ function renderFloatingTexts(ctx) {
             ctx.save();
             ctx.globalAlpha = particle.alpha;
             ctx.fillStyle = particle.color;
-            ctx.font = 'bold 16px Jua';
+            const fontSize = isMobileDevice() ? '20px' : '16px';
+            ctx.font = `bold ${fontSize} Jua`;
             ctx.textAlign = 'center';
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 2;
@@ -1671,7 +1712,7 @@ function initializeGame() {
     console.log('✅ 지율이의 픽셀 영어 게임이 초기화되었습니다!');
 }
 
-// 이벤트 리스너 설정
+// 이벤트 리스너 설정 (모바일 최적화)
 function setupEventListeners() {
     console.log('🔧 이벤트 리스너 설정 중...');
     
@@ -1682,9 +1723,12 @@ function setupEventListeners() {
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
     
     // 창 크기 변경
-    window.addEventListener('resize', resizeCanvas);
-    window.addEventListener('orientationchange', () => {
+    window.addEventListener('resize', () => {
         setTimeout(resizeCanvas, 100);
+    });
+    
+    window.addEventListener('orientationchange', () => {
+        setTimeout(resizeCanvas, 500); // 모바일에서 충분한 대기 시간
     });
     
     // 페이지 가시성 변경 시 전체화면 복구
@@ -1705,24 +1749,46 @@ function setupEventListeners() {
         }
     });
     
-    // 터치 이벤트 처리
+    // 터치 이벤트 처리 (모바일 최적화)
     let touchStartY = 0;
     let touchStartTime = 0;
+    let touchStartX = 0;
     
     document.addEventListener('touchstart', function(e) {
         touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
         touchStartTime = Date.now();
-    }, { passive: true });
+        
+        // 터치 시작 시 기본 동작 방지
+        if (gameState.running && !gameState.questionActive) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    
+    document.addEventListener('touchmove', function(e) {
+        // 게임 중 스크롤 방지
+        if (gameState.running && !gameState.questionActive) {
+            e.preventDefault();
+        }
+    }, { passive: false });
     
     document.addEventListener('touchend', function(e) {
         if (!gameState.running || gameState.questionActive) return;
         
         const touchEndY = e.changedTouches[0].clientY;
+        const touchEndX = e.changedTouches[0].clientX;
         const touchEndTime = Date.now();
+        
         const deltaY = touchStartY - touchEndY;
+        const deltaX = Math.abs(touchStartX - touchEndX);
         const deltaTime = touchEndTime - touchStartTime;
         
-        if ((deltaY > 50 && deltaTime < 500) || (deltaTime < 200 && Math.abs(deltaY) < 30)) {
+        // 점프 조건 완화 (모바일 최적화)
+        const isUpwardSwipe = deltaY > 30 && deltaTime < 800;
+        const isQuickTap = deltaTime < 300 && Math.abs(deltaY) < 50 && deltaX < 50;
+        const isAnyTouch = deltaTime < 500; // 매우 관대한 조건
+        
+        if (isUpwardSwipe || isQuickTap || isAnyTouch) {
             e.preventDefault();
             jump();
         }
@@ -1734,6 +1800,8 @@ function setupEventListeners() {
         
         switch(e.code) {
             case 'Space':
+            case 'ArrowUp':
+            case 'KeyW':
                 e.preventDefault();
                 jump();
                 break;
@@ -1777,6 +1845,32 @@ function setupEventListeners() {
     document.addEventListener('touchstart', enableAudio, { once: true });
     document.addEventListener('click', enableAudio, { once: true });
     
+    // 모바일에서 기본 동작 방지
+    if (isMobileDevice()) {
+        // 더블 탭 줌 방지
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // 핀치 줌 방지
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        }, false);
+        
+        document.addEventListener('gesturechange', function(e) {
+            e.preventDefault();
+        }, false);
+        
+        document.addEventListener('gestureend', function(e) {
+            e.preventDefault();
+        }, false);
+    }
+    
     console.log('✅ 이벤트 리스너 설정 완료!');
 }
 
@@ -1790,6 +1884,8 @@ window.showMenu = showMenu;
 window.startSelectedGame = startSelectedGame;
 window.toggleUnit = toggleUnit;
 window.selectVehicle = selectVehicle;
+window.showUnitSelectMenu = showUnitSelectMenu;
+window.showCharacterSelectMenu = showCharacterSelectMenu;
 
 // 에러 처리
 window.addEventListener('error', function(e) {
