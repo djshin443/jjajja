@@ -712,19 +712,17 @@ function checkCollisions() {
 					}
 				}
 				else {
-					// rock이나 pipe 같은 단단한 장애물 - 점프해야만 통과 가능
-					if (player.onGround && !player.isJumping) {
-						// 플레이어를 장애물 앞에서 멈춤
-						player.worldX = obstacle.x - player.width - 5;
-						player.velocityX = 0;
-						gameState.isMoving = false;
-						gameState.isBlocked = true;  // 막힌 상태로 설정
-						gameState.shakeTimer = 10;
-						
-						// 점프 힌트 파티클
-						if (Math.random() < 0.05 && typeof createParticles === 'function') {
-							createParticles(player.x, player.y - 30, 'hint');
-						}
+					// rock이나 pipe 같은 단단한 장애물 - 무조건 막힘
+					// 플레이어를 장애물 앞에서 멈춤
+					player.worldX = obstacle.x - player.width - 5;
+					player.velocityX = 0;
+					gameState.isMoving = false;
+					gameState.isBlocked = true;
+					gameState.shakeTimer = 10;
+					
+					// 점프 힌트 파티클
+					if (Math.random() < 0.05 && typeof createParticles === 'function') {
+						createParticles(player.x, player.y - 30, 'hint');
 					}
 				}
 			} else {
