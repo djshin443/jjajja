@@ -1,5 +1,4 @@
-// 영어 게임 로직 - 메인 파일 (분리 후)
-// 필요한 파일들: background.js, ending.js, particles.js를 먼저 로드해야 함
+// 영어 게임 로직 - 메인 파일 (수정된 버전)
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -56,7 +55,8 @@ let gameState = {
     cameraX: 0,
     screenShake: 0,
     shakeTimer: 0,
-    bossSpawned: false  // ← 이 줄 추가
+    bossSpawned: false,
+    isBlocked: false  // 장애물에 막혀서 멈춘 상태
 };
 
 // 단어 관리자 초기화
@@ -130,7 +130,7 @@ function resizeCanvas() {
     const groundRatio = aspectRatio > 1 ? 0.7 : 0.75;
     GROUND_Y = screenHeight * groundRatio;
     
-	// 기존 장애물들의 위치도 새로운 GROUND_Y에 맞게 조정
+    // 기존 장애물들의 위치도 새로운 GROUND_Y에 맞게 조정
     if (obstacles && obstacles.length > 0) {
         obstacles.forEach(obstacle => {
             obstacle.y = GROUND_Y - (16 * PIXEL_SCALE);  // 장애물을 바닥에 맞게 재배치
@@ -139,7 +139,16 @@ function resizeCanvas() {
         });
         console.log(`🔧 장애물 위치 조정: 총 ${obstacles.length}개`);
     }
-	
+    
+    // 적들도 바닥에 맞게 재배치
+    if (enemies && enemies.length > 0) {
+        enemies.forEach(enemy => {
+            enemy.y = GROUND_Y;  // 바닥 위치에 정확히 배치
+            enemy.width = 16 * PIXEL_SCALE;
+            enemy.height = 16 * PIXEL_SCALE;
+        });
+    }
+    
     // 플레이어 위치 재조정 (공중에 떠있는 버그 방지)
     if (player && gameState && !gameState.questionActive) {
         // 무조건 바닥에 고정
@@ -317,7 +326,8 @@ function initGame() {
     gameState.questionActive = false;
     gameState.isMoving = true;
     gameState.cameraX = 0;
-	gameState.bossSpawned = false; 
+    gameState.bossSpawned = false;
+    gameState.isBlocked = false;  // 새 추가: 장애물 차단 상태
 	
     document.getElementById('questionPanel').style.display = 'none';
     document.getElementById('ui').style.display = 'block';
@@ -329,7 +339,7 @@ function initGame() {
     player.sprite = gameState.selectedCharacter;
     player.x = 100;
     player.worldX = 100;
-    player.y = GROUND_Y;
+    player.y = GROUND_Y;  // 바닥에 정확히 배치
     player.hp = 100;
     player.velocityY = 0;
     player.velocityX = 0;
@@ -464,8 +474,8 @@ function gameLoop() {
 
 // 게임 업데이트
 function update() {
-    // 게임이 진행 중일 때만 이동
-    if (gameState.isMoving && !gameState.questionActive) {
+    // 게임이 진행 중이고 막혀있지 않을 때만 이동
+    if (gameState.isMoving && !gameState.questionActive && !gameState.isBlocked) {
         gameState.distance += gameState.speed;
         gameState.backgroundOffset += gameState.speed * 0.5;
         gameState.cameraX += gameState.speed;
@@ -549,7 +559,7 @@ function update() {
     }
 }
 
-// 플레이어 물리 업데이트
+// 플레이어 물리 업데이트 - 바닥 고정 강화
 function updatePlayerPhysics() {
     // 중력 적용 (공중에 있을 때만)
     if (!player.onGround) {
@@ -569,13 +579,14 @@ function updatePlayerPhysics() {
         }
     }
     
-    // 바닥 충돌 검사 및 위치 고정
+    // 바닥 충돌 검사 및 위치 고정 - 강화된 버전
     if (player.y >= GROUND_Y) {
         player.y = GROUND_Y;  // 바닥에 정확히 고정
         player.velocityY = 0;
         player.onGround = true;
         player.isJumping = false;
         
+        // 착지 시 파티클 효과
         if (player.velocityX > 2 && typeof createParticles === 'function') {
             createParticles(player.x, player.y, 'hint');
         }
@@ -587,7 +598,7 @@ function updatePlayerPhysics() {
     gameState.cameraX = player.worldX - targetScreenX;
 }
 
-// 몬스터 물리 처리
+// 몬스터 물리 처리 - 바닥 고정 강화
 function updateEnemyPhysics() {
     enemies.forEach(enemy => {
         if (!enemy.alive) return;
@@ -641,27 +652,28 @@ function updateEnemyPhysics() {
             enemy.jumpCooldown--;
         }
         
-        // 중력 및 점프 물리 처리
+        // 중력 및 점프 물리 처리 - 바닥 고정 강화
         if (!enemy.onGround) {
 			enemy.velocityY += GRAVITY;
 			enemy.y += enemy.velocityY;
 			
 			// 바닥 충돌 검사 및 위치 고정
 			if (enemy.y >= GROUND_Y) {
-				enemy.y = GROUND_Y;  // 플레이어와 정확히 같은 바닥 위치
+				enemy.y = GROUND_Y;  // 정확히 바닥 위치로 고정
 				enemy.velocityY = 0;
 				enemy.onGround = true;
 				enemy.isJumping = false;
 			}
 		} else {
-			// 이미 바닥에 있는 경우에도 위치 재확인
-			enemy.y = GROUND_Y;  // 플레이어와 정확히 같은 위치로 강제 고정
+			// 이미 바닥에 있는 경우에도 위치 재확인 및 강제 고정
+			enemy.y = GROUND_Y;  // 항상 바닥 위치로 강제 고정
 		}
     });
 }
 
-// 충돌 체크
+// 충돌 체크 - 장애물 충돌 시 멈춤 구현
 function checkCollisions() {
+    // 장애물 충돌 검사
     obstacles.forEach(obstacle => {
 		const obstacleScreenX = obstacle.x - gameState.cameraX;
 		
@@ -676,28 +688,43 @@ function checkCollisions() {
 			
 			const obstacleBox = {
 				x: obstacle.x, 
-				y: obstacle.y,  // 이미 올바른 위치로 설정됨
+				y: obstacle.y,
 				width: obstacle.width, 
 				height: obstacle.height
 			};
 			
 			if (checkBoxCollision(playerBox, obstacleBox)) {
-				if (obstacle.type === 'spike' && !obstacle.passed) {
-					obstacle.passed = true;
-					if (typeof createParticles === 'function') {
-						createParticles(player.x, player.y, 'hint');
+				if (obstacle.type === 'spike') {
+					// 가시는 통과 가능하지만 데미지
+					if (!obstacle.passed) {
+						obstacle.passed = true;
+						player.hp -= 10;  // 가시 데미지
+						if (typeof createParticles === 'function') {
+							createParticles(player.x, player.y, 'hurt');
+						}
+						gameState.score += 5;
+						updateUI();
+						
+						if (player.hp <= 0) {
+							gameOver();
+							return;
+						}
 					}
-					gameState.score += 5;
-					updateUI();
 				}
-				else if (obstacle.type !== 'spike' && player.onGround) {
-					player.worldX = obstacle.x - player.width - 5;
-					player.velocityX = 0;
-					gameState.isMoving = false;
-					gameState.shakeTimer = 10;
-					
-					if (Math.random() < 0.01 && typeof createParticles === 'function') {
-						createParticles(player.x, player.y - 30, 'hint');
+				else {
+					// rock이나 pipe 같은 단단한 장애물 - 점프해야만 통과 가능
+					if (player.onGround && !player.isJumping) {
+						// 플레이어를 장애물 앞에서 멈춤
+						player.worldX = obstacle.x - player.width - 5;
+						player.velocityX = 0;
+						gameState.isMoving = false;
+						gameState.isBlocked = true;  // 막힌 상태로 설정
+						gameState.shakeTimer = 10;
+						
+						// 점프 힌트 파티클
+						if (Math.random() < 0.05 && typeof createParticles === 'function') {
+							createParticles(player.x, player.y - 30, 'hint');
+						}
 					}
 				}
 			} else {
@@ -705,6 +732,7 @@ function checkCollisions() {
 				if (player.worldX > obstacle.x + obstacle.width && !obstacle.passed) {
 					obstacle.passed = true;
 					gameState.isMoving = true;
+					gameState.isBlocked = false;  // 차단 해제
 					gameState.score += 10;
 					if (typeof createParticles === 'function') {
 						createParticles(player.x, player.y - 20, 'hint');
@@ -715,6 +743,7 @@ function checkCollisions() {
 		}
 	});
     
+    // 적 충돌 검사
     enemies.forEach(enemy => {
 		if (!enemy.alive) return;
 		
@@ -740,6 +769,7 @@ function checkCollisions() {
 						enemy.dialogueShown = true;
 						gameState.bossDialogueActive = true;
 						gameState.isMoving = false;
+						gameState.isBlocked = true;  // 보스 대화 중 차단
 						player.velocityX = 0;
 						player.velocityY = 0;
 						
@@ -754,6 +784,7 @@ function checkCollisions() {
 								gameState.bossDialogueActive = false;
 								gameState.questionActive = true;
 								gameState.currentEnemy = enemy;
+								gameState.isBlocked = false;  // 차단 해제
 								
 								// UI 다시 표시
 								document.getElementById('ui').style.display = 'block';
@@ -771,6 +802,7 @@ function checkCollisions() {
 					gameState.questionActive = true;
 					gameState.currentEnemy = enemy;
 					gameState.isMoving = false;
+					gameState.isBlocked = true;  // 전투 중 차단
 					
 					// 보스전에서는 플레이어 움직임 완전 정지
 					if (enemy.isBoss) {
@@ -817,7 +849,7 @@ function updateUI() {
     document.getElementById('hp').textContent = Math.max(0, player.hp);
 }
 
-// 렌더링
+// 렌더링 - 캐릭터 바닥 고정 렌더링
 function render() {
     ctx.save();
     if (gameState.screenShake !== 0) {
@@ -835,6 +867,7 @@ function render() {
         drawBackground();
     }
     
+    // 바닥 그리기
     ctx.fillStyle = '#228B22';
     ctx.fillRect(0, GROUND_Y + 16 * PIXEL_SCALE, canvas.width, canvas.height);
     
@@ -844,19 +877,19 @@ function render() {
 		if (screenX > -100 && screenX < canvas.width + 100) {
 			if (typeof pixelData !== 'undefined' && pixelData[obstacle.type]) {
 				const data = pixelData[obstacle.type];
-				// 장애물을 정확한 위치에 그리기 (y 좌표 그대로 사용)
+				// 장애물을 정확한 위치에 그리기
 				drawPixelSprite(data.sprite, data.colorMap, screenX, obstacle.y);
 			}
 			
-			// 충돌 힌트 표시
-			if (!gameState.isMoving && Math.abs(player.worldX - obstacle.x) < 100) {
+			// 충돌 힌트 표시 - 막혀있을 때만
+			if (gameState.isBlocked && Math.abs(player.worldX - obstacle.x) < 100) {
 				ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
 				ctx.fillRect(screenX, obstacle.y - 10, obstacle.width, 5);
 			}
 		}
 	});
     
-    // 적 렌더링
+    // 적 렌더링 - 바닥에 맞게 조정
     enemies.forEach(enemy => {
 		if (!enemy.alive) return;
 		const screenX = enemy.x - gameState.cameraX;
@@ -866,33 +899,34 @@ function render() {
 				// 보스는 기존 방식 유지 (pixelData에 boss가 있다면)
 				if (typeof pixelData !== 'undefined' && pixelData.boss) {
 					const data = pixelData.boss;
-					drawPixelSprite(data.idle, data.colorMap, screenX, enemy.y - enemy.height);
+					// 보스를 바닥에 정확히 그리기
+					drawPixelSprite(data.idle, data.colorMap, screenX, enemy.y - 16 * PIXEL_SCALE);
 				}
 			} else {
-				// 알파벳 몬스터 렌더링 - 5픽셀 위로 올림
+				// 알파벳 몬스터 렌더링 - 바닥에 정확히 배치
 				if (typeof alphabetMonsters !== 'undefined' && alphabetMonsters[enemy.type]) {
 					const data = alphabetMonsters[enemy.type];
-					// 플레이어보다 5픽셀 위에 렌더링
-					drawPixelSprite(data.idle, data.colorMap, screenX, enemy.y - enemy.height - 10);
+					// 몬스터를 바닥에 정확히 그리기
+					drawPixelSprite(data.idle, data.colorMap, screenX, enemy.y - 16 * PIXEL_SCALE);
 				}
 			}
 			
 			// 보스 어그로 표시
 			if (enemy.isBoss && enemy.isAggro) {
 				ctx.fillStyle = 'red';
-				ctx.fillRect(screenX, enemy.y - enemy.height - 15, enemy.width, 3);
+				ctx.fillRect(screenX, enemy.y - 16 * PIXEL_SCALE - 15, enemy.width, 3);
 				
 				// 보스 체력바
 				ctx.fillStyle = 'rgba(0,0,0,0.5)';
-				ctx.fillRect(screenX - 10, enemy.y - enemy.height - 25, enemy.width + 20, 8);
+				ctx.fillRect(screenX - 10, enemy.y - 16 * PIXEL_SCALE - 25, enemy.width + 20, 8);
 				ctx.fillStyle = '#FF0000';
 				const healthPercent = enemy.hp / enemy.maxHp;
-				ctx.fillRect(screenX - 8, enemy.y - enemy.height - 23, (enemy.width + 16) * healthPercent, 4);
+				ctx.fillRect(screenX - 8, enemy.y - 16 * PIXEL_SCALE - 23, (enemy.width + 16) * healthPercent, 4);
 			}
 		}
 	});
     
-    // 플레이어 렌더링
+    // 플레이어 렌더링 - 바닥에 정확히 고정
     if (typeof pixelData !== 'undefined' && pixelData[player.sprite]) {
 		// 지율이가 탈것을 타고 있는 경우
 		if (player.sprite === 'jiyul' && gameState.selectedVehicle !== 'none') {
@@ -914,14 +948,13 @@ function render() {
 					kiwiSprite = kiwiData.idle;
 				}
 				
-				// 키위 위치 조정 (화면 중앙에 맞게)
-				const kiwiOffsetY = PIXEL_SCALE * 2; // 더 적절한 오프셋
-				drawPixelSprite(kiwiSprite, kiwiData.colorMap, player.x, player.y - player.height + kiwiOffsetY);
+				// 키위를 바닥에 정확히 그리기
+				drawPixelSprite(kiwiSprite, kiwiData.colorMap, player.x, player.y - 16 * PIXEL_SCALE);
 				
 				// 지율이를 키위 위에 그리기
 				const jiyulData = pixelData.jiyul;
-				const jiyulOffsetY = -PIXEL_SCALE * 4; // 키위 위 적절한 위치
-				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height + jiyulOffsetY);
+				const jiyulOffsetY = -PIXEL_SCALE * 20; // 키위 위 적절한 위치
+				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 16 * PIXEL_SCALE + jiyulOffsetY);
 				
 			} else if (gameState.selectedVehicle === 'whitehouse' && pixelData.whitehouse) {
 				const whData = pixelData.whitehouse;
@@ -940,16 +973,16 @@ function render() {
 					whSprite = whData.idle;
 				}
 				
-				// 화이트하우스 위치 조정
-				drawPixelSprite(whSprite, whData.colorMap, player.x, player.y - player.height);
+				// 화이트하우스를 바닥에 정확히 그리기
+				drawPixelSprite(whSprite, whData.colorMap, player.x, player.y - 16 * PIXEL_SCALE);
 				
 				// 지율이를 화이트하우스 위에 그리기
 				const jiyulData = pixelData.jiyul;
-				const jiyulOffsetY = -PIXEL_SCALE * 8; // 화이트하우스 위 적절한 위치
-				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height + jiyulOffsetY);
+				const jiyulOffsetY = -PIXEL_SCALE * 24; // 화이트하우스 위 적절한 위치
+				drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 16 * PIXEL_SCALE + jiyulOffsetY);
 			}
 		} else {
-			// 일반적인 캐릭터 그리기 (기존 코드 유지)
+			// 일반적인 캐릭터 그리기 - 바닥에 정확히 고정
 			const playerData = pixelData[player.sprite];
 			let sprite;
 			
@@ -971,7 +1004,8 @@ function render() {
 				sprite = playerData.idle;
 			}
 			
-			drawPixelSprite(sprite, playerData.colorMap, player.x, player.y - player.height);
+			// 캐릭터를 바닥에 정확히 그리기
+			drawPixelSprite(sprite, playerData.colorMap, player.x, player.y - 16 * PIXEL_SCALE);
 		}
 	}
     
@@ -980,7 +1014,8 @@ function render() {
         renderAllParticles(ctx);
     }
     
-    if (!gameState.isMoving && !gameState.questionActive) {
+    // 장애물에 막혔을 때 힌트 메시지
+    if (gameState.isBlocked && !gameState.questionActive) {
         ctx.fillStyle = 'rgba(255, 255, 0, 0.8)';
         ctx.font = 'bold 18px Jua';
         ctx.textAlign = 'center';
@@ -1083,6 +1118,7 @@ function selectChoice(choiceIndex) {
                 }
                 
                 gameState.isMoving = true;
+                gameState.isBlocked = false;  // 적 처치 시 차단 해제
                 
                 document.getElementById('questionPanel').style.display = 'none';
                 gameState.questionActive = false;
@@ -1305,7 +1341,7 @@ function nextStage() {
     generateMoreEnemies();
 }
 
-// 점프 함수
+// 점프 함수 - 차단 상태 해제 기능 추가
 function jump() {
     if (player.onGround && !gameState.questionActive) {
         const jumpPower = getJumpPower();
@@ -1316,7 +1352,12 @@ function jump() {
         
         player.isJumping = true;
         player.onGround = false;
-        gameState.isMoving = true;
+        
+        // 점프 시 차단 상태 해제 (장애물을 뛰어넘기 위함)
+        if (gameState.isBlocked) {
+            gameState.isBlocked = false;
+            gameState.isMoving = true;
+        }
         
         if (typeof createParticles === 'function') {
             createParticles(player.x, player.y, 'hint');
@@ -1626,6 +1667,7 @@ function showAdvancedHelp() {
 • 점프하면 앞으로 더 멀리 갈 수 있어요!
 • 보스전에서는 더 어려운 문제가 나와요!
 • Unit을 많이 선택할수록 다양한 문제가 나와요!
+• 장애물에 막히면 점프로 뛰어넘으세요!
 
 🏆 점수 시스템:
 • 장애물 통과: 5-10점
@@ -1635,6 +1677,7 @@ function showAdvancedHelp() {
 
 ❤️ 체력 시스템:
 • 틀린 답: -15 체력
+• 가시 데미지: -10 체력
 • 체력이 0이 되면 게임 오버!
     `;
     
