@@ -761,14 +761,14 @@ function updateEnemyPhysics() {
     });
 }
 
-// 충돌 체크 - 장애물 충돌 시 멈춤 구현 (수정된 버전)
+// 수정된 충돌 체크 함수 (중복 제거)
 function checkCollisions() {
     // 장애물 충돌 검사
     obstacles.forEach(obstacle => {
         const obstacleScreenX = obstacle.x - gameState.cameraX;
         
         if (obstacleScreenX > -100 && obstacleScreenX < canvas.width + 100) {
-            // 충돌 박스 계산 (플레이어는 worldX, obstacle은 x 좌표 사용)
+            // 충돌 박스 계산
             const playerBox = {
                 x: player.worldX, 
                 y: player.y, 
@@ -788,7 +788,7 @@ function checkCollisions() {
                     // 가시는 통과 가능하지만 데미지
                     if (!obstacle.passed) {
                         obstacle.passed = true;
-                        player.hp -= 10;  // 가시 데미지
+                        player.hp -= 10;
                         if (typeof createParticles === 'function') {
                             createParticles(player.x, player.y, 'hurt');
                         }
@@ -800,11 +800,9 @@ function checkCollisions() {
                             return;
                         }
                     }
-                }
-                else {
+                } else {
                     // rock이나 pipe 같은 단단한 장애물 - 무조건 막힘
                     if (!obstacle.colliding) {
-                        // 처음 충돌할 때만 위치 조정
                         obstacle.colliding = true;
                         player.worldX = obstacle.x - player.width - 5;
                         player.velocityX = 0;
@@ -834,7 +832,7 @@ function checkCollisions() {
                     obstacle.colliding = false;
                 }
                 
-                // 장애물을 완전히 통과했을 때 (플레이어가 장애물 뒤쪽으로 충분히 이동했을 때)
+                // 장애물을 완전히 통과했을 때
                 if (player.worldX > obstacle.x + obstacle.width + 10 && !obstacle.passed) {
                     obstacle.passed = true;
                     gameState.isMoving = true;
@@ -852,14 +850,13 @@ function checkCollisions() {
         }
     });
     
-    // 적 충돌 검사는 기존과 동일...
+    // 적 충돌 검사 (한 번만)
     enemies.forEach(enemy => {
         if (!enemy.alive) return;
         
         const enemyScreenX = enemy.x - gameState.cameraX;
         
         if (enemyScreenX > -100 && enemyScreenX < canvas.width + 100) {
-            // 보스는 더 넓은 범위에서 무조건 전투
             const collisionRange = enemy.isBoss ? 100 : 0;
             const expandedCollision = {
                 x: enemy.x - collisionRange,
@@ -873,29 +870,25 @@ function checkCollisions() {
                 expandedCollision
             )) {
                 if (!gameState.questionActive && !gameState.bossDialogueActive) {
-                    // 스테이지 20 보스와의 첫 만남 - 대화 시작
+                    // 보스 대화 시작
                     if (enemy.isBoss && gameState.stage === 20 && !enemy.dialogueShown) {
                         enemy.dialogueShown = true;
                         gameState.bossDialogueActive = true;
                         gameState.isMoving = false;
-                        gameState.isBlocked = true;  // 보스 대화 중 차단
+                        gameState.isBlocked = true;
                         player.velocityX = 0;
                         player.velocityY = 0;
                         
-                        // UI 숨기기
                         document.getElementById('ui').style.display = 'none';
                         document.getElementById('controls').style.display = 'none';
                         
-                        // 보스 대화 시작 (등장 대화)
                         if (typeof startBossDialogue === 'function') {
                             startBossDialogue(canvas, ctx, gameState.selectedCharacter, enemy.hp, enemy.maxHp, function() {
-                                // 대화 완료 후 전투 시작
                                 gameState.bossDialogueActive = false;
                                 gameState.questionActive = true;
                                 gameState.currentEnemy = enemy;
-                                gameState.isBlocked = false;  // 차단 해제
+                                gameState.isBlocked = false;
                                 
-                                // UI 다시 표시
                                 document.getElementById('ui').style.display = 'block';
                                 document.getElementById('controls').style.display = 'flex';
                                 
@@ -911,9 +904,8 @@ function checkCollisions() {
                     gameState.questionActive = true;
                     gameState.currentEnemy = enemy;
                     gameState.isMoving = false;
-                    gameState.isBlocked = true;  // 전투 중 차단
+                    gameState.isBlocked = true;
                     
-                    // 보스전에서는 플레이어 움직임 완전 정지
                     if (enemy.isBoss) {
                         player.velocityX = 0;
                         player.velocityY = 0;
@@ -1210,6 +1202,8 @@ function render() {
         ctx.fillText('점프로 장애물을 뛰어넘으세요!', canvas.width / 2, 50);
     }
     
+	renderFloatingTexts(ctx);
+	
     ctx.restore();
 }
 
@@ -1528,6 +1522,121 @@ function nextStage() {
     
     // 새 적들도 생성
     generateMoreEnemies();
+}
+
+// 누락된 showEnding 함수 추가
+function showEnding() {
+    gameState.running = false;
+    
+    const record = saveGameRecord();
+    
+    // 엔딩 화면 생성
+    const endingScreen = document.createElement('div');
+    endingScreen.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #FFD700, #FFA500, #FF69B4, #9370DB);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Jua', sans-serif;
+        text-align: center;
+        padding: 20px;
+        animation: sparkle 2s infinite;
+    `;
+    
+    endingScreen.innerHTML = `
+        <div style="background: rgba(255,255,255,0.95); padding: 40px; border-radius: 30px; border: 5px solid #FF1493; box-shadow: 0 0 50px rgba(255,215,0,0.8); max-width: 90vw; max-height: 90vh; overflow-y: auto;">
+            <h1 style="font-size: min(8vw, 48px); color: #FF1493; margin-bottom: 30px; text-shadow: 3px 3px 0 #FFD700;">🎊 축하해요! 🎊</h1>
+            <h2 style="font-size: min(6vw, 32px); color: #8B008B; margin-bottom: 30px;">모든 스테이지 클리어!</h2>
+            
+            <div style="font-size: min(4vw, 24px); color: #FF69B4; margin-bottom: 30px; line-height: 1.5;">
+                🌟 20스테이지를 모두 완주했어요! 🌟
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #E6E6FA, #FFE4E1); padding: 30px; border-radius: 20px; margin: 20px 0; border: 3px solid #FF69B4;">
+                <div style="font-size: min(4vw, 20px); color: #4B0082; font-weight: bold; margin-bottom: 15px;">🏆 최종 결과 🏆</div>
+                <div style="font-size: min(3.5vw, 18px); color: #8B008B; line-height: 1.6;">
+                    최종 점수: ${record.score}점<br>
+                    정답률: ${record.accuracy}% (${record.correctAnswers}/${record.totalQuestions})<br>
+                    플레이 시간: ${Math.floor(record.playTime / 60)}분 ${record.playTime % 60}초<br><br>
+                    <span style="color: #FF1493;">정말 대단해요! 💖</span>
+                </div>
+            </div>
+            
+            <button onclick="closeEnding()" style="
+                background: linear-gradient(135deg, #32CD32, #90EE90);
+                border: 3px solid #FFF;
+                color: white;
+                padding: 15px 30px;
+                font-size: min(4vw, 20px);
+                font-weight: bold;
+                cursor: pointer;
+                font-family: 'Jua', sans-serif;
+                border-radius: 25px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                margin: 10px;
+            ">🎮 다시 플레이</button>
+        </div>
+    `;
+    
+    document.body.appendChild(endingScreen);
+    
+    // 전역 함수로 등록
+    window.closeEnding = function() {
+        endingScreen.remove();
+        showMenu();
+    };
+}
+
+// 떠다니는 텍스트 함수 추가 (누락된 경우)
+function showFloatingText(x, y, text, color) {
+    if (!window.textParticles) {
+        window.textParticles = [];
+    }
+    
+    const textParticle = {
+        x: x,
+        y: y,
+        text: text,
+        color: color,
+        life: 60,
+        vy: -2,
+        alpha: 1.0
+    };
+    
+    window.textParticles.push(textParticle);
+}
+
+// 텍스트 파티클 렌더링 (render 함수에서 호출)
+function renderFloatingTexts(ctx) {
+    if (!window.textParticles) return;
+    
+    window.textParticles = window.textParticles.filter(particle => {
+        particle.y += particle.vy;
+        particle.life--;
+        particle.alpha = particle.life / 60;
+        
+        if (particle.life > 0) {
+            ctx.save();
+            ctx.globalAlpha = particle.alpha;
+            ctx.fillStyle = particle.color;
+            ctx.font = 'bold 16px Jua';
+            ctx.textAlign = 'center';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeText(particle.text, particle.x, particle.y);
+            ctx.fillText(particle.text, particle.x, particle.y);
+            ctx.restore();
+        }
+        
+        return particle.life > 0;
+    });
 }
 
 // 새 스테이지용 장애물 생성 함수
