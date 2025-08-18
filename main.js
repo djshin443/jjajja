@@ -1474,16 +1474,21 @@ function jump() {
         const jumpPower = getJumpPower();
         player.velocityY = jumpPower;
         
-        // 모바일에서 더 강한 전진력
-        const forwardSpeed = isMobileDevice() ? JUMP_FORWARD_SPEED * 3.0 : JUMP_FORWARD_SPEED * 2.5;
-        player.velocityX = forwardSpeed;
+        // 장애물에 막혔을 때 더 강한 전진력 제공
+        let forwardSpeed;
+        if (gameState.isBlocked) {
+            // 막혔을 때는 훨씬 더 강한 전진력
+            forwardSpeed = isMobileDevice() ? JUMP_FORWARD_SPEED * 4.5 : JUMP_FORWARD_SPEED * 4.0;
+            gameState.isMoving = true;
+            gameState.isBlocked = false; // 점프 시 즉시 블록 해제
+        } else {
+            // 일반 점프
+            forwardSpeed = isMobileDevice() ? JUMP_FORWARD_SPEED * 3.0 : JUMP_FORWARD_SPEED * 2.5;
+        }
         
+        player.velocityX = forwardSpeed;
         player.isJumping = true;
         player.onGround = false;
-        
-        if (gameState.isBlocked) {
-            gameState.isMoving = true;
-        }
         
         if (typeof createParticles === 'function') {
             createParticles(player.x, player.y, 'hint');
@@ -1491,7 +1496,7 @@ function jump() {
         gameState.score += 1;
         updateUI();
         
-        console.log(`점프! velocityY: ${player.velocityY}, velocityX: ${player.velocityX}, 디바이스: ${isMobileDevice() ? '모바일' : '데스크톱'}`);
+        console.log(`점프! velocityY: ${player.velocityY}, velocityX: ${player.velocityX}, 블록상태: ${gameState.isBlocked}, 디바이스: ${isMobileDevice() ? '모바일' : '데스크톱'}`);
     }
 }
 
