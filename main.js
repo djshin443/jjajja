@@ -1,4 +1,4 @@
-// 영어 게임 로직 - 메인 파일 (수정된 버전)
+// 영어 게임 로직 - 메인 파일 (완전 수정된 버전)
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -94,6 +94,10 @@ let player = {
 let obstacles = [];
 let enemies = [];
 
+// 전체화면 상태 추적 변수
+let isFullscreenDesired = false;
+let isUserExiting = false;
+
 // 캔버스 크기 조정
 function resizeCanvas() {
     const container = document.getElementById('gameContainer');
@@ -150,10 +154,6 @@ function resizeCanvas() {
         player.isJumping = false;
     }
 }
-
-// 전체화면 상태 추적 변수
-let isFullscreenDesired = false;
-let isUserExiting = false;
 
 // 전체화면 기능
 function toggleFullscreen() {
@@ -259,6 +259,68 @@ function showIOSFullscreenGuide() {
             guideDiv.remove();
         }
     }, 5000);
+}
+
+// 전체화면 자동 복구 함수
+function restoreFullscreen() {
+    if (!isFullscreenDesired || isUserExiting) return;
+    
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) return;
+    
+    if (!document.fullscreenElement && 
+        !document.webkitFullscreenElement && 
+        !document.mozFullScreenElement && 
+        !document.msFullscreenElement) {
+        
+        const elem = document.documentElement;
+        
+        setTimeout(() => {
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(() => {});
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }, 100);
+    }
+}
+
+// 전체화면 변경 처리 함수
+function handleFullscreenChange() {
+    setTimeout(resizeCanvas, 100);
+    
+    const isCurrentlyFullscreen = !!(document.fullscreenElement || 
+                                    document.webkitFullscreenElement || 
+                                    document.mozFullScreenElement || 
+                                    document.msFullscreenElement);
+    
+    if (isCurrentlyFullscreen) {
+        document.getElementById('fullscreenBtn').textContent = 'EXIT';
+        isUserExiting = false;
+    } else {
+        document.getElementById('fullscreenBtn').textContent = 'FULL';
+        
+        if (isFullscreenDesired && !isUserExiting) {
+            restoreFullscreen();
+        }
+    }
+}
+
+// iOS 체크 함수
+function checkIOSFullscreen() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.navigator.standalone === true;
+    
+    if (isIOS && !isStandalone) {
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        if (fullscreenBtn) {
+            fullscreenBtn.textContent = '🏠 추가';
+        }
+    }
 }
 
 // 게임 초기화
@@ -1169,6 +1231,7 @@ function toggleUnit(unit) {
     }
     
     updateSelectedDisplay();
+    console.log('Unit 선택 상태:', gameState.selectedUnits);
 }
 
 // 선택한 내용 표시 업데이트
@@ -1538,12 +1601,29 @@ function selectVehicle(vehicleName) {
     if (selectedBtn) {
         selectedBtn.classList.add('selected');
     }
+    
+    console.log('탈것 선택됨:', vehicleName);
 }
 
 // 캐릭터 선택 함수
 function selectCharacterByName(characterName) {
     gameState.selectedCharacter = characterName;
-// 오프닝 시퀀스 시작 (단일 정의)
+    
+    document.querySelectorAll('.character-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    const selectedBtn = document.querySelector(`[data-character="${characterName}"]`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('selected');
+    }
+    
+    if (typeof selectCharacter === 'function') {
+        selectCharacter(characterName);
+    }
+}
+
+// 오프닝 시퀀스 시작
 function startOpeningSequence() {
     document.getElementById('gameContainer').classList.remove('menu-mode');
     document.getElementById('characterSelectMenu').style.display = 'none';
@@ -1576,7 +1656,7 @@ function initializeGame() {
     
     // 픽셀 데이터 확인
     if (typeof characterPixelData === 'undefined') {
-        console.warn('⚠️ characterPixelData가 정의되지 않았습니다. HTML의 캐릭터 픽셀 데이터를 전역으로 노출합니다.');
+        console.warn('⚠️ characterPixelData가 정의되지 않았습니다.');
         window.characterPixelData = window.characterPixelData || {};
     }
     
@@ -1589,68 +1669,6 @@ function initializeGame() {
     }
     
     console.log('✅ 지율이의 픽셀 영어 게임이 초기화되었습니다!');
-}
-
-// 전체화면 변경 처리 함수
-function handleFullscreenChange() {
-    setTimeout(resizeCanvas, 100);
-    
-    const isCurrentlyFullscreen = !!(document.fullscreenElement || 
-                                    document.webkitFullscreenElement || 
-                                    document.mozFullScreenElement || 
-                                    document.msFullscreenElement);
-    
-    if (isCurrentlyFullscreen) {
-        document.getElementById('fullscreenBtn').textContent = 'EXIT';
-        isUserExiting = false;
-    } else {
-        document.getElementById('fullscreenBtn').textContent = 'FULL';
-        
-        if (isFullscreenDesired && !isUserExiting) {
-            restoreFullscreen();
-        }
-    }
-}
-
-// 전체화면 자동 복구 함수
-function restoreFullscreen() {
-    if (!isFullscreenDesired || isUserExiting) return;
-    
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    if (isIOS) return;
-    
-    if (!document.fullscreenElement && 
-        !document.webkitFullscreenElement && 
-        !document.mozFullScreenElement && 
-        !document.msFullscreenElement) {
-        
-        const elem = document.documentElement;
-        
-        setTimeout(() => {
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(() => {});
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-            } else if (elem.mozRequestFullScreen) {
-                elem.mozRequestFullScreen();
-            } else if (elem.msRequestFullscreen) {
-                elem.msRequestFullscreen();
-            }
-        }, 100);
-    }
-}
-
-// iOS 체크 함수
-function checkIOSFullscreen() {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isStandalone = window.navigator.standalone === true;
-    
-    if (isIOS && !isStandalone) {
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        if (fullscreenBtn) {
-            fullscreenBtn.textContent = '🏠 추가';
-        }
-    }
 }
 
 // 이벤트 리스너 설정
@@ -1762,7 +1780,7 @@ function setupEventListeners() {
     console.log('✅ 이벤트 리스너 설정 완료!');
 }
 
-// 전역 함수로 등록
+// 전역 함수로 등록 (HTML에서 사용)
 window.showHelp = showHelp;
 window.restartGame = restartGame;
 window.selectCharacterByName = selectCharacterByName;
