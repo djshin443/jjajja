@@ -472,7 +472,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// 게임 업데이트
+// update() 함수에 추가할 동적 장애물 생성 로직
 function update() {
     // 게임이 진행 중이고 막혀있지 않을 때만 이동
     if (gameState.isMoving && !gameState.questionActive && !gameState.isBlocked) {
@@ -500,9 +500,17 @@ function update() {
         updateParticleSystem();
     }
 
+    // ✨ 동적 장애물 생성 추가
+    generateObstaclesIfNeeded();
+
     // 화면 밖 적들 제거
     enemies = enemies.filter(enemy => 
         enemy.alive && (enemy.x > gameState.cameraX - 500)
+    );
+
+    // 화면 밖 장애물들 제거 (메모리 최적화)
+    obstacles = obstacles.filter(obstacle => 
+        obstacle.x > gameState.cameraX - 500
     );
 
     // 앞쪽 적들이 부족하면 더 생성
@@ -516,12 +524,12 @@ function update() {
     
     // 20스테이지 엔딩 직전에 보스 등장 (한 번만)
     if (gameState.stage === 20 && !gameState.bossSpawned && 
-        gameState.distance > (gameState.stage * 3000) - 1000) { // 엔딩 1000 거리 전
+        gameState.distance > (gameState.stage * 3000) - 1000) {
         
-        const bossX = player.worldX + 600; // 플레이어 앞쪽에 생성
+        const bossX = player.worldX + 600;
         enemies.push({
             x: bossX,
-            y: GROUND_Y,  // 바닥 위치에 정확히 생성
+            y: GROUND_Y,
             width: 16 * PIXEL_SCALE,
             height: 16 * PIXEL_SCALE,
             hp: 3,
@@ -532,7 +540,7 @@ function update() {
             velocityY: 0,
             velocityX: 0,
             isJumping: false,
-            onGround: true,  // 바닥에 있음을 명시
+            onGround: true,
             jumpCooldown: 0,
             isMoving: true,
             walkSpeed: 1 + gameState.stage * 0.3,
@@ -544,12 +552,12 @@ function update() {
             isBoss: true
         });
         
-        gameState.bossSpawned = true; // 보스 생성 완료 플래그
+        gameState.bossSpawned = true;
         console.log('🐉 보스 등장! 엔딩 직전 최종 보스전!');
     }
 
-    // 스테이지 진행 체크 - 거리 기준 개선
-    const stageDistance = gameState.stage * 2000; // 스테이지당 필요 거리 감소
+    // 스테이지 진행 체크
+    const stageDistance = gameState.stage * 2000;
     if (gameState.distance > stageDistance) {
         if (gameState.stage >= 20) {
             showEnding();
@@ -557,6 +565,78 @@ function update() {
         }
         nextStage();
     }
+}
+
+// 동적 장애물 생성 함수
+function generateObstaclesIfNeeded() {
+    // 플레이어 앞쪽 1500픽셀 내에 있는 장애물 개수 확인
+    const aheadObstacles = obstacles.filter(obstacle => 
+        obstacle.x > player.worldX && obstacle.x < player.worldX + 1500
+    );
+    
+    // 앞쪽 장애물이 부족하면 새로 생성
+    if (aheadObstacles.length < 5) {
+        // 가장 앞쪽 장애물 위치 찾기
+        const maxObstacleX = obstacles.length > 0 ? 
+            Math.max(...obstacles.map(o => o.x)) : player.worldX;
+        
+        const startX = Math.max(maxObstacleX + 200, player.worldX + 800);
+        
+        // 3-5개의 새 장애물 생성
+        const newObstacleCount = 3 + Math.floor(Math.random() * 3);
+        
+        for (let i = 0; i < newObstacleCount; i++) {
+            const types = ['rock', 'spike', 'pipe'];
+            
+            // 스테이지별 난이도 조정
+            let type;
+            if (gameState.stage >= 15) {
+                // 후반부: 어려운 장애물 비율 증가
+                const hardTypes = ['spike', 'pipe', 'rock'];
+                const weights = [4, 3, 1]; // spike가 많이 나옴
+                type = weightedRandomChoice(hardTypes, weights);
+            } else if (gameState.stage >= 8) {
+                // 중반부: 균형잡힌 분배
+                type = types[Math.floor(Math.random() * types.length)];
+            } else {
+                // 초반부: 쉬운 장애물 위주
+                const easyTypes = ['rock', 'spike', 'pipe'];
+                const weights = [3, 2, 1]; // rock이 많이 나옴
+                type = weightedRandomChoice(easyTypes, weights);
+            }
+            
+            const spacing = 150 + Math.random() * 200 + (gameState.stage * 10);
+            const obstacleX = startX + i * spacing;
+            
+            obstacles.push({
+                x: obstacleX,
+                y: GROUND_Y - (16 * PIXEL_SCALE),
+                width: 16 * PIXEL_SCALE,
+                height: 16 * PIXEL_SCALE,
+                type: type,
+                passed: false,
+                colliding: false
+            });
+        }
+        
+        console.log(`🏗️ 동적 장애물 생성: ${newObstacleCount}개 (스테이지 ${gameState.stage})`);
+    }
+}
+
+// 가중치 기반 랜덤 선택 함수
+function weightedRandomChoice(choices, weights) {
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+    const random = Math.random() * totalWeight;
+    let sum = 0;
+    
+    for (let i = 0; i < choices.length; i++) {
+        sum += weights[i];
+        if (random < sum) {
+            return choices[i];
+        }
+    }
+    
+    return choices[0]; // fallback
 }
 
 // 플레이어 물리 업데이트 - 바닥 고정 강화
@@ -1349,8 +1429,7 @@ function gameOver() {
     alert(`게임 오버! 😢\n최종 점수: ${gameState.score}점\n다시 도전해보세요!`);
     showMenu();
 }
-
-// 다음 스테이지
+// 다음 스테이지 - 장애물 재생성 포함
 function nextStage() {
     if (gameState.stage >= 20) {
         showEnding();
@@ -1359,10 +1438,101 @@ function nextStage() {
     
     gameState.stage++;
     gameState.speed += 0.5;
-	gameState.bossSpawned = false;
+    gameState.bossSpawned = false;
+    
     alert(`🎉 스테이지 ${gameState.stage - 1} 클리어! 🎉\n스테이지 ${gameState.stage}로 이동합니다!`);
     
+    // 새 스테이지용 장애물 생성
+    generateNewStageObstacles();
+    
+    // 새 적들도 생성
     generateMoreEnemies();
+}
+
+// 새 스테이지용 장애물 생성 함수
+function generateNewStageObstacles() {
+    // 현재 플레이어 위치 기준으로 앞쪽에 새로운 장애물들 생성
+    const startX = player.worldX + 400; // 플레이어 앞쪽 400픽셀부터 시작
+    const obstacleSpacing = 180 + Math.random() * 120; // 간격 조정
+    
+    // 스테이지별 장애물 개수 증가
+    const obstacleCount = Math.min(15, 8 + gameState.stage); 
+    
+    for (let i = 0; i < obstacleCount; i++) {
+        const types = ['rock', 'spike', 'pipe'];
+        
+        // 스테이지가 높을수록 더 어려운 장애물 비율 증가
+        let type;
+        if (gameState.stage >= 10) {
+            // 10스테이지 이상에서는 가시와 파이프 비율 증가
+            const weights = [1, 3, 2]; // rock: 1, spike: 3, pipe: 2
+            const totalWeight = weights.reduce((a, b) => a + b, 0);
+            const random = Math.random() * totalWeight;
+            let sum = 0;
+            for (let j = 0; j < types.length; j++) {
+                sum += weights[j];
+                if (random < sum) {
+                    type = types[j];
+                    break;
+                }
+            }
+        } else {
+            // 초기 스테이지는 균등 분배
+            type = types[Math.floor(Math.random() * types.length)];
+        }
+        
+        const obstacleX = startX + i * obstacleSpacing + Math.random() * 50;
+        
+        obstacles.push({
+            x: obstacleX,
+            y: GROUND_Y - (16 * PIXEL_SCALE),
+            width: 16 * PIXEL_SCALE,
+            height: 16 * PIXEL_SCALE,
+            type: type,
+            passed: false,
+            colliding: false // 충돌 상태 초기화
+        });
+    }
+    
+    // 화면 뒤쪽의 오래된 장애물들 제거 (메모리 최적화)
+    obstacles = obstacles.filter(obstacle => 
+        obstacle.x > player.worldX - 1000
+    );
+    
+    console.log(`🏗️ 스테이지 ${gameState.stage}: ${obstacleCount}개 장애물 생성`);
+}
+
+// 레벨 생성 함수도 수정
+function generateLevel() {
+    obstacles = [];
+    enemies = [];
+
+    // 초기 장애물 생성 - 시작 위치 기준
+    generateInitialObstacles();
+
+    // 초기 몬스터들 생성
+    generateMoreEnemies();
+}
+
+// 초기 장애물 생성 함수
+function generateInitialObstacles() {
+    const obstacleSpacing = 200 + Math.random() * 150;
+    for (let i = 0; i < 12; i++) {
+        const types = ['rock', 'spike', 'pipe'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        
+        obstacles.push({
+            x: 600 + i * obstacleSpacing,
+            y: GROUND_Y - (16 * PIXEL_SCALE),
+            width: 16 * PIXEL_SCALE,
+            height: 16 * PIXEL_SCALE,
+            type: type,
+            passed: false,
+            colliding: false // 충돌 상태 초기화
+        });
+    }
+    
+    console.log(`🏗️ 초기 장애물 ${obstacles.length}개 생성`);
 }
 
 // 점프 함수 - 차단 상태 해제 기능 수정
