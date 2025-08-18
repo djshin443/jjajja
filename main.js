@@ -472,10 +472,13 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// update() 함수에 추가할 동적 장애물 생성 로직
+// 게임 업데이트 - 점프 중 이동 허용
 function update() {
-    // 게임이 진행 중이고 막혀있지 않을 때만 이동
-    if (gameState.isMoving && !gameState.questionActive && !gameState.isBlocked) {
+    // 게임이 진행 중이고 (막혀있지 않거나 점프 중일 때) 이동
+    const canMove = gameState.isMoving && !gameState.questionActive && 
+                   (!gameState.isBlocked || player.isJumping);
+    
+    if (canMove) {
         gameState.distance += gameState.speed;
         gameState.backgroundOffset += gameState.speed * 0.5;
         gameState.cameraX += gameState.speed;
@@ -500,8 +503,10 @@ function update() {
         updateParticleSystem();
     }
 
-    // ✨ 동적 장애물 생성 추가
-    generateObstaclesIfNeeded();
+    // 동적 장애물 생성
+    if (typeof generateObstaclesIfNeeded === 'function') {
+        generateObstaclesIfNeeded();
+    }
 
     // 화면 밖 적들 제거
     enemies = enemies.filter(enemy => 
@@ -639,7 +644,7 @@ function weightedRandomChoice(choices, weights) {
     return choices[0]; // fallback
 }
 
-// 플레이어 물리 업데이트 - 바닥 고정 강화
+// 플레이어 물리 업데이트 - 점프 중 이동 허용
 function updatePlayerPhysics() {
     // 중력 적용 (공중에 있을 때만)
     if (!player.onGround) {
@@ -649,9 +654,14 @@ function updatePlayerPhysics() {
     // Y축 위치 업데이트
     player.y += player.velocityY;
     
-    // X축 이동 처리
+    // X축 이동 처리 - 점프 중이거나 차단되지 않았을 때
     if (player.velocityX !== 0) {
-        player.worldX += player.velocityX;
+        // 점프 중에는 장애물에 막혀도 계속 앞으로 이동
+        if (player.isJumping || !gameState.isBlocked) {
+            player.worldX += player.velocityX;
+        }
+        
+        // 마찰력 적용
         const friction = player.isJumping ? 0.98 : 0.92;
         player.velocityX *= friction;
         if (Math.abs(player.velocityX) < 0.1) {
@@ -659,7 +669,7 @@ function updatePlayerPhysics() {
         }
     }
     
-    // 바닥 충돌 검사 및 위치 고정 - 강화된 버전
+    // 바닥 충돌 검사 및 위치 고정
     if (player.y >= GROUND_Y) {
         player.y = GROUND_Y;  // 바닥에 정확히 고정
         player.velocityY = 0;
@@ -824,28 +834,99 @@ function checkCollisions() {
                     obstacle.colliding = false;
                 }
                 
-                // 장애물을 완전히 통과했을 때만 (충분히 멀리 떨어져 있고 점프로 넘어갔을 때)
-                if (player.worldX > obstacle.x + obstacle.width + 20 && !obstacle.passed) {
-                    // 점프로 넘어간 경우에만 통과로 인정 (Y 위치 체크 추가)
-                    const wasJumping = player.isJumping || player.y < GROUND_Y - 10;
+                // 장애물을 완전히 통과했을 때 (플레이어가 장애물 뒤쪽으로 충분히 이동했을 때)
+                if (player.worldX > obstacle.x + obstacle.width + 10 && !obstacle.passed) {
+                    obstacle.passed = true;
+                    gameState.isMoving = true;
+                    gameState.isBlocked = false;
+                    gameState.score += 10;
                     
-                    if (wasJumping) {
-                        obstacle.passed = true;
-                        gameState.isMoving = true;
-                        gameState.isBlocked = false;
-                        gameState.score += 10;
-                        
-                        if (typeof createParticles === 'function') {
-                            createParticles(player.x, player.y - 20, 'hint');
-                        }
-                        
-                        console.log(`✅ 장애물 통과 성공! Score +10`);
-                        updateUI();
+                    if (typeof createParticles === 'function') {
+                        createParticles(player.x, player.y - 20, 'hint');
                     }
+                    
+                    console.log(`✅ 장애물 통과 성공! Score +10`);
+                    updateUI();
                 }
             }
         }
     });
+    
+    // 적 충돌 검사는 기존과 동일...
+    enemies.forEach(enemy => {
+        if (!enemy.alive) return;
+        
+        const enemyScreenX = enemy.x - gameState.cameraX;
+        
+        if (enemyScreenX > -100 && enemyScreenX < canvas.width + 100) {
+            // 보스는 더 넓은 범위에서 무조건 전투
+            const collisionRange = enemy.isBoss ? 100 : 0;
+            const expandedCollision = {
+                x: enemy.x - collisionRange,
+                y: enemy.y - collisionRange,
+                width: enemy.width + collisionRange * 2,
+                height: enemy.height + collisionRange * 2
+            };
+            
+            if (checkBoxCollision(
+                {x: player.worldX, y: player.y, width: player.width, height: player.height},
+                expandedCollision
+            )) {
+                if (!gameState.questionActive && !gameState.bossDialogueActive) {
+                    // 스테이지 20 보스와의 첫 만남 - 대화 시작
+                    if (enemy.isBoss && gameState.stage === 20 && !enemy.dialogueShown) {
+                        enemy.dialogueShown = true;
+                        gameState.bossDialogueActive = true;
+                        gameState.isMoving = false;
+                        gameState.isBlocked = true;  // 보스 대화 중 차단
+                        player.velocityX = 0;
+                        player.velocityY = 0;
+                        
+                        // UI 숨기기
+                        document.getElementById('ui').style.display = 'none';
+                        document.getElementById('controls').style.display = 'none';
+                        
+                        // 보스 대화 시작 (등장 대화)
+                        if (typeof startBossDialogue === 'function') {
+                            startBossDialogue(canvas, ctx, gameState.selectedCharacter, enemy.hp, enemy.maxHp, function() {
+                                // 대화 완료 후 전투 시작
+                                gameState.bossDialogueActive = false;
+                                gameState.questionActive = true;
+                                gameState.currentEnemy = enemy;
+                                gameState.isBlocked = false;  // 차단 해제
+                                
+                                // UI 다시 표시
+                                document.getElementById('ui').style.display = 'block';
+                                document.getElementById('controls').style.display = 'flex';
+                                
+                                generateEnglishQuestion();
+                                updateQuestionPanel();
+                                document.getElementById('questionPanel').style.display = 'block';
+                            });
+                        }
+                        return;
+                    }
+                    
+                    // 일반 전투 시작
+                    gameState.questionActive = true;
+                    gameState.currentEnemy = enemy;
+                    gameState.isMoving = false;
+                    gameState.isBlocked = true;  // 전투 중 차단
+                    
+                    // 보스전에서는 플레이어 움직임 완전 정지
+                    if (enemy.isBoss) {
+                        player.velocityX = 0;
+                        player.velocityY = 0;
+                    }
+                    
+                    generateEnglishQuestion();
+                    updateQuestionPanel();
+                    document.getElementById('questionPanel').style.display = 'block';
+                }
+            }
+        }
+    });
+}
     
     // 적 충돌 검사는 기존과 동일...
     enemies.forEach(enemy => {
@@ -1541,18 +1622,17 @@ function jump() {
         const jumpPower = getJumpPower();
         player.velocityY = jumpPower;
         
-        const forwardSpeed = isMobileDevice() ? JUMP_FORWARD_SPEED * 1.2 : JUMP_FORWARD_SPEED * 1.5;
+        // 점프 시 앞으로 가는 속도를 더 크게 증가
+        const forwardSpeed = isMobileDevice() ? JUMP_FORWARD_SPEED * 2.0 : JUMP_FORWARD_SPEED * 2.5;
         player.velocityX = forwardSpeed;
         
         player.isJumping = true;
         player.onGround = false;
         
-        // 점프 시에는 차단 상태를 즉시 해제하지 않음
-        // 대신 점프 상태만 설정하고, 장애물을 실제로 넘어갔을 때 해제
+        // 점프 시 즉시 이동 재개 (장애물을 뛰어넘기 위해)
         if (gameState.isBlocked) {
-            console.log(`🦘 점프 시도 - 장애물 차단 중`);
-            // gameState.isBlocked = false;  // 이 줄을 제거
-            // gameState.isMoving = true;    // 이 줄을 제거
+            console.log(`🦘 점프로 장애물 뛰어넘기 시도`);
+            gameState.isMoving = true;  // 점프 중에는 이동 허용
         }
         
         if (typeof createParticles === 'function') {
@@ -1562,7 +1642,6 @@ function jump() {
         updateUI();
     }
 }
-
 // 픽셀 스프라이트 그리기 함수 (characters.js가 없을 경우를 대비)
 function drawPixelSprite(sprite, colorMap, x, y, scale = PIXEL_SCALE) {
     if (!sprite || !colorMap) return;
