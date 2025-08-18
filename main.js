@@ -728,11 +728,12 @@ function checkCollisions() {
 					}
 				}
 			} else {
-				// 장애물을 통과했을 때
-				if (player.worldX > obstacle.x + obstacle.width && !obstacle.passed) {
+				// 장애물을 완전히 통과했을 때만 (점프 중이거나 충분히 멀리 떨어져 있을 때)
+				if (player.worldX > obstacle.x + obstacle.width + 10 && !obstacle.passed && 
+					(player.isJumping || player.y < GROUND_Y - 10)) {
 					obstacle.passed = true;
 					gameState.isMoving = true;
-					gameState.isBlocked = false;  // 차단 해제
+					gameState.isBlocked = false;
 					gameState.score += 10;
 					if (typeof createParticles === 'function') {
 						createParticles(player.x, player.y - 20, 'hint');
