@@ -104,33 +104,49 @@ function resizeCanvas() {
     const controls = document.getElementById('controls');
     const controlsHeight = controls ? controls.offsetHeight : 0;
     
+    // 디바이스 픽셀 비율 가져오기
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    
     let screenWidth = window.innerWidth;
     let screenHeight = window.innerHeight - controlsHeight;
     
     // 모바일에서 실제 화면 크기 사용
     if (isMobileDevice()) {
-        screenWidth = Math.max(window.innerWidth, window.screen.width);
-        screenHeight = Math.max(window.innerHeight - controlsHeight, window.screen.height - controlsHeight);
+        // 뷰포트 크기 사용 (더 정확)
+        screenWidth = window.innerWidth;
+        screenHeight = window.innerHeight - controlsHeight;
         
         // 모바일에서 최소 크기 보장
         if (screenWidth < 320) screenWidth = 320;
         if (screenHeight < 240) screenHeight = 240;
     }
     
-    canvas.width = screenWidth;
-    canvas.height = screenHeight;
+    // 캔버스 크기 설정 (픽셀 밀도 고려)
+    canvas.width = screenWidth * devicePixelRatio;
+    canvas.height = screenHeight * devicePixelRatio;
+    
+    // CSS 크기 설정 (실제 표시 크기)
+    canvas.style.width = screenWidth + 'px';
+    canvas.style.height = screenHeight + 'px';
+    
+    // 컨텍스트 스케일 조정
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    ctx.imageSmoothingEnabled = false;
     
     // 화면 비율과 크기에 따른 PIXEL_SCALE 조정
     const aspectRatio = screenWidth / screenHeight;
     
     if (isMobileDevice()) {
-        // 모바일에서는 더 큰 픽셀 스케일 사용
-        if (screenWidth < 480) {
+        // 모바일에서 화면 크기에 따른 동적 스케일
+        const baseSize = Math.min(screenWidth, screenHeight);
+        if (baseSize < 400) {
             PIXEL_SCALE = 2;
-        } else if (screenWidth < 768) {
+        } else if (baseSize < 600) {
             PIXEL_SCALE = 3;
-        } else {
+        } else if (baseSize < 800) {
             PIXEL_SCALE = 4;
+        } else {
+            PIXEL_SCALE = 5;
         }
     } else {
         // 데스크톱 로직
@@ -144,7 +160,7 @@ function resizeCanvas() {
     }
     
     // 픽셀 스케일 범위 제한
-    PIXEL_SCALE = Math.max(2, Math.min(6, PIXEL_SCALE));
+    PIXEL_SCALE = Math.max(2, Math.min(8, PIXEL_SCALE));
     
     // 플레이어 크기 업데이트
     if (player) {
@@ -182,7 +198,7 @@ function resizeCanvas() {
         player.isJumping = false;
     }
     
-    console.log(`화면 크기 조정: ${screenWidth}x${screenHeight}, PIXEL_SCALE: ${PIXEL_SCALE}, GROUND_Y: ${GROUND_Y}`);
+    console.log(`화면 크기 조정: ${screenWidth}x${screenHeight} (실제: ${canvas.width}x${canvas.height}), DPR: ${devicePixelRatio}, PIXEL_SCALE: ${PIXEL_SCALE}, GROUND_Y: ${GROUND_Y}`);
 }
 
 // 전체화면 기능
@@ -670,6 +686,7 @@ function updatePlayerPhysics() {
     player.y += player.velocityY;
     
     if (player.velocityX !== 0) {
+        // 점프 중이거나 블록되지 않았을 때만 전진 허용
         if (player.isJumping || !gameState.isBlocked) {
             player.worldX += player.velocityX;
         }
@@ -692,7 +709,7 @@ function updatePlayerPhysics() {
         }
     }
     
-    const targetScreenX = canvas.width / 4;
+    const targetScreenX = canvas.clientWidth / 4;
     player.x = targetScreenX;
     gameState.cameraX = player.worldX - targetScreenX;
 }
@@ -704,7 +721,7 @@ function updateEnemyPhysics() {
         
         const enemyScreenX = enemy.x - gameState.cameraX;
         
-        if (enemyScreenX > -200 && enemyScreenX < canvas.width + 200) {
+        if (enemyScreenX > -200 && enemyScreenX < canvas.clientWidth + 200) {
             if (enemy.type === 'boss') {
                 const distanceToPlayer = Math.abs(enemy.x - player.worldX);
                 
@@ -767,7 +784,7 @@ function checkCollisions() {
     obstacles.forEach(obstacle => {
         const obstacleScreenX = obstacle.x - gameState.cameraX;
         
-        if (obstacleScreenX > -100 && obstacleScreenX < canvas.width + 100) {
+        if (obstacleScreenX > -100 && obstacleScreenX < canvas.clientWidth + 100) {
             const playerBox = {
                 x: player.worldX, 
                 y: player.y, 
@@ -799,24 +816,27 @@ function checkCollisions() {
                         }
                     }
                 } else {
-                    if (!obstacle.colliding) {
-                        obstacle.colliding = true;
-                        player.worldX = obstacle.x - player.width - 5;
-                        player.velocityX = 0;
-                        gameState.isMoving = false;
-                        gameState.isBlocked = true;
-                        gameState.shakeTimer = 10;
-                    }
-                    
-                    if (player.worldX + player.width > obstacle.x - 5) {
-                        player.worldX = obstacle.x - player.width - 5;
-                        player.velocityX = 0;
-                        gameState.isMoving = false;
-                        gameState.isBlocked = true;
-                    }
-                    
-                    if (Math.random() < 0.05 && typeof createParticles === 'function') {
-                        createParticles(player.x, player.y - 30, 'hint');
+                    // 점프 중이 아닐 때만 블록 처리
+                    if (!player.isJumping) {
+                        if (!obstacle.colliding) {
+                            obstacle.colliding = true;
+                            player.worldX = obstacle.x - player.width - 5;
+                            player.velocityX = 0;
+                            gameState.isMoving = false;
+                            gameState.isBlocked = true;
+                            gameState.shakeTimer = 10;
+                        }
+                        
+                        if (player.worldX + player.width > obstacle.x - 5) {
+                            player.worldX = obstacle.x - player.width - 5;
+                            player.velocityX = 0;
+                            gameState.isMoving = false;
+                            gameState.isBlocked = true;
+                        }
+                        
+                        if (Math.random() < 0.05 && typeof createParticles === 'function') {
+                            createParticles(player.x, player.y - 30, 'hint');
+                        }
                     }
                 }
             } else {
@@ -824,6 +844,7 @@ function checkCollisions() {
                     obstacle.colliding = false;
                 }
                 
+                // 장애물을 완전히 넘었을 때
                 if (player.worldX > obstacle.x + obstacle.width + 10 && !obstacle.passed) {
                     obstacle.passed = true;
                     gameState.isMoving = true;
@@ -846,7 +867,7 @@ function checkCollisions() {
         
         const enemyScreenX = enemy.x - gameState.cameraX;
         
-        if (enemyScreenX > -100 && enemyScreenX < canvas.width + 100) {
+        if (enemyScreenX > -100 && enemyScreenX < canvas.clientWidth + 100) {
             const collisionRange = enemy.isBoss ? 100 : 0;
             const expandedCollision = {
                 x: enemy.x - collisionRange,
@@ -940,6 +961,10 @@ function updateUI() {
 
 // 렌더링
 function render() {
+    // 실제 화면 크기 (CSS 크기)
+    const displayWidth = canvas.clientWidth;
+    const displayHeight = canvas.clientHeight;
+    
     ctx.save();
     if (gameState.screenShake !== 0) {
         ctx.translate(
@@ -948,20 +973,22 @@ function render() {
         );
     }
     
+    // 배경색 채우기
     ctx.fillStyle = '#5C94FC';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, displayWidth, displayHeight);
     
     if (typeof drawBackground === 'function') {
         drawBackground();
     }
     
+    // 지면 그리기
     ctx.fillStyle = '#228B22';
-    ctx.fillRect(0, GROUND_Y + 16 * PIXEL_SCALE, canvas.width, canvas.height);
+    ctx.fillRect(0, GROUND_Y + 16 * PIXEL_SCALE, displayWidth, displayHeight);
     
     // 장애물 렌더링
     obstacles.forEach(obstacle => {
         const screenX = obstacle.x - gameState.cameraX;
-        if (screenX > -100 && screenX < canvas.width + 100) {
+        if (screenX > -100 && screenX < displayWidth + 100) {
             if (typeof pixelData !== 'undefined' && pixelData[obstacle.type]) {
                 const data = pixelData[obstacle.type];
                 drawPixelSprite(data.sprite, data.colorMap, screenX, obstacle.y);
@@ -978,7 +1005,7 @@ function render() {
     enemies.forEach(enemy => {
         if (!enemy.alive) return;
         const screenX = enemy.x - gameState.cameraX;
-        if (screenX > -100 && screenX < canvas.width + 100) {
+        if (screenX > -100 && screenX < displayWidth + 100) {
             if (enemy.type === 'boss') {
                 if (typeof pixelData !== 'undefined' && pixelData.boss) {
                     const data = pixelData.boss;
@@ -1085,14 +1112,14 @@ function render() {
     
     if (gameState.isBlocked && !gameState.questionActive) {
         // 모바일에서 더 큰 폰트 사용
-        const fontSize = isMobileDevice() ? '24px' : '18px';
+        const fontSize = isMobileDevice() ? Math.max(20, displayWidth * 0.04) : 18;
         ctx.fillStyle = 'rgba(255, 255, 0, 0.8)';
-        ctx.font = `bold ${fontSize} Jua`;
+        ctx.font = `bold ${fontSize}px Jua`;
         ctx.textAlign = 'center';
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;
-        ctx.strokeText('점프로 장애물을 뛰어넘으세요!', canvas.width / 2, 50);
-        ctx.fillText('점프로 장애물을 뛰어넘으세요!', canvas.width / 2, 50);
+        ctx.strokeText('점프로 장애물을 뛰어넘으세요!', displayWidth / 2, 50);
+        ctx.fillText('점프로 장애물을 뛰어넘으세요!', displayWidth / 2, 50);
     }
     
     renderFloatingTexts(ctx);
@@ -1538,6 +1565,8 @@ function showFloatingText(x, y, text, color) {
 function renderFloatingTexts(ctx) {
     if (!window.textParticles) return;
     
+    const displayWidth = canvas.clientWidth;
+    
     window.textParticles = window.textParticles.filter(particle => {
         particle.y += particle.vy;
         particle.life--;
@@ -1547,8 +1576,9 @@ function renderFloatingTexts(ctx) {
             ctx.save();
             ctx.globalAlpha = particle.alpha;
             ctx.fillStyle = particle.color;
-            const fontSize = isMobileDevice() ? '20px' : '16px';
-            ctx.font = `bold ${fontSize} Jua`;
+            // 모바일에서 화면 크기에 비례한 폰트 크기
+            const fontSize = isMobileDevice() ? Math.max(16, displayWidth * 0.035) : 16;
+            ctx.font = `bold ${fontSize}px Jua`;
             ctx.textAlign = 'center';
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 2;
