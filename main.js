@@ -984,13 +984,12 @@ function render() {
                     kiwiSprite = kiwiData.idle;
                 }
                 
-                // 키위 위치 조정 (화면 중앙에 맞게)
-                const kiwiOffsetY = PIXEL_SCALE * 2; // 더 적절한 오프셋
-                drawPixelSprite(kiwiSprite, kiwiData.colorMap, player.x, player.y - player.height + kiwiOffsetY);
+                // 키위를 바닥에 정확히 배치
+                drawPixelSprite(kiwiSprite, kiwiData.colorMap, player.x, player.y - player.height);
                 
-                // 지율이를 키위 위에 그리기
+                // 지율이를 키위 위에 8픽셀 위에 딱 붙게 배치
                 const jiyulData = pixelData.jiyul;
-                const jiyulOffsetY = -PIXEL_SCALE * 4; // 키위 위 적절한 위치
+                const jiyulOffsetY = -8; // 8픽셀 위에 딱 붙게
                 drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height + jiyulOffsetY);
                 
             } else if (gameState.selectedVehicle === 'whitehouse' && pixelData.whitehouse) {
@@ -1010,12 +1009,12 @@ function render() {
                     whSprite = whData.idle;
                 }
                 
-                // 화이트하우스 위치 조정
+                // 화이트하우스를 바닥에 정확히 배치
                 drawPixelSprite(whSprite, whData.colorMap, player.x, player.y - player.height);
                 
-                // 지율이를 화이트하우스 위에 그리기
+                // 지율이를 화이트하우스 위에 12픽셀 위에 딱 붙게 배치
                 const jiyulData = pixelData.jiyul;
-                const jiyulOffsetY = -PIXEL_SCALE * 8; // 화이트하우스 위 적절한 위치
+                const jiyulOffsetY = -12; // 12픽셀 위에 딱 붙게
                 drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height + jiyulOffsetY);
             }
         } else {
@@ -1818,5 +1817,6 @@ document.addEventListener('keydown', function(e) {
             break;
     }
 });
+
 
 console.log('✨ 지율이의 픽셀 영어 게임 준비 완료! ✨');
