@@ -1,4 +1,4 @@
-// 영어 게임 로직 - 메인 파일 (모바일 최적화 수정된 버전)
+// 영어 게임 로직 - 메인 파일 (모바일 최적화 완료)
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -959,7 +959,7 @@ function updateUI() {
     document.getElementById('hp').textContent = Math.max(0, player.hp);
 }
 
-// 렌더링
+// 렌더링 (모바일 최적화)
 function render() {
     // 실제 화면 크기 (CSS 크기)
     const displayWidth = canvas.clientWidth;
@@ -1032,10 +1032,10 @@ function render() {
     });
     
     // 플레이어 렌더링
-    if (typeof characterPixelData !== 'undefined' && characterPixelData[player.sprite]) {
+    if (typeof pixelData !== 'undefined' && pixelData[player.sprite]) {
         if (player.sprite === 'jiyul' && gameState.selectedVehicle !== 'none') {
-            if (gameState.selectedVehicle === 'kiwi' && characterPixelData.kiwi) {
-                const kiwiData = characterPixelData.kiwi;
+            if (gameState.selectedVehicle === 'kiwi' && pixelData.kiwi) {
+                const kiwiData = pixelData.kiwi;
                 let kiwiSprite;
                 
                 if (player.isJumping) {
@@ -1053,12 +1053,12 @@ function render() {
                 
                 drawPixelSprite(kiwiSprite, kiwiData.colorMap, player.x, player.y - 16 * PIXEL_SCALE);
                 
-                const jiyulData = characterPixelData.jiyul;
+                const jiyulData = pixelData.jiyul;
                 const jiyulOffsetY = -PIXEL_SCALE * 20;
                 drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 16 * PIXEL_SCALE + jiyulOffsetY);
                 
-            } else if (gameState.selectedVehicle === 'whitehouse' && characterPixelData.whitehouse) {
-                const whData = characterPixelData.whitehouse;
+            } else if (gameState.selectedVehicle === 'whitehouse' && pixelData.whitehouse) {
+                const whData = pixelData.whitehouse;
                 let whSprite;
                 
                 if (player.isJumping) {
@@ -1076,12 +1076,12 @@ function render() {
                 
                 drawPixelSprite(whSprite, whData.colorMap, player.x, player.y - 16 * PIXEL_SCALE);
                 
-                const jiyulData = characterPixelData.jiyul;
+                const jiyulData = pixelData.jiyul;
                 const jiyulOffsetY = -PIXEL_SCALE * 24;
                 drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 16 * PIXEL_SCALE + jiyulOffsetY);
             }
         } else {
-            const playerData = characterPixelData[player.sprite];
+            const playerData = pixelData[player.sprite];
             let sprite;
             
             if (player.isJumping) {
@@ -1382,12 +1382,12 @@ function updateSelectedCharacterDisplay() {
     const selectedCharacterPixel = document.getElementById('selectedCharacterPixel');
     const selectedCharacterName = document.getElementById('selectedCharacterName');
     
-    if (selectedCharacterPixel && typeof characterPixelData !== 'undefined' && characterPixelData[gameState.selectedCharacter]) {
+    if (selectedCharacterPixel && typeof pixelData !== 'undefined' && pixelData[gameState.selectedCharacter]) {
         const ctx = selectedCharacterPixel.getContext('2d');
         drawCharacterPixelSprite(
             ctx, 
-            characterPixelData[gameState.selectedCharacter].idle, 
-            characterPixelData[gameState.selectedCharacter].colorMap, 
+            pixelData[gameState.selectedCharacter].idle, 
+            pixelData[gameState.selectedCharacter].colorMap, 
             4
         );
     }
@@ -1731,9 +1731,9 @@ function initializeGame() {
     resizeCanvas();
     
     // 픽셀 데이터 확인
-    if (typeof characterPixelData === 'undefined') {
-        console.warn('⚠️ characterPixelData가 정의되지 않았습니다.');
-        window.characterPixelData = window.characterPixelData || {};
+    if (typeof pixelData === 'undefined') {
+        console.warn('⚠️ pixelData가 정의되지 않았습니다.');
+        window.pixelData = window.pixelData || {};
     }
     
     if (!hasSeenOpening) {
