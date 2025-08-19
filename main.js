@@ -1737,5 +1737,4 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-
 console.log('✨ 지율이의 픽셀 영어 게임 준비 완료! ✨');
