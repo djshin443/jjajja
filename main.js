@@ -989,7 +989,7 @@ function render() {
                 
                 // 지율이를 키위 위에 8픽셀 위에 딱 붙게 배치
                 const jiyulData = pixelData.jiyul;
-                const jiyulOffsetY = -8; // 8픽셀 위에 딱 붙게
+                const jiyulOffsetY = +30; // 8픽셀 위에 딱 붙게
                 drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height + jiyulOffsetY);
                 
             } else if (gameState.selectedVehicle === 'whitehouse' && pixelData.whitehouse) {
@@ -1014,7 +1014,7 @@ function render() {
                 
                 // 지율이를 화이트하우스 위에 12픽셀 위에 딱 붙게 배치
                 const jiyulData = pixelData.jiyul;
-                const jiyulOffsetY = -12; // 12픽셀 위에 딱 붙게
+                const jiyulOffsetY = +36; // 12픽셀 위에 딱 붙게
                 drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height + jiyulOffsetY);
             }
         } else {
