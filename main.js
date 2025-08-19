@@ -954,7 +954,7 @@ function render() {
                 
                 // 보스 체력바
                 ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                ctx.fillRect(screenX - 10, enemy.y - 25, enemy.width + 20, 8);
+                ctx.fillRect(screenX - 10, enemy.y - 24, enemy.width + 20, 8);
                 ctx.fillStyle = '#FF0000';
                 const healthPercent = enemy.hp / enemy.maxHp;
                 ctx.fillRect(screenX - 8, enemy.y - 23, (enemy.width + 16) * healthPercent, 4);
@@ -989,7 +989,7 @@ function render() {
                 
                 // 지율이를 키위 위에 8픽셀 위에 딱 붙게 배치
                 const jiyulData = pixelData.jiyul;
-                const jiyulOffsetY = -25; // 8픽셀 위에 딱 붙게
+                const jiyulOffsetY = -24; // 8픽셀 위에 딱 붙게
                 drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height + jiyulOffsetY);
                 
             } else if (gameState.selectedVehicle === 'whitehouse' && pixelData.whitehouse) {
