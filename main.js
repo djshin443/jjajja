@@ -49,6 +49,7 @@ let gameState = {
     distance: 0,
     speed: 4,
     questionActive: false,
+    bossDialogueActive: false,  // ← 이 줄 추가
     currentEnemy: null,
     backgroundOffset: 0,
     currentQuestion: null,
@@ -56,7 +57,7 @@ let gameState = {
     cameraX: 0,
     screenShake: 0,
     shakeTimer: 0,
-    bossSpawned: false  // ← 이 줄 추가
+    bossSpawned: false
 };
 
 // 단어 관리자 초기화
@@ -310,6 +311,7 @@ function initGame() {
     gameState.distance = 0;
     gameState.speed = 4;
     gameState.questionActive = false;
+	gameState.bossDialogueActive = false;  // ← 이 줄 추가
     gameState.isMoving = true;
     gameState.cameraX = 0;
 	gameState.bossSpawned = false; 
@@ -513,37 +515,40 @@ function update() {
     
     // 20스테이지 엔딩 직전에 보스 등장 (한 번만)
     if (gameState.stage === 20 && !gameState.bossSpawned && 
-		gameState.distance > (gameState.stage * 3000) - 1000) {
-		
-		const bossX = player.worldX + 600;
-		enemies.push({
-			x: bossX,
-			y: GROUND_Y - (16 * PIXEL_SCALE),  // 수정: 보스도 바닥 위에 정확히 배치
-			width: 16 * PIXEL_SCALE,
-			height: 16 * PIXEL_SCALE,
-			hp: 3,
-			maxHp: 3,
-			type: 'boss',
-			alive: true,
-			animFrame: 0,
-			velocityY: 0,
-			velocityX: 0,
-			isJumping: false,
-			onGround: true,
-			jumpCooldown: 0,
-			isMoving: true,
-			walkSpeed: 1 + gameState.stage * 0.3,
-			direction: -1,
-			patrolStart: bossX,
-			patrolRange: 200,
-			aggroRange: 500,
-			isAggro: false,
-			isBoss: true
-		});
-		
-		gameState.bossSpawned = true;
-		console.log('🐉 보스 등장! 엔딩 직전 최종 보스전!');
-	}
+        gameState.distance > (gameState.stage * 1500)) { // 거리 줄임
+        
+        console.log('🐉 20스테이지 보스 등장!');
+        
+        const bossX = player.worldX + 400; // 거리도 줄임
+        enemies.push({
+            x: bossX,
+            y: GROUND_Y - (16 * PIXEL_SCALE),
+            width: 16 * PIXEL_SCALE,
+            height: 16 * PIXEL_SCALE,
+            hp: 3,
+            maxHp: 3,
+            type: 'boss',
+            alive: true,
+            animFrame: 0,
+            velocityY: 0,
+            velocityX: 0,
+            isJumping: false,
+            onGround: true,
+            jumpCooldown: 0,
+            isMoving: true,
+            walkSpeed: 1 + gameState.stage * 0.3,
+            direction: -1,
+            patrolStart: bossX,
+            patrolRange: 200,
+            aggroRange: 500,
+            isAggro: false,
+            isBoss: true,
+            dialogueShown: false // 대화 표시 여부 추가
+        });
+        
+        gameState.bossSpawned = true;
+        console.log('🐉 보스 등장 완료!');
+    }
 
     // 스테이지 진행 체크 - 거리 기준 개선
     const stageDistance = gameState.stage * 2000; // 스테이지당 필요 거리 감소
@@ -785,10 +790,12 @@ function checkCollisions() {
                 ctx.strokeRect(playerScreenX, player.y - player.height, player.width, player.height);
             }
             
-            if (checkBoxCollision(playerCollisionBox, enemyCollisionBox)) {
+             if (checkBoxCollision(playerCollisionBox, enemyCollisionBox)) {
                 if (!gameState.questionActive && !gameState.bossDialogueActive) {
-                    // 스테이지 20 보스와의 첫 만남 - 대화 시작
+                    // 20스테이지 보스와의 첫 만남 - 대화 시작
                     if (enemy.isBoss && gameState.stage === 20 && !enemy.dialogueShown) {
+                        console.log('🐉 보스 대화 시작!');
+                        
                         enemy.dialogueShown = true;
                         gameState.bossDialogueActive = true;
                         gameState.isMoving = false;
@@ -799,40 +806,40 @@ function checkCollisions() {
                         document.getElementById('ui').style.display = 'none';
                         document.getElementById('controls').style.display = 'none';
                         
-                        // 보스 대화 시작 (등장 대화)
-                        if (typeof startBossDialogue === 'function') {
-                            startBossDialogue(canvas, ctx, gameState.selectedCharacter, enemy.hp, enemy.maxHp, function() {
-                                // 대화 완료 후 전투 시작
-                                gameState.bossDialogueActive = false;
-                                gameState.questionActive = true;
-                                gameState.currentEnemy = enemy;
-                                
-                                // UI 다시 표시
-                                document.getElementById('ui').style.display = 'block';
-                                document.getElementById('controls').style.display = 'flex';
-                                
-                                generateEnglishQuestion();
-                                updateQuestionPanel();
-                                document.getElementById('questionPanel').style.display = 'block';
-                            });
+                        // 보스 대화 시작 함수 수정
+                        if (typeof window.startBossDialogue === 'function') {
+                            try {
+                                window.startBossDialogue(canvas, ctx, gameState.selectedCharacter, enemy.hp, enemy.maxHp, function() {
+                                    console.log('보스 대화 완료, 전투 시작');
+                                    
+                                    // 대화 완료 후 전투 시작
+                                    gameState.bossDialogueActive = false;
+                                    gameState.questionActive = true;
+                                    gameState.currentEnemy = enemy;
+                                    
+                                    // UI 다시 표시
+                                    document.getElementById('ui').style.display = 'block';
+                                    document.getElementById('controls').style.display = 'flex';
+                                    
+                                    generateEnglishQuestion();
+                                    updateQuestionPanel();
+                                    document.getElementById('questionPanel').style.display = 'block';
+                                });
+                            } catch (error) {
+                                console.error('보스 대화 시작 오류:', error);
+                                // 오류 발생 시 바로 전투 시작
+                                startBossBattle(enemy);
+                            }
+                        } else {
+                            console.error('startBossDialogue 함수를 찾을 수 없습니다!');
+                            // 함수가 없으면 바로 전투 시작
+                            startBossBattle(enemy);
                         }
                         return;
                     }
                     
                     // 일반 전투 시작
-                    gameState.questionActive = true;
-                    gameState.currentEnemy = enemy;
-                    gameState.isMoving = false;
-                    
-                    // 보스전에서는 플레이어 움직임 완전 정지
-                    if (enemy.isBoss) {
-                        player.velocityX = 0;
-                        player.velocityY = 0;
-                    }
-                    
-                    generateEnglishQuestion();
-                    updateQuestionPanel();
-                    document.getElementById('questionPanel').style.display = 'block';
+                    startBattle(enemy);
                 }
             }
         }
@@ -1157,21 +1164,67 @@ function selectChoice(choiceIndex) {
             }
             
             if (gameState.currentEnemy.hp <= 0) {
-                gameState.currentEnemy.alive = false;
-                gameState.score += gameState.currentEnemy.type === 'boss' ? 100 : 50;
-                if (typeof createParticles === 'function') {
-                    createParticles(enemyScreenX, gameState.currentEnemy.y, 'defeat');
-                }
-                
-                gameState.isMoving = true;
-                
-                document.getElementById('questionPanel').style.display = 'none';
-                gameState.questionActive = false;
-                gameState.currentEnemy = null;
-                
-                if (typeof showFloatingText === 'function') {
-                    showFloatingText(player.x, player.y - 50, '완료!', '#00FF00');
-                }
+			    // 보스 처치 시 마지막 대화 추가
+			    if (gameState.currentEnemy.type === 'boss') {
+			        // UI 숨기기
+			        document.getElementById('ui').style.display = 'none';
+			        document.getElementById('controls').style.display = 'none';
+			        document.getElementById('questionPanel').style.display = 'none';
+			        
+			        // 보스 처치 대화 실행
+			        if (typeof window.startBossDialogue === 'function') {
+			            window.startBossDialogue(canvas, ctx, gameState.selectedCharacter, 0, gameState.currentEnemy.maxHp, function() {
+			                // 처치 대화 완료 후 게임 진행
+			                gameState.currentEnemy.alive = false;
+			                gameState.score += 100;
+			                gameState.isMoving = true;
+			                gameState.questionActive = false;
+			                gameState.currentEnemy = null;
+			                
+			                // UI 다시 표시
+			                document.getElementById('ui').style.display = 'block';
+			                document.getElementById('controls').style.display = 'flex';
+			                
+			                // 파티클 효과
+			                if (typeof createParticles === 'function') {
+			                    createParticles(player.x, player.y, 'defeat');
+			                }
+			                if (typeof showFloatingText === 'function') {
+			                    showFloatingText(player.x, player.y - 50, '보스 처치!', '#00FF00');
+			                }
+			            });
+			        } else {
+			            // startBossDialogue 함수가 없으면 일반 처리
+			            gameState.currentEnemy.alive = false;
+			            gameState.score += 100;
+			            gameState.isMoving = true;
+			            gameState.questionActive = false;
+			            gameState.currentEnemy = null;
+			            
+			            document.getElementById('questionPanel').style.display = 'none';
+			            document.getElementById('ui').style.display = 'block';
+			            document.getElementById('controls').style.display = 'flex';
+			        }
+			    } else {
+			        // 일반 몬스터 처치
+			        gameState.currentEnemy.alive = false;
+			        gameState.score += 50;
+			        gameState.isMoving = true;
+			        gameState.questionActive = false;
+			        gameState.currentEnemy = null;
+			        
+			        document.getElementById('questionPanel').style.display = 'none';
+			        
+			        // 파티클 효과
+			        if (typeof createParticles === 'function') {
+			            const enemyScreenX = gameState.currentEnemy ? gameState.currentEnemy.x - gameState.cameraX : player.x;
+			            createParticles(enemyScreenX, player.y, 'defeat');
+			        }
+			        if (typeof showFloatingText === 'function') {
+			            showFloatingText(player.x, player.y - 50, '완료!', '#00FF00');
+			        }
+			    }
+			}
             } else {
 				// 보스전 중간대사 (3문제 맞췄을 때, 체력이 2가 될 때)
 				if (gameState.currentEnemy.type === 'boss' && gameState.currentEnemy.hp === 2) {
@@ -1820,3 +1873,34 @@ document.addEventListener('keydown', function(e) {
 
 
 console.log('✨ 지율이의 픽셀 영어 게임 준비 완료! ✨');
+
+// 보스 전투 시작 함수 추가
+function startBossBattle(enemy) {
+    console.log('보스 전투 시작');
+    gameState.questionActive = true;
+    gameState.currentEnemy = enemy;
+    gameState.isMoving = false;
+    player.velocityX = 0;
+    player.velocityY = 0;
+    
+    generateEnglishQuestion();
+    updateQuestionPanel();
+    document.getElementById('questionPanel').style.display = 'block';
+}
+
+// 일반 전투 시작 함수 추가
+function startBattle(enemy) {
+    gameState.questionActive = true;
+    gameState.currentEnemy = enemy;
+    gameState.isMoving = false;
+    
+    if (enemy.isBoss) {
+        player.velocityX = 0;
+        player.velocityY = 0;
+    }
+    
+    generateEnglishQuestion();
+    updateQuestionPanel();
+    document.getElementById('questionPanel').style.display = 'block';
+}
+
