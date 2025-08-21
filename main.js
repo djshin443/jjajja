@@ -545,14 +545,21 @@ function update() {
 		console.log('🐉 보스 등장! 엔딩 직전 최종 보스전!');
 	}
 
-    // 스테이지 진행 체크 - 거리 기준 개선
-    const stageDistance = gameState.stage * 2000; // 스테이지당 필요 거리 감소
+    // 스테이지 진행 체크 - 보스전 고려
+    const stageDistance = gameState.stage * 2000; // 스테이지당 필요 거리
     if (gameState.distance > stageDistance) {
         if (gameState.stage >= 20) {
-            showEnding();
-            return;
+            // 20스테이지에서는 보스를 처치해야만 엔딩
+            const bossAlive = enemies.some(enemy => enemy.type === 'boss' && enemy.alive);
+            if (!bossAlive && gameState.bossSpawned) {
+                // 보스가 스폰되었고 처치되었을 때만 엔딩
+                showEnding();
+                return;
+            }
+            // 보스가 아직 살아있거나 스폰되지 않았으면 엔딩 안함
+        } else {
+            nextStage();
         }
-        nextStage();
     }
 }
 
@@ -1167,6 +1174,17 @@ function selectChoice(choiceIndex) {
                 
                 document.getElementById('questionPanel').style.display = 'none';
                 gameState.questionActive = false;
+                
+                // 보스를 처치했을 때 엔딩 확인
+                if (gameState.currentEnemy.type === 'boss' && gameState.stage === 20) {
+                    gameState.currentEnemy = null;
+                    // 보스 처치 후 바로 엔딩으로 이동
+                    setTimeout(() => {
+                        showEnding();
+                    }, 1000); // 1초 후 엔딩 (파티클 효과 보기 위해)
+                    return;
+                }
+                
                 gameState.currentEnemy = null;
                 
                 if (typeof showFloatingText === 'function') {
@@ -1379,7 +1397,7 @@ function nextStage() {
     }
     
     gameState.stage++;
-    gameState.speed += 0.5;
+    // gameState.speed += 0.5; // 속도 증가 제거 - 1스테이지 속도 유지
 	gameState.bossSpawned = false;
     alert(`🎉 스테이지 ${gameState.stage - 1} 클리어! 🎉\n스테이지 ${gameState.stage}로 이동합니다!`);
     
