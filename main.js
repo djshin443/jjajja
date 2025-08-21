@@ -794,34 +794,26 @@ function checkCollisions() {
             
             if (checkBoxCollision(playerCollisionBox, enemyCollisionBox)) {
                 if (!gameState.questionActive && !gameState.bossDialogueActive) {
-                    // 스테이지 20 보스와의 첫 만남 - 대화 시작
+                    // 스테이지 20 보스와의 첫 만남 - 바로 전투 시작 (대화 시스템 문제로 인해 임시 비활성화)
                     if (enemy.isBoss && gameState.stage === 20 && !enemy.dialogueShown) {
                         enemy.dialogueShown = true;
-                        gameState.bossDialogueActive = true;
+                        
+                        // 보스 대화 대신 바로 전투 시작
+                        gameState.questionActive = true;
+                        gameState.currentEnemy = enemy;
                         gameState.isMoving = false;
+                        
+                        // 보스전에서는 플레이어 움직임 완전 정지
                         player.velocityX = 0;
                         player.velocityY = 0;
                         
-                        // UI 숨기기
-                        document.getElementById('ui').style.display = 'none';
-                        document.getElementById('controls').style.display = 'none';
+                        generateEnglishQuestion();
+                        updateQuestionPanel();
+                        document.getElementById('questionPanel').style.display = 'block';
                         
-                        // 보스 대화 시작 (등장 대화)
-                        if (typeof startBossDialogue === 'function') {
-                            startBossDialogue(canvas, ctx, gameState.selectedCharacter, enemy.hp, enemy.maxHp, function() {
-                                // 대화 완료 후 전투 시작
-                                gameState.bossDialogueActive = false;
-                                gameState.questionActive = true;
-                                gameState.currentEnemy = enemy;
-                                
-                                // UI 다시 표시
-                                document.getElementById('ui').style.display = 'block';
-                                document.getElementById('controls').style.display = 'flex';
-                                
-                                generateEnglishQuestion();
-                                updateQuestionPanel();
-                                document.getElementById('questionPanel').style.display = 'block';
-                            });
+                        // 보스 등장 알림
+                        if (typeof showFloatingText === 'function') {
+                            showFloatingText(player.x, player.y - 50, '👑 최종 보스 등장!', '#FF0000');
                         }
                         return;
                     }
@@ -1191,35 +1183,16 @@ function selectChoice(choiceIndex) {
                     showFloatingText(player.x, player.y - 50, '완료!', '#00FF00');
                 }
             } else {
-				// 보스전 중간대사 (3문제 맞췄을 때, 체력이 2가 될 때)
+				// 보스전 중간대사 - 대화 시스템 문제로 인해 임시 비활성화
 				if (gameState.currentEnemy.type === 'boss' && gameState.currentEnemy.hp === 2) {
-					// UI 숨기기
-					document.getElementById('ui').style.display = 'none';
-					document.getElementById('controls').style.display = 'none';
-					document.getElementById('questionPanel').style.display = 'none';
-					gameState.isMoving = false;
-					
-					// 보스 중간대사 실행
-					if (typeof startBossDialogue === 'function') {
-						startBossDialogue(canvas, ctx, gameState.selectedCharacter, gameState.currentEnemy.hp, gameState.currentEnemy.maxHp, function() {
-							// 중간대사 완료 후 전투 재개
-							gameState.questionActive = true;
-							
-							// UI 다시 표시
-							document.getElementById('ui').style.display = 'block';
-							document.getElementById('controls').style.display = 'flex';
-							
-							generateEnglishQuestion();
-							updateQuestionPanel();
-							document.getElementById('questionPanel').style.display = 'block';
-						}, true); // 중간대사 플래그
-					} else {
-						// startBossDialogue가 없으면 간단한 메시지만
-						setTimeout(() => {
-							generateEnglishQuestion();
-							updateQuestionPanel();
-						}, 1000);
-					}
+					// 중간대사 대신 간단한 메시지로 대체
+					setTimeout(() => {
+						generateEnglishQuestion();
+						updateQuestionPanel();
+						if (typeof showFloatingText === 'function') {
+							showFloatingText(player.x, player.y - 30, '👑 보스가 강해졌다!', '#FF0000');
+						}
+					}, 1000);
 				} else {
 					generateEnglishQuestion();
 					updateQuestionPanel();
