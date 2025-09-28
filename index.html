@@ -7,6 +7,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <title>지율이의 픽셀 영어 게임</title>
+	<link rel="apple-touch-icon" href="ico.png">
+    <link rel="icon" type="image/png" href="ico.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
 
@@ -1242,9 +1244,22 @@
             }
             
             const helpBtn = document.getElementById('helpBtn');
-            if (helpBtn) {
-                helpBtn.addEventListener('click', showHelp);
-            }
+			if (helpBtn) {
+				// 혹시 잘못 연결된 이벤트 리스너 제거
+				const newHelpBtn = helpBtn.cloneNode(true);
+				helpBtn.parentNode.replaceChild(newHelpBtn, helpBtn);
+				
+				// 올바른 이벤트 리스너 추가
+				newHelpBtn.addEventListener('click', function(e) {
+					e.preventDefault();
+					e.stopPropagation();
+					if (typeof showHelp === 'function') {
+						showHelp();
+					} else {
+						alert('도움말 함수를 찾을 수 없습니다.');
+					}
+				});
+			}
             
             // 이전 버튼 (Unit 선택 -> 캐릭터 선택)
             const backToCharacterBtn = document.getElementById('backToCharacterBtn');

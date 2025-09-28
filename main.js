@@ -1840,7 +1840,7 @@ function nextStage() {
     
     gameState.stage++;
     gameState.speed += 0.5;
-	gameState.bossSpawned = false;
+	// gameState.bossSpawned = false;
     alert(`🎉 스테이지 ${gameState.stage - 1} 클리어! 🎉\n스테이지 ${gameState.stage}로 이동합니다!`);
     
     generateMoreEnemies();
