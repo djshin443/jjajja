@@ -1979,8 +1979,21 @@ function initializeGame() {
     resizeCanvas();
     
     // 첫 실행시 오프닝 재생, 이후엔 메뉴 바로 표시
+    // 초기에 모든 UI 숨기기 (타이틀 화면 표시 전)
+    if (document.getElementById('characterSelectMenu')) document.getElementById('characterSelectMenu').style.display = 'none';
+    if (document.getElementById('unitSelectMenu')) document.getElementById('unitSelectMenu').style.display = 'none';
+    if (document.getElementById('ui')) document.getElementById('ui').style.display = 'none';
+    if (document.getElementById('questionPanel')) document.getElementById('questionPanel').style.display = 'none';
+    if (document.getElementById('controls')) document.getElementById('controls').style.display = 'none';
+    if (document.getElementById('fullscreenBtn')) document.getElementById('fullscreenBtn').style.display = 'none';
     if (!hasSeenOpening) {
-        startOpeningSequence();
+        // 타이틀 화면 먼저 표시
+        if (typeof showTitleScreen === "function") {
+            showTitleScreen();
+        } else {
+            console.error("타이틀 화면을 찾을 수 없습니다.");
+            showMenu();
+        }
     } else {
         showMenu();
     }
@@ -2184,7 +2197,13 @@ function showAdvancedHelp() {
 
 // 오프닝 다시보기 함수
 function replayOpening() {
-    startOpeningSequence();
+    // 타이틀 화면 먼저 표시
+        if (typeof showTitleScreen === "function") {
+            showTitleScreen();
+        } else {
+            console.error("타이틀 화면을 찾을 수 없습니다.");
+            showMenu();
+        }
 }
 
 // 전역 함수로 등록하여 HTML에서 접근 가능하게 함
