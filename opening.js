@@ -6,6 +6,12 @@ function showTitleScreen() {
         existingTitle.remove();
     }
     
+    // 화면 방향 및 크기 체크
+    const isPortrait = window.innerHeight > window.innerWidth;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                     (navigator.maxTouchPoints > 0) || window.innerWidth <= 768;
+    const isMobilePortrait = isPortrait && isMobile;
+    
     // 타이틀 화면 컨테이너 생성
     const titleScreen = document.createElement('div');
     titleScreen.id = 'titleScreen';
@@ -20,10 +26,13 @@ function showTitleScreen() {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: ${isMobilePortrait ? 'flex-start' : 'center'};
         font-family: 'Jua', sans-serif;
-        overflow: hidden;
+        overflow-y: ${isMobilePortrait ? 'auto' : 'hidden'};
+        overflow-x: hidden;
         animation: backgroundShimmer 3s ease-in-out infinite alternate;
+        padding: ${isMobilePortrait ? '10px' : '20px'};
+        box-sizing: border-box;
     `;
     
     // CSS 애니메이션 추가
@@ -72,16 +81,6 @@ function showTitleScreen() {
                 100% { transform: rotateY(360deg); }
             }
             
-            @keyframes rainbow {
-                0% { color: #FF0000; }
-                17% { color: #FF7F00; }
-                33% { color: #FFFF00; }
-                50% { color: #00FF00; }
-                67% { color: #0000FF; }
-                83% { color: #4B0082; }
-                100% { color: #9400D3; }
-            }
-            
             @keyframes pulse {
                 0%, 100% { transform: scale(1); opacity: 1; }
                 50% { transform: scale(1.2); opacity: 0.8; }
@@ -95,23 +94,18 @@ function showTitleScreen() {
                 from { opacity: 1; }
                 to { opacity: 0; }
             }
-            
-            @keyframes levelUp {
-                0% { transform: scale(0) rotate(0deg); opacity: 0; }
-                50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
-                100% { transform: scale(1) rotate(360deg); opacity: 1; }
-            }
         `;
         document.head.appendChild(style);
     }
     
-    // 반짝이는 별들 배경
-    for (let i = 0; i < 20; i++) {
+    // 반짝이는 별들 배경 (모바일 세로 모드에서는 개수 줄이기)
+    const starCount = isMobilePortrait ? 10 : 20;
+    for (let i = 0; i < starCount; i++) {
         const star = document.createElement('div');
         star.innerHTML = '✨';
         star.style.cssText = `
             position: absolute;
-            font-size: ${Math.random() * 20 + 15}px;
+            font-size: ${Math.random() * 15 + 10}px;
             left: ${Math.random() * 100}vw;
             top: ${Math.random() * 100}vh;
             animation: sparkle ${2 + Math.random() * 3}s infinite;
@@ -121,13 +115,14 @@ function showTitleScreen() {
         titleScreen.appendChild(star);
     }
     
-    // 하트 이모지들
-    for (let i = 0; i < 8; i++) {
+    // 하트 이모지들 (모바일 세로 모드에서는 개수 줄이기)
+    const heartCount = isMobilePortrait ? 5 : 8;
+    for (let i = 0; i < heartCount; i++) {
         const heart = document.createElement('div');
         heart.innerHTML = '💖';
         heart.style.cssText = `
             position: absolute;
-            font-size: ${Math.random() * 15 + 20}px;
+            font-size: ${Math.random() * 12 + 15}px;
             left: ${Math.random() * 100}vw;
             top: ${Math.random() * 100}vh;
             animation: float ${3 + Math.random() * 2}s ease-in-out infinite;
@@ -137,13 +132,14 @@ function showTitleScreen() {
         titleScreen.appendChild(heart);
     }
     
-    // 게임 코인들
-    for (let i = 0; i < 10; i++) {
+    // 게임 코인들 (모바일 세로 모드에서는 개수 줄이기)
+    const coinCount = isMobilePortrait ? 5 : 10;
+    for (let i = 0; i < coinCount; i++) {
         const coin = document.createElement('div');
         coin.innerHTML = '🪙';
         coin.style.cssText = `
             position: absolute;
-            font-size: ${Math.random() * 20 + 20}px;
+            font-size: ${Math.random() * 15 + 15}px;
             left: ${Math.random() * 100}vw;
             top: ${-50 - Math.random() * 100}px;
             animation: fall ${5 + Math.random() * 5}s linear infinite, coinRotate 2s linear infinite;
@@ -154,17 +150,19 @@ function showTitleScreen() {
         titleScreen.appendChild(coin);
     }
     
-    // 픽셀 캐릭터들 추가 (지율이, 키위, 화이트하우스)
+    // 픽셀 캐릭터들 추가 (모바일 세로 모드에서는 크기와 위치 조정)
     const characterContainer = document.createElement('div');
     characterContainer.style.cssText = `
-        position: absolute;
-        bottom: 15%;
+        position: ${isMobilePortrait ? 'relative' : 'absolute'};
+        bottom: ${isMobilePortrait ? 'auto' : '15%'};
         left: 50%;
         transform: translateX(-50%);
         display: flex;
-        gap: 50px;
+        gap: ${isMobilePortrait ? '15px' : '50px'};
         animation: float 3s ease-in-out infinite;
         z-index: 5;
+        margin-top: ${isMobilePortrait ? '10px' : '0'};
+        margin-bottom: ${isMobilePortrait ? '10px' : '0'};
     `;
 
     const characters = [
@@ -175,16 +173,19 @@ function showTitleScreen() {
 
     characters.forEach((char, index) => {
         const charDiv = document.createElement('div');
+        const charSize = isMobilePortrait ? '45px' : '60px';
+        const fontSize = isMobilePortrait ? '25px' : '30px';
+        
         charDiv.style.cssText = `
-            width: 60px;
-            height: 60px;
+            width: ${charSize};
+            height: ${charSize};
             background: ${char.color};
             border: 3px solid #FFF;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
+            font-size: ${fontSize};
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             animation: pulse ${1.5 + index * 0.3}s ease-in-out infinite, pixelMove ${2 + index * 0.5}s ease-in-out infinite;
             animation-delay: ${index * 0.2}s;
@@ -193,7 +194,9 @@ function showTitleScreen() {
         characterContainer.appendChild(charDiv);
     });
 
-    titleScreen.appendChild(characterContainer);
+    if (!isMobilePortrait) {
+        titleScreen.appendChild(characterContainer);
+    }
     
     // 컨텐츠를 담을 중앙 컨테이너
     const contentContainer = document.createElement('div');
@@ -203,78 +206,114 @@ function showTitleScreen() {
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: 20px;
+        padding: ${isMobilePortrait ? '10px' : '20px'};
+        width: 100%;
+        max-width: ${isMobilePortrait ? '100%' : '90%'};
+        box-sizing: border-box;
+        ${isMobilePortrait ? 'margin-top: 20px;' : ''}
     `;
     
     // 메인 타이틀 컨테이너
     const mainTitle = document.createElement('div');
     mainTitle.style.cssText = `
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: ${isMobilePortrait ? '15px' : '30px'};
         animation: titleBounce 2s ease-in-out infinite;
+        width: 100%;
     `;
     
-    // 게임 제목
+    // 게임 제목 (반응형 폰트 크기)
     const title = document.createElement('h1');
-	title.innerHTML = '🌸 지율이의 픽셀 영어 게임 🌸';
-	title.style.cssText = `
-		font-size: 3.5em;
-		color: #FF69B4;
-		text-shadow: 
-			3px 3px 0px #FFD700,
-			4px 4px 0px rgba(255,105,180,0.5),
-			5px 5px 10px rgba(0,0,0,0.3);
-		margin: 0;
-		font-weight: bold;
-		text-align: center;
-		line-height: 1.2;
-		animation: titleBounce 2s ease-in-out infinite;
-	`;
-		
-		// 부제목
-		const subtitle = document.createElement('h2');
-		subtitle.innerHTML = '✨ English Adventure ✨';
-		subtitle.style.cssText = `
-			font-size: 1.8em;
-			color: #FFD700;
-			text-shadow: 2px 2px 0px #FF69B4,
-						 3px 3px 0px rgba(255,215,0,0.5),
-						 4px 4px 8px rgba(0,0,0,0.3);
-			margin: 20px 0;
-			font-weight: bold;
-			animation: float 2.5s ease-in-out infinite;
-		`;
-		
+    title.innerHTML = '🌸 지율이의 픽셀 영어 게임 🌸';
+    
+    // 뷰포트 단위 사용하여 반응형 폰트 크기 설정
+    const titleFontSize = isMobilePortrait ? 
+        'min(8vw, 32px)' : 
+        (isMobile ? '2.5em' : '3.5em');
+    
+    title.style.cssText = `
+        font-size: ${titleFontSize};
+        color: #FF69B4;
+        text-shadow: 
+            2px 2px 0px #FFD700,
+            3px 3px 0px rgba(255,105,180,0.5),
+            4px 4px 10px rgba(0,0,0,0.3);
+        margin: 0;
+        font-weight: bold;
+        text-align: center;
+        line-height: 1.2;
+        word-break: keep-all;
+        white-space: normal;
+    `;
+    
+    // 부제목 (반응형 폰트 크기)
+    const subtitle = document.createElement('h2');
+    subtitle.innerHTML = '✨ English Adventure ✨';
+    
+    const subtitleFontSize = isMobilePortrait ? 
+        'min(5vw, 20px)' : 
+        (isMobile ? '1.4em' : '1.8em');
+    
+    subtitle.style.cssText = `
+        font-size: ${subtitleFontSize};
+        color: #FFD700;
+        text-shadow: 2px 2px 0px #FF69B4,
+                     3px 3px 0px rgba(255,215,0,0.5),
+                     4px 4px 8px rgba(0,0,0,0.3);
+        margin: ${isMobilePortrait ? '10px 0' : '20px 0'};
+        font-weight: bold;
+        animation: float 2.5s ease-in-out infinite;
+    `;
+    
     mainTitle.appendChild(title);
     mainTitle.appendChild(subtitle);
     
-    // 게임 설명
+    // 모바일 세로 모드에서만 캐릭터를 여기에 추가
+    if (isMobilePortrait) {
+        contentContainer.appendChild(characterContainer);
+    }
+    
+    // 게임 설명 (반응형 폰트 크기)
     const description = document.createElement('div');
+    const descFontSize = isMobilePortrait ? 
+        'min(4vw, 16px)' : 
+        (isMobile ? '1.1em' : '1.3em');
+    
     description.innerHTML = `
-        <p style="font-size: 1.3em; color: #4B0082; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); text-align: center; margin: 30px 0; line-height: 1.6;">
+        <p style="font-size: ${descFontSize}; color: #4B0082; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); text-align: center; margin: ${isMobilePortrait ? '15px 0' : '30px 0'}; line-height: 1.6;">
             🎮 영어 단어를 배우며 모험을 떠나요! 🎮<br>
             🌟 20개 스테이지를 클리어하고 영어 마스터가 되어보세요! 🌟
         </p>
     `;
     
-    // 시작 버튼
+    // 시작 버튼 (반응형 크기)
     const startButton = document.createElement('button');
     startButton.innerHTML = '🚀 모험 시작하기! 🚀';
+    
+    const buttonFontSize = isMobilePortrait ? 
+        'min(5vw, 20px)' : 
+        (isMobile ? '1.5em' : '2em');
+    
+    const buttonPadding = isMobilePortrait ? 
+        '15px 25px' : 
+        '20px 40px';
+    
     startButton.style.cssText = `
         background: linear-gradient(135deg, #FF69B4, #FFB6C1);
         border: 4px solid #FFFFFF;
         color: white;
-        font-size: 2em;
+        font-size: ${buttonFontSize};
         font-weight: bold;
         font-family: 'Jua', sans-serif;
-        padding: 20px 40px;
+        padding: ${buttonPadding};
         border-radius: 50px;
         cursor: pointer;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         transition: all 0.3s ease;
         animation: buttonGlow 2s ease-in-out infinite;
-        margin-top: 30px;
+        margin-top: ${isMobilePortrait ? '20px' : '30px'};
         box-shadow: 0 10px 25px rgba(255, 105, 180, 0.4);
+        white-space: nowrap;
     `;
     
     startButton.onmouseover = () => {
@@ -288,8 +327,9 @@ function showTitleScreen() {
     };
     
     startButton.onclick = () => {
-        // 화면 전체 폭죽 효과
-        for (let i = 0; i < 30; i++) {
+        // 화면 전체 폭죽 효과 (모바일에서는 개수 줄이기)
+        const fireworkCount = isMobilePortrait ? 15 : 30;
+        for (let i = 0; i < fireworkCount; i++) {
             setTimeout(() => {
                 const firework = document.createElement('div');
                 const colors = ['✨', '🌟', '💫', '⭐', '🎆'];
@@ -337,14 +377,19 @@ function showTitleScreen() {
         }, 800);
     };
     
-    // 작은 도움말 텍스트
+    // 작은 도움말 텍스트 (반응형 폰트)
     const helpText = document.createElement('div');
     helpText.innerHTML = '💡 터치하거나 클릭해서 시작하세요! 💡';
+    
+    const helpFontSize = isMobilePortrait ? 
+        'min(3.5vw, 14px)' : 
+        '1.1em';
+    
     helpText.style.cssText = `
-        font-size: 1.1em;
+        font-size: ${helpFontSize};
         color: #8B008B;
         text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
-        margin-top: 30px;
+        margin-top: ${isMobilePortrait ? '15px' : '30px'};
         animation: float 3s ease-in-out infinite;
         text-align: center;
     `;
@@ -368,7 +413,7 @@ function showTitleScreen() {
     });
 }
 
-// 오프닝 시퀀스를 시작하는 함수 (기존 코드와 연결)
+// 오프닝 시퀀스를 시작하는 함수 (기존 코드와 연결) - 나머지 코드 계속...
 function startOpeningSequence() {
     if (typeof startOpening === 'function') {
         const canvas = document.getElementById('gameCanvas');
