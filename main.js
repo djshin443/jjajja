@@ -1944,22 +1944,96 @@ window.addEventListener('focus', function() {
 
 // 터치 이벤트 처리 (모바일 지원)
 let touchStartY = 0;
+let touchStartX = 0;
 let touchStartTime = 0;
+let isTouchOnButton = false;
 
 document.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
     touchStartTime = Date.now();
+    
+    // 터치 시작 지점이 버튼이나 UI 요소인지 확인
+    const target = document.elementFromPoint(touchStartX, touchStartY);
+    
+    if (target) {
+        // 버튼 클래스, ID, 또는 부모 요소 확인
+        if (target.classList.contains('control-btn') || 
+            target.id === 'jumpBtn' || 
+            target.id === 'menuBtn' || 
+            target.id === 'helpBtn' ||
+            target.id === 'fullscreenBtn' ||
+            target.closest('#controls') ||
+            target.closest('#ui') ||
+            target.closest('#questionPanel') ||
+            target.closest('#characterSelectMenu') ||
+            target.closest('#unitSelectMenu') ||
+            target.closest('.choice-btn') ||
+            target.classList.contains('unit-btn') ||
+            target.classList.contains('character-btn') ||
+            target.classList.contains('vehicle-btn') ||
+            target.classList.contains('start-btn') ||
+            target.classList.contains('back-btn') ||
+            target.tagName === 'BUTTON') {
+            isTouchOnButton = true;
+        } else {
+            isTouchOnButton = false;
+        }
+    }
 }, { passive: true });
 
 document.addEventListener('touchend', function(e) {
+    // 버튼을 터치한 경우 점프하지 않음
+    if (isTouchOnButton) {
+        isTouchOnButton = false;
+        return;
+    }
+    
     if (!gameState.running || gameState.questionActive || gameState.bossDialogueActive) return;
     
+    const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
     const touchEndTime = Date.now();
     const deltaY = touchStartY - touchEndY;
     const deltaTime = touchEndTime - touchStartTime;
     
-    // 위로 스와이프 또는 빠른 터치 감지
+    // 터치 종료 지점도 확인 (iOS Safari 대응)
+    const endTarget = document.elementFromPoint(touchEndX, touchEndY);
+    
+    if (endTarget) {
+        // 종료 지점이 버튼이나 UI 요소면 점프하지 않음
+        if (endTarget.classList.contains('control-btn') || 
+            endTarget.id === 'jumpBtn' || 
+            endTarget.id === 'menuBtn' || 
+            endTarget.id === 'helpBtn' ||
+            endTarget.id === 'fullscreenBtn' ||
+            endTarget.closest('#controls') ||
+            endTarget.closest('#ui') ||
+            endTarget.closest('#questionPanel') ||
+            endTarget.closest('#characterSelectMenu') ||
+            endTarget.closest('#unitSelectMenu') ||
+            endTarget.closest('.choice-btn') ||
+            endTarget.classList.contains('unit-btn') ||
+            endTarget.classList.contains('character-btn') ||
+            endTarget.classList.contains('vehicle-btn') ||
+            endTarget.classList.contains('start-btn') ||
+            endTarget.classList.contains('back-btn') ||
+            endTarget.tagName === 'BUTTON') {
+            return;
+        }
+    }
+    
+    // 하단 컨트롤 영역에서 터치한 경우 점프하지 않음
+    const controlsElement = document.getElementById('controls');
+    if (controlsElement) {
+        const controlsRect = controlsElement.getBoundingClientRect();
+        // 터치가 controls 영역 내부이면 점프하지 않음
+        if (touchEndY >= controlsRect.top) {
+            return;
+        }
+    }
+    
+    // 위로 스와이프 또는 빠른 터치 감지 (캔버스 영역에서만)
     if ((deltaY > 50 && deltaTime < 500) || (deltaTime < 200 && Math.abs(deltaY) < 30)) {
         e.preventDefault();
         jump();
