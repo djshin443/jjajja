@@ -5,6 +5,33 @@ function showTitleScreen() {
     if (existingTitle) {
         existingTitle.remove();
     }
+
+    // 모바일 뷰포트 메타 태그 설정 (검정 공백 방지)
+    let viewportMeta = document.querySelector('meta[name="viewport"]');
+    const originalViewportContent = viewportMeta ? viewportMeta.content : '';
+
+    if (!viewportMeta) {
+        viewportMeta = document.createElement('meta');
+        viewportMeta.name = 'viewport';
+        document.head.appendChild(viewportMeta);
+    }
+
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+
+    // 원래 viewport 설정 저장
+    window._originalViewport = originalViewportContent;
+
+    // 실제 화면 높이를 CSS 변수로 설정 (모바일 브라우저의 주소창 고려)
+    const setAppHeight = () => {
+        const vh = window.innerHeight;
+        document.documentElement.style.setProperty('--app-height', `${vh}px`);
+    };
+
+    setAppHeight();
+    window.addEventListener('resize', setAppHeight);
+    window.addEventListener('orientationchange', () => {
+        setTimeout(setAppHeight, 100);
+    });
     
     // 화면 방향 및 크기 체크
     const isPortrait = window.innerHeight > window.innerWidth;
@@ -12,6 +39,29 @@ function showTitleScreen() {
                      (navigator.maxTouchPoints > 0) || window.innerWidth <= 768;
     const isMobilePortrait = isPortrait && isMobile;
     
+    // body와 html 스타일 임시 설정 (검정 공백 제거)
+    const originalBodyStyle = {
+        margin: document.body.style.margin,
+        padding: document.body.style.padding,
+        overflow: document.body.style.overflow,
+        height: document.body.style.height
+    };
+    const originalHtmlStyle = {
+        margin: document.documentElement.style.margin,
+        padding: document.documentElement.style.padding,
+        overflow: document.documentElement.style.overflow,
+        height: document.documentElement.style.height
+    };
+
+    document.body.style.margin = '0';
+    document.body.style.padding = '0';
+    document.body.style.overflow = 'hidden';
+    document.body.style.height = '100%';
+    document.documentElement.style.margin = '0';
+    document.documentElement.style.padding = '0';
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.height = '100%';
+
     // 타이틀 화면 컨테이너 생성
     const titleScreen = document.createElement('div');
     titleScreen.id = 'titleScreen';
@@ -19,8 +69,11 @@ function showTitleScreen() {
         position: fixed;
         top: 0;
         left: 0;
-        width: 100vw;
-        height: 100vh;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        min-height: -webkit-fill-available;
         background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
         z-index: 10000;
         display: flex;
@@ -33,13 +86,50 @@ function showTitleScreen() {
         animation: backgroundShimmer 3s ease-in-out infinite alternate;
         padding: ${isMobilePortrait ? '10px' : '20px'};
         box-sizing: border-box;
+        margin: 0;
     `;
+
+    // 원래 스타일 복원 함수 저장
+    titleScreen.dataset.restoreStyles = JSON.stringify({
+        body: originalBodyStyle,
+        html: originalHtmlStyle
+    });
     
     // CSS 애니메이션 추가
     if (!document.getElementById('titleScreenStyles')) {
         const style = document.createElement('style');
         style.id = 'titleScreenStyles';
         style.textContent = `
+            /* 모바일 브라우저의 주소창을 고려한 스타일 */
+            html, body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                height: 100%;
+                width: 100%;
+                position: fixed;
+            }
+
+            /* 타이틀 화면 전체 채우기 */
+            #titleScreen {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                min-height: 100vh !important;
+                min-height: -webkit-fill-available !important;
+            }
+
+            @supports (-webkit-touch-callout: none) {
+                /* iOS Safari 전용 스타일 */
+                #titleScreen {
+                    height: -webkit-fill-available !important;
+                }
+            }
+
             @keyframes backgroundShimmer {
                 0% { background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD); }
                 50% { background: linear-gradient(135deg, #87CEEB, #DDA0DD, #FFB6C1); }
@@ -87,7 +177,14 @@ function showTitleScreen() {
             }
             
             @keyframes fall {
-                to { transform: translateY(calc(100vh + 100px)); }
+                0% {
+                    transform: translateY(0);
+                }
+                100% {
+                    transform: translateY(calc(100vh + 100px));
+                    /* 모바일에서도 작동하도록 대체값 설정 */
+                    transform: translateY(calc(var(--app-height, 100vh) + 100px));
+                }
             }
             
             @keyframes flashFade {
@@ -106,15 +203,15 @@ function showTitleScreen() {
         star.style.cssText = `
             position: absolute;
             font-size: ${Math.random() * 15 + 10}px;
-            left: ${Math.random() * 100}vw;
-            top: ${Math.random() * 100}vh;
+            left: ${Math.random() * 100}%;
+            top: ${Math.random() * 100}%;
             animation: sparkle ${2 + Math.random() * 3}s infinite;
             animation-delay: ${Math.random() * 2}s;
             pointer-events: none;
         `;
         titleScreen.appendChild(star);
     }
-    
+
     // 하트 이모지들 (모바일 세로 모드에서는 개수 줄이기)
     const heartCount = isMobilePortrait ? 5 : 8;
     for (let i = 0; i < heartCount; i++) {
@@ -123,25 +220,26 @@ function showTitleScreen() {
         heart.style.cssText = `
             position: absolute;
             font-size: ${Math.random() * 12 + 15}px;
-            left: ${Math.random() * 100}vw;
-            top: ${Math.random() * 100}vh;
+            left: ${Math.random() * 100}%;
+            top: ${Math.random() * 100}%;
             animation: float ${3 + Math.random() * 2}s ease-in-out infinite;
             animation-delay: ${Math.random() * 2}s;
             pointer-events: none;
         `;
         titleScreen.appendChild(heart);
     }
-    
+
     // 게임 코인들 (모바일 세로 모드에서는 개수 줄이기)
     const coinCount = isMobilePortrait ? 5 : 10;
     for (let i = 0; i < coinCount; i++) {
         const coin = document.createElement('div');
         coin.innerHTML = '🪙';
+        const randomLeft = Math.random() * 100;
         coin.style.cssText = `
             position: absolute;
             font-size: ${Math.random() * 15 + 15}px;
-            left: ${Math.random() * 100}vw;
-            top: ${-50 - Math.random() * 100}px;
+            left: ${randomLeft}%;
+            top: -50px;
             animation: fall ${5 + Math.random() * 5}s linear infinite, coinRotate 2s linear infinite;
             animation-delay: ${Math.random() * 5}s;
             pointer-events: none;
@@ -150,67 +248,22 @@ function showTitleScreen() {
         titleScreen.appendChild(coin);
     }
     
-    // 픽셀 캐릭터들 추가 (모바일 세로 모드에서는 크기와 위치 조정)
-    const characterContainer = document.createElement('div');
-    characterContainer.style.cssText = `
-        position: ${isMobilePortrait ? 'relative' : 'absolute'};
-        bottom: ${isMobilePortrait ? 'auto' : '15%'};
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: ${isMobilePortrait ? '15px' : '50px'};
-        animation: float 3s ease-in-out infinite;
-        z-index: 5;
-        margin-top: ${isMobilePortrait ? '10px' : '0'};
-        margin-bottom: ${isMobilePortrait ? '10px' : '0'};
-    `;
-
-    const characters = [
-        { name: '지율이', emoji: '👧', color: '#FF69B4' },
-        { name: '키위', emoji: '🦎', color: '#32CD32' },
-        { name: '집', emoji: '🏠', color: '#4169E1' }
-    ];
-
-    characters.forEach((char, index) => {
-        const charDiv = document.createElement('div');
-        const charSize = isMobilePortrait ? '45px' : '60px';
-        const fontSize = isMobilePortrait ? '25px' : '30px';
-        
-        charDiv.style.cssText = `
-            width: ${charSize};
-            height: ${charSize};
-            background: ${char.color};
-            border: 3px solid #FFF;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: ${fontSize};
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            animation: pulse ${1.5 + index * 0.3}s ease-in-out infinite, pixelMove ${2 + index * 0.5}s ease-in-out infinite;
-            animation-delay: ${index * 0.2}s;
-        `;
-        charDiv.innerHTML = char.emoji;
-        characterContainer.appendChild(charDiv);
-    });
-
-    if (!isMobilePortrait) {
-        titleScreen.appendChild(characterContainer);
-    }
     
     // 컨텐츠를 담을 중앙 컨테이너
     const contentContainer = document.createElement('div');
+    const isLandscape = window.innerWidth > window.innerHeight;
     contentContainer.style.cssText = `
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: ${isMobilePortrait ? '10px' : '20px'};
+        padding: ${isMobilePortrait ? '10px' : (isLandscape ? '10px' : '20px')};
         width: 100%;
         max-width: ${isMobilePortrait ? '100%' : '90%'};
         box-sizing: border-box;
         ${isMobilePortrait ? 'margin-top: 20px;' : ''}
+        ${isLandscape && isMobile ? 'transform: scale(0.9); margin: 0;' : ''}
     `;
     
     // 메인 타이틀 컨테이너
@@ -224,71 +277,53 @@ function showTitleScreen() {
     
     // 게임 제목 (반응형 폰트 크기)
     const title = document.createElement('h1');
-    title.innerHTML = '🌸 지율이의 픽셀 영어 게임 🌸';
-    
+    title.innerHTML = '🚀 지율이의 잉글리쉬 어드벤쳐 🚀';
+
     // 뷰포트 단위 사용하여 반응형 폰트 크기 설정
-    const titleFontSize = isMobilePortrait ? 
-        'min(8vw, 32px)' : 
-        (isMobile ? '2.5em' : '3.5em');
-    
+    const titleFontSize = isMobilePortrait ?
+        'min(7vw, 28px)' :
+        (isMobile ? '2.2em' : '3em');
+
     title.style.cssText = `
         font-size: ${titleFontSize};
         color: #FF69B4;
-        text-shadow: 
+        text-shadow:
             2px 2px 0px #FFD700,
             3px 3px 0px rgba(255,105,180,0.5),
             4px 4px 10px rgba(0,0,0,0.3);
         margin: 0;
         font-weight: bold;
         text-align: center;
-        line-height: 1.2;
+        line-height: 1.3;
         word-break: keep-all;
         white-space: normal;
     `;
-    
+
     // 부제목 (반응형 폰트 크기)
     const subtitle = document.createElement('h2');
-    subtitle.innerHTML = '✨ English Adventure ✨';
-    
-    const subtitleFontSize = isMobilePortrait ? 
-        'min(5vw, 20px)' : 
-        (isMobile ? '1.4em' : '1.8em');
-    
+    subtitle.innerHTML = '👽 ABC 대마왕의 지구 침공! 👾';
+
+    const subtitleFontSize = isMobilePortrait ?
+        'min(5vw, 22px)' :
+        (isMobile ? '1.5em' : '2em');
+
     subtitle.style.cssText = `
         font-size: ${subtitleFontSize};
         color: #FFD700;
         text-shadow: 2px 2px 0px #FF69B4,
                      3px 3px 0px rgba(255,215,0,0.5),
                      4px 4px 8px rgba(0,0,0,0.3);
-        margin: ${isMobilePortrait ? '10px 0' : '20px 0'};
+        margin: ${isMobilePortrait ? '10px 0 15px 0' : '20px 0 25px 0'};
         font-weight: bold;
         animation: float 2.5s ease-in-out infinite;
     `;
     
     mainTitle.appendChild(title);
     mainTitle.appendChild(subtitle);
-    
-    // 모바일 세로 모드에서만 캐릭터를 여기에 추가
-    if (isMobilePortrait) {
-        contentContainer.appendChild(characterContainer);
-    }
-    
-    // 게임 설명 (반응형 폰트 크기)
-    const description = document.createElement('div');
-    const descFontSize = isMobilePortrait ? 
-        'min(4vw, 16px)' : 
-        (isMobile ? '1.1em' : '1.3em');
-    
-    description.innerHTML = `
-        <p style="font-size: ${descFontSize}; color: #4B0082; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); text-align: center; margin: ${isMobilePortrait ? '15px 0' : '30px 0'}; line-height: 1.6;">
-            🎮 영어 단어를 배우며 모험을 떠나요! 🎮<br>
-            🌟 20개 스테이지를 클리어하고 영어 마스터가 되어보세요! 🌟
-        </p>
-    `;
-    
+
     // 시작 버튼 (반응형 크기)
     const startButton = document.createElement('button');
-    startButton.innerHTML = '🚀 모험 시작하기! 🚀';
+    startButton.innerHTML = '⚔️ 지구를 지켜라! ⚔️';
     
     const buttonFontSize = isMobilePortrait ? 
         'min(5vw, 20px)' : 
@@ -354,8 +389,10 @@ function showTitleScreen() {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
             background: radial-gradient(circle, rgba(255,255,255,0.8), transparent);
             z-index: 10001;
             animation: flashFade 0.5s ease-out forwards;
@@ -370,6 +407,23 @@ function showTitleScreen() {
         titleScreen.style.opacity = '0';
         
         setTimeout(() => {
+            // 원래 스타일 복원
+            try {
+                const styles = JSON.parse(titleScreen.dataset.restoreStyles);
+                if (styles) {
+                    Object.assign(document.body.style, styles.body);
+                    Object.assign(document.documentElement.style, styles.html);
+                }
+            } catch (e) {
+                console.error('스타일 복원 오류:', e);
+            }
+
+            // 원래 viewport 복원
+            const viewportMeta = document.querySelector('meta[name="viewport"]');
+            if (viewportMeta && window._originalViewport) {
+                viewportMeta.content = window._originalViewport;
+            }
+
             titleScreen.remove();
             const styleTag = document.getElementById('titleScreenStyles');
             if (styleTag) styleTag.remove();
@@ -379,7 +433,7 @@ function showTitleScreen() {
     
     // 작은 도움말 텍스트 (반응형 폰트)
     const helpText = document.createElement('div');
-    helpText.innerHTML = '💡 터치하거나 클릭해서 시작하세요! 💡';
+    helpText.innerHTML = '💥 지율이와 함께 ABC 대마왕을 물리치자! 💥';
     
     const helpFontSize = isMobilePortrait ? 
         'min(3.5vw, 14px)' : 
@@ -396,7 +450,6 @@ function showTitleScreen() {
     
     // 모든 요소를 컨테이너에 추가
     contentContainer.appendChild(mainTitle);
-    contentContainer.appendChild(description);
     contentContainer.appendChild(startButton);
     contentContainer.appendChild(helpText);
     
