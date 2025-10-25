@@ -2063,8 +2063,10 @@ function initializeGame() {
     if (document.getElementById('controls')) document.getElementById('controls').style.display = 'none';
     if (document.getElementById('fullscreenBtn')) document.getElementById('fullscreenBtn').style.display = 'none';
     if (!hasSeenOpening) {
-        // 타이틀 화면 먼저 표시
-        if (typeof showTitleScreen === "function") {
+        // 방향 체크 후 회전 메시지 또는 타이틀 화면 표시
+        if (typeof checkOrientationAndShowTitle === "function") {
+            checkOrientationAndShowTitle();
+        } else if (typeof showTitleScreen === "function") {
             showTitleScreen();
         } else {
             console.error("타이틀 화면을 찾을 수 없습니다.");
@@ -2273,13 +2275,15 @@ function showAdvancedHelp() {
 
 // 오프닝 다시보기 함수
 function replayOpening() {
-    // 타이틀 화면 먼저 표시
-        if (typeof showTitleScreen === "function") {
-            showTitleScreen();
-        } else {
-            console.error("타이틀 화면을 찾을 수 없습니다.");
-            showMenu();
-        }
+    // 방향 체크 후 회전 메시지 또는 타이틀 화면 표시
+    if (typeof checkOrientationAndShowTitle === "function") {
+        checkOrientationAndShowTitle();
+    } else if (typeof showTitleScreen === "function") {
+        showTitleScreen();
+    } else {
+        console.error("타이틀 화면을 찾을 수 없습니다.");
+        showMenu();
+    }
 }
 
 // 전역 함수로 등록하여 HTML에서 접근 가능하게 함

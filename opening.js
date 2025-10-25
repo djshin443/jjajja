@@ -541,9 +541,103 @@ function startOpeningSequence() {
     }
 }
 
+// 방향 체크 후 타이틀 화면 또는 회전 메시지 표시
+function checkOrientationAndShowTitle() {
+    const isPortrait = window.innerHeight > window.innerWidth;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                     (navigator.maxTouchPoints > 0) || window.innerWidth <= 768;
+
+    // 모바일 세로모드면 회전 메시지 표시
+    if (isMobile && isPortrait) {
+        showRotateMessage();
+    } else {
+        // PC 또는 가로모드면 바로 타이틀 화면 표시
+        showTitleScreen();
+    }
+}
+
+// 회전 메시지 화면 표시 (타이틀 화면 전에 표시)
+function showRotateMessage() {
+    // 기존 회전 메시지 화면 제거
+    const existingRotate = document.getElementById('rotateMessageScreen');
+    if (existingRotate) {
+        existingRotate.remove();
+    }
+
+    // 회전 메시지 화면 생성
+    const rotateScreen = document.createElement('div');
+    rotateScreen.id = 'rotateMessageScreen';
+    rotateScreen.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(135deg, #DDA0DD, #9370DB);
+        z-index: 10001;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Jua', sans-serif;
+    `;
+
+    // 회전된 폰 아이콘
+    const iconContainer = document.createElement('div');
+    iconContainer.style.cssText = `
+        font-size: 80px;
+        transform: rotate(90deg);
+        margin-bottom: 30px;
+    `;
+    iconContainer.textContent = '📱';
+
+    // 메시지 텍스트
+    const messageText = document.createElement('div');
+    messageText.style.cssText = `
+        color: #FFFFFF;
+        font-size: 24px;
+        font-weight: bold;
+        text-align: center;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        margin-bottom: 10px;
+    `;
+    messageText.textContent = '가로 모드로 돌려주세요';
+
+    // 서브 텍스트
+    const subText = document.createElement('div');
+    subText.style.cssText = `
+        color: #FFD700;
+        font-size: 16px;
+        text-align: center;
+    `;
+    subText.textContent = '최적의 게임 경험을 위해';
+
+    rotateScreen.appendChild(iconContainer);
+    rotateScreen.appendChild(messageText);
+    rotateScreen.appendChild(subText);
+    document.body.appendChild(rotateScreen);
+
+    // 방향 변경 감지
+    const checkOrientation = () => {
+        const isPortrait = window.innerHeight > window.innerWidth;
+
+        if (!isPortrait) {
+            // 가로모드가 되면 회전 메시지 제거하고 타이틀 화면 표시
+            rotateScreen.remove();
+            window.removeEventListener('resize', checkOrientation);
+            window.removeEventListener('orientationchange', checkOrientation);
+            showTitleScreen();
+        }
+    };
+
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+}
+
 // 전역 함수로 등록
 window.showTitleScreen = showTitleScreen;
 window.startOpeningSequence = startOpeningSequence;
+window.checkOrientationAndShowTitle = checkOrientationAndShowTitle;
 
 // 오프닝 시퀀스 클래스 (코믹 버전 + 클릭 진행) - 기존 코드 유지
 class OpeningSequence {
