@@ -1,8 +1,13 @@
 // HTML 스타일 타이틀 화면 표시 함수
 function showTitleScreen() {
-    // 기존 타이틀 화면 제거
+    // 기존 타이틀 화면 제거 (이벤트 리스너도 함께 정리)
     const existingTitle = document.getElementById('titleScreen');
     if (existingTitle) {
+        // ✅ 이벤트 리스너 먼저 제거!
+        if (window._titleScreenCleanup) {
+            window._titleScreenCleanup();
+        }
+        // 그 다음 DOM 제거
         existingTitle.remove();
     }
 
@@ -101,94 +106,90 @@ function showTitleScreen() {
     #titleScreen {
         position: fixed !important;
         top: 0 !important;
-            /* 타이틀 화면 전체 채우기 - html/body는 건드리지 않음 */
-            #titleScreen {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                min-height: 100vh !important;
-                min-height: -webkit-fill-available !important;
-                max-height: 100vh !important;
-                max-height: -webkit-fill-available !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                box-sizing: border-box !important;
-            }
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        min-height: 100vh !important;
+        min-height: -webkit-fill-available !important;
+        max-height: 100vh !important;
+        max-height: -webkit-fill-available !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
 
-            @supports (-webkit-touch-callout: none) {
-                /* iOS Safari 전용 스타일 - 주소창 고려 */
-                #titleScreen {
-                    height: -webkit-fill-available !important;
-                    min-height: -webkit-fill-available !important;
-                    max-height: -webkit-fill-available !important;
-                }
-            }
+    @supports (-webkit-touch-callout: none) {
+        /* iOS Safari 전용 스타일 - 주소창 고려 */
+        #titleScreen {
+            height: -webkit-fill-available !important;
+            min-height: -webkit-fill-available !important;
+            max-height: -webkit-fill-available !important;
+        }
+    }
 
-            @keyframes backgroundShimmer {
-                0% { background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD); }
-                50% { background: linear-gradient(135deg, #87CEEB, #DDA0DD, #FFB6C1); }
-                100% { background: linear-gradient(135deg, #DDA0DD, #FFB6C1, #87CEEB); }
-            }
-            
-            @keyframes titleBounce {
-                0%, 20%, 50%, 80%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
-                40% { transform: translateY(-30px) scale(1.1) rotate(-2deg); }
-                60% { transform: translateY(-15px) scale(1.05) rotate(2deg); }
-            }
-            
-            @keyframes sparkle {
-                0% { opacity: 0; transform: scale(0) rotate(0deg); }
-                50% { opacity: 1; transform: scale(1.5) rotate(180deg); }
-                100% { opacity: 0; transform: scale(0) rotate(360deg); }
-            }
-            
-            @keyframes float {
-                0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-                25% { transform: translateY(-15px) translateX(5px) rotate(5deg); }
-                50% { transform: translateY(-10px) translateX(-5px) rotate(-5deg); }
-                75% { transform: translateY(-5px) translateX(3px) rotate(3deg); }
-            }
-            
-            @keyframes buttonGlow {
-                0% { box-shadow: 0 5px 20px rgba(255, 105, 180, 0.3), 0 0 30px rgba(255, 105, 180, 0.2); }
-                50% { box-shadow: 0 8px 40px rgba(255, 105, 180, 0.6), 0 0 50px rgba(255, 105, 180, 0.4); }
-                100% { box-shadow: 0 5px 20px rgba(255, 105, 180, 0.3), 0 0 30px rgba(255, 105, 180, 0.2); }
-            }
-            
-            @keyframes pixelMove {
-                0%, 100% { transform: translateX(0); }
-                50% { transform: translateX(10px); }
-            }
-            
-            @keyframes coinRotate {
-                0% { transform: rotateY(0deg); }
-                100% { transform: rotateY(360deg); }
-            }
-            
-            @keyframes pulse {
-                0%, 100% { transform: scale(1); opacity: 1; }
-                50% { transform: scale(1.2); opacity: 0.8; }
-            }
-            
-            @keyframes fall {
-                0% {
-                    transform: translateY(0);
-                }
-                100% {
-                    transform: translateY(calc(100vh + 100px));
-                    /* 모바일에서도 작동하도록 대체값 설정 */
-                    transform: translateY(calc(var(--app-height, 100vh) + 100px));
-                }
-            }
-            
-            @keyframes flashFade {
-                from { opacity: 1; }
-                to { opacity: 0; }
-            }
+    @keyframes backgroundShimmer {
+        0% { background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD); }
+        50% { background: linear-gradient(135deg, #87CEEB, #DDA0DD, #FFB6C1); }
+        100% { background: linear-gradient(135deg, #DDA0DD, #FFB6C1, #87CEEB); }
+    }
+
+    @keyframes titleBounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+        40% { transform: translateY(-30px) scale(1.1) rotate(-2deg); }
+        60% { transform: translateY(-15px) scale(1.05) rotate(2deg); }
+    }
+
+    @keyframes sparkle {
+        0% { opacity: 0; transform: scale(0) rotate(0deg); }
+        50% { opacity: 1; transform: scale(1.5) rotate(180deg); }
+        100% { opacity: 0; transform: scale(0) rotate(360deg); }
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+        25% { transform: translateY(-15px) translateX(5px) rotate(5deg); }
+        50% { transform: translateY(-10px) translateX(-5px) rotate(-5deg); }
+        75% { transform: translateY(-5px) translateX(3px) rotate(3deg); }
+    }
+
+    @keyframes buttonGlow {
+        0% { box-shadow: 0 5px 20px rgba(255, 105, 180, 0.3), 0 0 30px rgba(255, 105, 180, 0.2); }
+        50% { box-shadow: 0 8px 40px rgba(255, 105, 180, 0.6), 0 0 50px rgba(255, 105, 180, 0.4); }
+        100% { box-shadow: 0 5px 20px rgba(255, 105, 180, 0.3), 0 0 30px rgba(255, 105, 180, 0.2); }
+    }
+
+    @keyframes pixelMove {
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(10px); }
+    }
+
+    @keyframes coinRotate {
+        0% { transform: rotateY(0deg); }
+        100% { transform: rotateY(360deg); }
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.8; }
+    }
+
+    @keyframes fall {
+        0% {
+            transform: translateY(0);
+        }
+        100% {
+            transform: translateY(calc(100vh + 100px));
+            /* 모바일에서도 작동하도록 대체값 설정 */
+            transform: translateY(calc(var(--app-height, 100vh) + 100px));
+        }
+    }
+
+    @keyframes flashFade {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
         `;
         document.head.appendChild(style);
     }
