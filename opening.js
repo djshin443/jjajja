@@ -6,12 +6,6 @@ function showTitleScreen() {
         existingTitle.remove();
     }
 
-    // gameContainer 숨기기 (파란색 배경 제거)
-    const gameContainer = document.getElementById('gameContainer');
-    if (gameContainer) {
-        gameContainer.style.display = 'none';
-    }
-
     // 모바일 뷰포트 메타 태그 설정 (검정 공백 방지)
     let viewportMeta = document.querySelector('meta[name="viewport"]');
     const originalViewportContent = viewportMeta ? viewportMeta.content : '';
@@ -30,21 +24,13 @@ function showTitleScreen() {
     // 실제 화면 높이를 CSS 변수로 설정 (모바일 브라우저의 주소창 고려)
     const setAppHeight = () => {
         const vh = window.innerHeight;
-        const vw = window.innerWidth;
         document.documentElement.style.setProperty('--app-height', `${vh}px`);
-        document.documentElement.style.setProperty('--app-width', `${vw}px`);
     };
 
     setAppHeight();
-
-    // 화면 크기 변경 시 CSS 변수 업데이트
-    const updateTitleScreenSize = () => {
-        setAppHeight();
-    };
-
-    window.addEventListener('resize', updateTitleScreenSize);
+    window.addEventListener('resize', setAppHeight);
     window.addEventListener('orientationchange', () => {
-        setTimeout(updateTitleScreenSize, 100);
+        setTimeout(setAppHeight, 100);
     });
     
     // 화면 방향 및 크기 체크
@@ -58,40 +44,52 @@ function showTitleScreen() {
         margin: document.body.style.margin,
         padding: document.body.style.padding,
         overflow: document.body.style.overflow,
-        height: document.body.style.height,
-        background: document.body.style.background
+        height: document.body.style.height
     };
     const originalHtmlStyle = {
         margin: document.documentElement.style.margin,
         padding: document.documentElement.style.padding,
         overflow: document.documentElement.style.overflow,
-        height: document.documentElement.style.height,
-        background: document.documentElement.style.background
+        height: document.documentElement.style.height
     };
 
-    // 타이틀 화면 표시 중에만 스크롤 방지 및 배경색 설정
     document.body.style.margin = '0';
     document.body.style.padding = '0';
     document.body.style.overflow = 'hidden';
-    document.body.style.background = 'linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD)';
+    document.body.style.height = '100%';
     document.documentElement.style.margin = '0';
     document.documentElement.style.padding = '0';
     document.documentElement.style.overflow = 'hidden';
-    document.documentElement.style.background = 'linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD)';
+    document.documentElement.style.height = '100%';
 
     // 타이틀 화면 컨테이너 생성
     const titleScreen = document.createElement('div');
     titleScreen.id = 'titleScreen';
-
-    // 타이틀 화면 스타일 - CSS 클래스에서 대부분 처리, 여기서는 동적인 것만
-    titleScreen.style.background = 'linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD)';
-    titleScreen.style.display = 'flex';
-    titleScreen.style.flexDirection = 'column';
-    titleScreen.style.alignItems = 'center';
-    titleScreen.style.justifyContent = 'center';
-    titleScreen.style.fontFamily = "'Jua', sans-serif";
-    titleScreen.style.animation = 'backgroundShimmer 3s ease-in-out infinite alternate';
-    titleScreen.style.padding = isMobilePortrait ? '20px 10px' : '20px';
+    titleScreen.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+        max-height: 100vh;
+        max-height: -webkit-fill-available;
+        background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Jua', sans-serif;
+        overflow: hidden;
+        animation: backgroundShimmer 3s ease-in-out infinite alternate;
+        padding: ${isMobilePortrait ? '20px 10px' : '20px'};
+        box-sizing: border-box;
+        margin: 0;
+    `;
 
     // 원래 스타일 복원 함수 저장
     titleScreen.dataset.restoreStyles = JSON.stringify({
@@ -104,6 +102,16 @@ function showTitleScreen() {
         const style = document.createElement('style');
         style.id = 'titleScreenStyles';
         style.textContent = `
+            /* 모바일 브라우저의 주소창을 고려한 스타일 */
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                height: 100% !important;
+                width: 100% !important;
+                position: fixed !important;
+            }
+
             /* 타이틀 화면 전체 채우기 - 여백 완전 제거 */
             #titleScreen {
                 position: fixed !important;
@@ -112,55 +120,25 @@ function showTitleScreen() {
                 right: 0 !important;
                 bottom: 0 !important;
                 width: 100vw !important;
-                max-width: 100vw !important;
                 height: 100vh !important;
+                min-height: 100vh !important;
+                min-height: -webkit-fill-available !important;
                 max-height: 100vh !important;
+                max-height: -webkit-fill-available !important;
                 margin: 0 !important;
                 padding: 20px !important;
                 box-sizing: border-box !important;
-                overflow: hidden !important;
-                z-index: 10000 !important;
-            }
-
-            /* 모바일 Safe Area 대응 (노치, 상태바) */
-            @supports (padding: max(0px)) {
-                #titleScreen {
-                    padding-top: max(20px, env(safe-area-inset-top)) !important;
-                    padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
-                    padding-left: max(20px, env(safe-area-inset-left)) !important;
-                    padding-right: max(20px, env(safe-area-inset-right)) !important;
-                }
             }
 
             @supports (-webkit-touch-callout: none) {
                 /* iOS Safari 전용 스타일 - 주소창 고려 */
-                #titleScreen {
-                    height: 100vh !important;
+                html, body {
                     height: -webkit-fill-available !important;
                 }
-            }
-
-            /* 세로모드일 때 경고 메시지 */
-            @media screen and (orientation: portrait) {
-                #titleScreen::before {
-                    content: "🔄\\A\\A화면을 가로로\\A돌려주세요!\\A\\A📱 ➜ 🖥️\\A\\A이 게임은\\A가로 모드 전용입니다";
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: linear-gradient(135deg, #9370DB, #DDA0DD);
-                    color: white;
-                    padding: 6vh 8vw;
-                    border: 3px solid #FFF;
-                    border-radius: 20px;
-                    font-size: min(4.5vw, 18px);
-                    z-index: 20000;
-                    font-family: 'Jua', sans-serif;
-                    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-                    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-                    text-align: center;
-                    line-height: 1.6;
-                    white-space: pre-line;
+                #titleScreen {
+                    height: -webkit-fill-available !important;
+                    min-height: -webkit-fill-available !important;
+                    max-height: -webkit-fill-available !important;
                 }
             }
 
@@ -441,12 +419,6 @@ function showTitleScreen() {
         titleScreen.style.opacity = '0';
         
         setTimeout(() => {
-            // gameContainer 다시 보이기
-            const gameContainer = document.getElementById('gameContainer');
-            if (gameContainer) {
-                gameContainer.style.display = 'flex';
-            }
-
             // 원래 스타일 복원
             try {
                 const styles = JSON.parse(titleScreen.dataset.restoreStyles);
@@ -498,26 +470,7 @@ function showTitleScreen() {
     
     // 타이틀 화면을 페이지에 추가
     document.body.appendChild(titleScreen);
-
-    // 모바일에서 스크롤/오버스크롤 완전히 방지
-    const preventScroll = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    };
-
-    // 모든 터치 이벤트에서 스크롤 방지
-    titleScreen.addEventListener('touchstart', preventScroll, { passive: false });
-    titleScreen.addEventListener('touchmove', preventScroll, { passive: false });
-    titleScreen.addEventListener('touchend', (e) => {
-        if (e.target !== startButton && !startButton.contains(e.target)) {
-            e.preventDefault();
-        }
-    }, { passive: false });
-
-    document.body.addEventListener('touchmove', preventScroll, { passive: false });
-    document.documentElement.addEventListener('touchmove', preventScroll, { passive: false });
-
+    
     // 터치 이벤트도 추가 (모바일 지원)
     startButton.addEventListener('touchend', (e) => {
         e.preventDefault();

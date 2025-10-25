@@ -115,8 +115,6 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             max-height: 90vh;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            touch-action: pan-y pinch-zoom;
         }
 
         #questionText {
@@ -243,7 +241,6 @@
             padding: 20px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-y pinch-zoom;
         }
 
         .menu-container {
@@ -257,8 +254,6 @@
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            touch-action: pan-y pinch-zoom;
         }
 
         .menu-header {
@@ -358,7 +353,6 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             padding: 5px;
-            touch-action: pan-x pan-y;
         }
         
         #unitGrid::-webkit-scrollbar {
@@ -625,7 +619,6 @@
                 -webkit-overflow-scrolling: touch;
                 padding-bottom: 10px;
                 flex-wrap: nowrap;
-                touch-action: pan-x pan-y;
             }
             
             #unitGrid::-webkit-scrollbar {
@@ -739,31 +732,29 @@
                 gap: 12px;
                 justify-content: center;
                 flex-wrap: nowrap;
-                touch-action: pan-x pan-y;
             }
         }
 
         @media screen and (orientation: portrait) {
 			/* 메뉴가 아닌 게임 중일 때만 세로 모드 경고 표시 */
 			#gameContainer:not(.menu-mode)::before {
-				content: "🔄\A\A화면을 가로로\A돌려주세요!\A\A📱 ➜ 🖥️\A\A이 게임은\A가로 모드 전용입니다";
+				content: "💜 화면을 가로로 돌려주세요! 💜";
 				position: fixed;
 				top: 50%;
 				left: 50%;
 				transform: translate(-50%, -50%);
 				background: linear-gradient(135deg, #9370DB, #DDA0DD);
 				color: white;
-				padding: 6vh 8vw;
+				padding: 5vh 10vw;
 				border: 3px solid #FFF;
 				border-radius: 20px;
-				font-size: min(4.5vw, 18px);
+				font-size: min(5vw, 20px);
 				z-index: 9999;
 				font-family: 'Jua', sans-serif;
 				text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 				box-shadow: 0 5px 20px rgba(0,0,0,0.5);
 				text-align: center;
-				line-height: 1.6;
-				white-space: pre-line;
+				line-height: 1.5;
 			}
 			
 			/* 게임 중일 때만 UI 숨김 */
