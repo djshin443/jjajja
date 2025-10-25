@@ -576,9 +576,6 @@ function startOpeningSequence() {
         document.getElementById('fullscreenBtn').style.display = 'none';
         controls.style.display = 'none';
 
-        // 강제 레이아웃 재계산 (Forced Reflow)
-        controls.offsetHeight;
-
         // 캔버스를 flex에서 분리 (완전 풀스크린)
         canvas.style.flex = 'none';
         canvas.style.position = 'fixed';
@@ -594,11 +591,19 @@ function startOpeningSequence() {
         // body 배경을 그라데이션으로 변경 (오프닝 중)
         document.body.style.background = 'linear-gradient(135deg, #87CEEB, #98D8E8)';
 
-        // 캔버스를 전체 화면으로 설정
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // 강제 레이아웃 재계산 (더 확실하게)
+        canvas.offsetHeight;
+        controls.offsetHeight;
 
-        startOpening(canvas, ctx, function() {
+        // requestAnimationFrame으로 레이아웃 완료 후 캔버스 크기 설정
+        requestAnimationFrame(() => {
+            // 한 프레임 더 기다려서 확실하게 레이아웃 완료
+            requestAnimationFrame(() => {
+                // 캔버스를 전체 화면으로 설정
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+
+                startOpening(canvas, ctx, function() {
             // 캔버스 원래대로 복원
             canvas.style.flex = '1';
             canvas.style.position = '';
@@ -621,6 +626,8 @@ function startOpeningSequence() {
             if (typeof showMenu === 'function') {
                 showMenu();
             }
+        });
+            });
         });
     }
 }
@@ -1043,11 +1050,8 @@ class OpeningSequence {
 
     // 가로모드 권장 메시지
     drawRotateMessage() {
-        // 그라데이션 배경
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        gradient.addColorStop(0, '#DDA0DD');
-        gradient.addColorStop(1, '#9370DB');
-        this.ctx.fillStyle = gradient;
+        // 검은 반투명 배경
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         // 회전 아이콘
@@ -1056,7 +1060,7 @@ class OpeningSequence {
         const iconSize = Math.min(this.canvas.width, this.canvas.height) * 0.15;
 
         this.ctx.save();
-        this.ctx.translate(centerX, centerY);
+        this.ctx.translate(centerX, centerY - 30);
         this.ctx.rotate(Math.PI / 2);
         this.ctx.font = `${iconSize}px Arial`;
         this.ctx.textAlign = 'center';
@@ -1066,18 +1070,21 @@ class OpeningSequence {
 
         // 메시지 텍스트
         this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.font = 'bold 24px "Jua", sans-serif';
+        this.ctx.font = 'bold 28px "Jua", sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         this.ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        this.ctx.shadowBlur = 10;
-        this.ctx.fillText('가로 모드로 돌려주세요', centerX, centerY + iconSize + 40);
+        this.ctx.shadowBlur = 8;
+        this.ctx.fillText('💜 화면을 가로로 돌려주세요! 💜', centerX, centerY + iconSize + 20);
         this.ctx.shadowBlur = 0;
 
         // 작은 안내 텍스트
-        this.ctx.font = '16px "Jua", sans-serif';
+        this.ctx.font = '18px "Jua", sans-serif';
         this.ctx.fillStyle = '#FFD700';
-        this.ctx.fillText('최적의 게임 경험을 위해', centerX, centerY + iconSize + 75);
+        this.ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        this.ctx.shadowBlur = 4;
+        this.ctx.fillText('최적의 게임 경험을 위해', centerX, centerY + iconSize + 55);
+        this.ctx.shadowBlur = 0;
     }
     
     // 배경 그리기

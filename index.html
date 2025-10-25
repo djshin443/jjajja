@@ -753,20 +753,34 @@
 				top: 50%;
 				left: 50%;
 				transform: translate(-50%, -50%);
-				background: linear-gradient(135deg, #9370DB, #DDA0DD);
+				background: rgba(0, 0, 0, 0.8);
 				color: white;
 				padding: 5vh 10vw;
-				border: 3px solid #FFF;
 				border-radius: 20px;
-				font-size: min(5vw, 20px);
+				font-size: min(5vw, 24px);
 				z-index: 9999;
 				font-family: 'Jua', sans-serif;
-				text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-				box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+				text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+				box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 				text-align: center;
 				line-height: 1.5;
+				font-weight: bold;
 			}
-			
+
+			#gameContainer:not(.menu-mode)::after {
+				content: "최적의 게임 경험을 위해";
+				position: fixed;
+				top: calc(50% + 60px);
+				left: 50%;
+				transform: translate(-50%, 0);
+				color: #FFD700;
+				font-size: min(4vw, 18px);
+				z-index: 9999;
+				font-family: 'Jua', sans-serif;
+				text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+				text-align: center;
+			}
+
 			/* 게임 중일 때만 UI 숨김 */
 			#gameContainer:not(.menu-mode) #gameCanvas,
 			#gameContainer:not(.menu-mode) #controls,

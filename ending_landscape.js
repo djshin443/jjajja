@@ -133,30 +133,76 @@ let endingParticleSystem = null;
 
 // 가로 화면 회전 메시지
 function showRotateDeviceMessage() {
-    const rotateMsg = document.createElement('div');
-    rotateMsg.style.cssText = `
+    const rotateOverlay = document.createElement('div');
+    rotateOverlay.id = 'rotateDeviceOverlay';
+    rotateOverlay.style.cssText = `
         position: fixed;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, rgba(255, 107, 107, 0.9), rgba(255, 165, 0, 0.9));
-        color: white;
-        padding: 10px 20px;
-        border-radius: 20px;
-        font-family: 'Jua', sans-serif;
-        font-size: 14px;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         z-index: 10001;
-        animation: bounce 2s ease-in-out infinite;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        pointer-events: auto;
     `;
-    rotateMsg.textContent = '📱 화면을 가로로 돌려주세요! 더 멋진 엔딩을 볼 수 있어요!';
-    document.body.appendChild(rotateMsg);
-    
-    setTimeout(() => {
-        if (rotateMsg.parentElement) {
-            rotateMsg.remove();
+
+    // 회전 아이콘
+    const rotateIcon = document.createElement('div');
+    rotateIcon.innerHTML = '📱';
+    rotateIcon.style.cssText = `
+        font-size: min(20vw, 100px);
+        transform: rotate(90deg);
+        animation: pulse 2s ease-in-out infinite;
+        margin-bottom: 30px;
+    `;
+
+    // 메시지 텍스트
+    const rotateText = document.createElement('div');
+    rotateText.innerHTML = '💜 화면을 가로로 돌려주세요! 💜';
+    rotateText.style.cssText = `
+        font-family: 'Jua', sans-serif;
+        font-size: min(6vw, 28px);
+        color: #FFFFFF;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+        text-align: center;
+        padding: 0 20px;
+        line-height: 1.5;
+        font-weight: bold;
+    `;
+
+    // 작은 안내 텍스트
+    const rotateSubtext = document.createElement('div');
+    rotateSubtext.innerHTML = '최적의 게임 경험을 위해';
+    rotateSubtext.style.cssText = `
+        font-family: 'Jua', sans-serif;
+        font-size: min(4vw, 18px);
+        color: #FFD700;
+        text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+        margin-top: 15px;
+        text-align: center;
+    `;
+
+    rotateOverlay.appendChild(rotateIcon);
+    rotateOverlay.appendChild(rotateText);
+    rotateOverlay.appendChild(rotateSubtext);
+    document.body.appendChild(rotateOverlay);
+
+    // 화면 회전 시 오버레이 제거
+    const checkOrientation = () => {
+        const isNowPortrait = window.innerHeight > window.innerWidth;
+        if (!isNowPortrait && rotateOverlay.parentNode) {
+            rotateOverlay.remove();
+            window.removeEventListener('resize', checkOrientation);
+            window.removeEventListener('orientationchange', checkOrientation);
         }
-    }, 5000);
+    };
+
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
 }
 
 // 캐릭터별 엔딩 스토리 (대화형)
