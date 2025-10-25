@@ -557,8 +557,14 @@ function showTitleScreen() {
 
     // 실시간으로 화면 방향 감지하여 오버레이 표시/숨김
     const checkOrientation = () => {
-        const isNowPortrait = window.innerHeight > window.innerWidth;
-        rotateOverlay.style.display = isNowPortrait ? 'flex' : 'none';
+        // setTimeout으로 브라우저가 화면 크기를 업데이트할 시간을 줌
+        setTimeout(() => {
+            // requestAnimationFrame으로 렌더링 시점에 정확하게 체크
+            requestAnimationFrame(() => {
+                const isNowPortrait = window.innerHeight > window.innerWidth;
+                rotateOverlay.style.display = isNowPortrait ? 'flex' : 'none';
+            });
+        }, 100);
     };
 
     // 초기 체크

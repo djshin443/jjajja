@@ -193,12 +193,18 @@ function showRotateDeviceMessage() {
 
     // 화면 회전 시 오버레이 제거
     const checkOrientation = () => {
-        const isNowPortrait = window.innerHeight > window.innerWidth;
-        if (!isNowPortrait && rotateOverlay.parentNode) {
-            rotateOverlay.remove();
-            window.removeEventListener('resize', checkOrientation);
-            window.removeEventListener('orientationchange', checkOrientation);
-        }
+        // setTimeout으로 브라우저가 화면 크기를 업데이트할 시간을 줌
+        setTimeout(() => {
+            // requestAnimationFrame으로 렌더링 시점에 정확하게 체크
+            requestAnimationFrame(() => {
+                const isNowPortrait = window.innerHeight > window.innerWidth;
+                if (!isNowPortrait && rotateOverlay.parentNode) {
+                    rotateOverlay.remove();
+                    window.removeEventListener('resize', checkOrientation);
+                    window.removeEventListener('orientationchange', checkOrientation);
+                }
+            });
+        }, 100);
     };
 
     window.addEventListener('resize', checkOrientation);
