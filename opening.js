@@ -48,6 +48,12 @@ function showTitleScreen() {
                      (navigator.maxTouchPoints > 0) || window.innerWidth <= 768;
     const isMobilePortrait = isPortrait && isMobile;
 
+    // gameContainer에 menu-mode 클래스 추가 (타이틀 화면은 메뉴 모드)
+    const gameContainer = document.getElementById('gameContainer');
+    if (gameContainer) {
+        gameContainer.classList.add('menu-mode');
+    }
+
     // 타이틀 화면 컨테이너 생성
     const titleScreen = document.createElement('div');
     titleScreen.id = 'titleScreen';
@@ -414,6 +420,12 @@ function showTitleScreen() {
         titleScreen.style.opacity = '0';
         
         setTimeout(() => {
+            // gameContainer의 menu-mode 클래스 제거 (게임 모드로 전환)
+            const gameContainer = document.getElementById('gameContainer');
+            if (gameContainer) {
+                gameContainer.classList.remove('menu-mode');
+            }
+
             // 타이틀 화면 이벤트 리스너 정리
             if (window._titleScreenCleanup) {
                 window._titleScreenCleanup();
@@ -463,13 +475,85 @@ function showTitleScreen() {
     contentContainer.appendChild(mainTitle);
     contentContainer.appendChild(startButton);
     contentContainer.appendChild(helpText);
-    
+
     // 컨테이너를 타이틀 화면에 추가
     titleScreen.appendChild(contentContainer);
-    
+
+    // 세로모드일 때 회전 메시지 오버레이 추가
+    if (isPortrait) {
+        const rotateOverlay = document.createElement('div');
+        rotateOverlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            pointer-events: auto;
+        `;
+
+        // 회전 아이콘
+        const rotateIcon = document.createElement('div');
+        rotateIcon.innerHTML = '📱';
+        rotateIcon.style.cssText = `
+            font-size: min(20vw, 100px);
+            transform: rotate(90deg);
+            animation: pulse 2s ease-in-out infinite;
+            margin-bottom: 30px;
+        `;
+
+        // 메시지 텍스트
+        const rotateText = document.createElement('div');
+        rotateText.innerHTML = '💜 화면을 가로로 돌려주세요! 💜';
+        rotateText.style.cssText = `
+            font-family: 'Jua', sans-serif;
+            font-size: min(6vw, 28px);
+            color: #FFFFFF;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+            text-align: center;
+            padding: 0 20px;
+            line-height: 1.5;
+        `;
+
+        // 작은 안내 텍스트
+        const rotateSubtext = document.createElement('div');
+        rotateSubtext.innerHTML = '최적의 게임 경험을 위해';
+        rotateSubtext.style.cssText = `
+            font-family: 'Jua', sans-serif;
+            font-size: min(4vw, 18px);
+            color: #FFD700;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+            margin-top: 15px;
+            text-align: center;
+        `;
+
+        rotateOverlay.appendChild(rotateIcon);
+        rotateOverlay.appendChild(rotateText);
+        rotateOverlay.appendChild(rotateSubtext);
+        titleScreen.appendChild(rotateOverlay);
+
+        // 화면 회전 시 오버레이 제거
+        const checkOrientation = () => {
+            const isNowPortrait = window.innerHeight > window.innerWidth;
+            if (!isNowPortrait && rotateOverlay.parentNode) {
+                rotateOverlay.remove();
+                window.removeEventListener('resize', checkOrientation);
+                window.removeEventListener('orientationchange', checkOrientation);
+            }
+        };
+
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
+    }
+
     // 타이틀 화면을 페이지에 추가
     document.body.appendChild(titleScreen);
-    
+
     // 터치 이벤트도 추가 (모바일 지원)
     startButton.addEventListener('touchend', (e) => {
         e.preventDefault();
@@ -541,17 +625,10 @@ function startOpeningSequence() {
     }
 }
 
-// 방향 체크 후 타이틀 화면 또는 오프닝 시퀀스 시작
+// 방향 체크 후 타이틀 화면 시작 (세로모드든 가로모드든 항상 타이틀 표시)
 function checkOrientationAndShowTitle() {
-    const isPortrait = window.innerHeight > window.innerWidth;
-
-    // 세로모드면 바로 오프닝 시퀀스 시작 (기존 drawRotateMessage 사용)
-    if (isPortrait) {
-        startOpeningSequence();
-    } else {
-        // 가로모드면 타이틀 화면 표시
-        showTitleScreen();
-    }
+    // 세로모드든 가로모드든 항상 타이틀 화면 표시
+    showTitleScreen();
 }
 
 // 전역 함수로 등록
@@ -926,8 +1003,8 @@ class OpeningSequence {
     
     // 렌더링
     render() {
-        // 세로모드일 때 가로모드 권장 메시지 표시 (모바일만)
-        if (!this.isLandscape && this.isMobile) {
+        // 세로모드일 때 무조건 가로모드 권장 메시지 표시
+        if (!this.isLandscape) {
             this.drawRotateMessage();
             return;
         }
