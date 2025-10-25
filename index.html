@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="screen-orientation" content="landscape">
+    <meta name="x5-orientation" content="landscape">
     <title>지율이의 픽셀 영어 게임</title>
 	<link rel="apple-touch-icon" href="ico.png">
     <link rel="icon" type="image/png" href="ico.png">
@@ -736,23 +738,24 @@
         @media screen and (orientation: portrait) {
 			/* 메뉴가 아닌 게임 중일 때만 세로 모드 경고 표시 */
 			#gameContainer:not(.menu-mode)::before {
-				content: "💜 화면을 가로로 돌려주세요! 💜";
+				content: "🔄\A\A화면을 가로로\A돌려주세요!\A\A📱 ➜ 🖥️\A\A이 게임은\A가로 모드 전용입니다";
 				position: fixed;
 				top: 50%;
 				left: 50%;
 				transform: translate(-50%, -50%);
 				background: linear-gradient(135deg, #9370DB, #DDA0DD);
 				color: white;
-				padding: 5vh 10vw;
+				padding: 6vh 8vw;
 				border: 3px solid #FFF;
 				border-radius: 20px;
-				font-size: min(5vw, 20px);
+				font-size: min(4.5vw, 18px);
 				z-index: 9999;
 				font-family: 'Jua', sans-serif;
 				text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 				box-shadow: 0 5px 20px rgba(0,0,0,0.5);
 				text-align: center;
-				line-height: 1.5;
+				line-height: 1.6;
+				white-space: pre-line;
 			}
 			
 			/* 게임 중일 때만 UI 숨김 */
@@ -812,8 +815,8 @@
         <div id="characterSelectMenu">
             <div class="menu-container">
                 <div class="menu-header">
-                    <h1 id="menuTitle">💜 지율이의 픽셀 영어 게임 💜</h1>
-                    <p id="menuSubtitle">공주님! 함께 모험할 캐릭터를 선택해주세요 ✨</p>
+                    <h1 id="menuTitle">🌟 영어 히어로를 선택하세요! 🌟</h1>
+                    <p id="menuSubtitle">ABC 대마왕으로부터 지구를 지킬 히어로는?</p>
                 </div>
 
                 <div class="menu-content">
