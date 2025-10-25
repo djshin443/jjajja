@@ -617,11 +617,13 @@ let enemies = [];
 function resizeCanvas() {
     const container = document.getElementById('gameContainer');
     const controls = document.getElementById('controls');
-    const controlsHeight = controls ? controls.offsetHeight : 0;
-    
+
+    // 오프닝 중에는 controls 높이를 무시 (풀스크린)
+    const controlsHeight = (window.isOpeningPlaying || !controls) ? 0 : controls.offsetHeight;
+
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight - controlsHeight;
-    
+
     canvas.width = screenWidth;
     canvas.height = screenHeight;
     

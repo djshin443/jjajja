@@ -495,6 +495,15 @@ function startOpeningSequence() {
         // 강제 레이아웃 재계산 (Forced Reflow)
         controls.offsetHeight;
 
+        // 캔버스를 flex에서 분리 (완전 풀스크린)
+        canvas.style.flex = 'none';
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100vw';
+        canvas.style.height = '100vh';
+        canvas.style.zIndex = '10';
+
         // 오프닝 플래그 설정
         window.isOpeningPlaying = true;
 
@@ -506,6 +515,15 @@ function startOpeningSequence() {
         canvas.height = window.innerHeight;
 
         startOpening(canvas, ctx, function() {
+            // 캔버스 원래대로 복원
+            canvas.style.flex = '1';
+            canvas.style.position = '';
+            canvas.style.top = '';
+            canvas.style.left = '';
+            canvas.style.width = '';
+            canvas.style.height = '';
+            canvas.style.zIndex = '';
+
             // 오프닝 플래그 해제
             window.isOpeningPlaying = false;
 
