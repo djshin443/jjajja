@@ -22,7 +22,7 @@
         }
 
         body {
-            background: #000;
+            background: #87CEEB; /* 기본 하늘색 배경 */
             font-family: 'Jua', sans-serif;
             overflow: hidden;
             touch-action: none;
@@ -44,20 +44,23 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: #5C94FC;
+            background: transparent; /* 파란색 제거 */
             display: flex;
             flex-direction: column;
         }
 
         #gameCanvas {
-            flex: 1;
-            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background: transparent;
+            background: transparent; /* 배경 투명 - background.js가 그림 */
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
+            z-index: 1;
+            display: block;
         }
 
         /* 공주님을 위한 예쁜 UI - 보라색 테마 */
@@ -78,14 +81,14 @@
         }
 
         #ui {
-            position: absolute;
+            position: fixed; /* 전체 화면 기준 */
             top: 10px;
             left: 10px;
             right: 120px;
             color: white;
             font-size: 14px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            z-index: 10;
+            z-index: 110; /* 캔버스와 메뉴 위에 */
             background: linear-gradient(135deg, rgba(147,112,219,0.9), rgba(221,160,221,0.9));
             border: 3px solid #FFF;
             padding: 12px 20px;
@@ -96,7 +99,7 @@
         }
 
         #questionPanel {
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -186,7 +189,7 @@
             right: 0;
             display: flex;
             gap: 2%;
-            z-index: 10;
+            z-index: 110; /* UI와 같은 레벨 */
             height: 15vh;
             min-height: 60px;
             max-height: 80px;

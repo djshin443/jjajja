@@ -1,5 +1,29 @@
 // HTML 스타일 타이틀 화면 표시 함수
 function showTitleScreen() {
+    // PWA/Standalone 모드 감지
+    const isStandalone = window.navigator.standalone === true ||
+                        window.matchMedia('(display-mode: standalone)').matches ||
+                        window.matchMedia('(display-mode: fullscreen)').matches;
+
+    // 실제 화면 높이를 CSS 변수로 설정 (visualViewport 우선, 모바일 브라우저 주소창 고려)
+    // 맨 먼저 설정하여 DOM 생성 전에 --app-height가 준비되도록 함
+    const setAppHeight = () => {
+        const vv = window.visualViewport;
+        let vh = vv ? vv.height : window.innerHeight;
+
+        // iOS PWA 모드에서는 상태바 영역 보정
+        if (isStandalone && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+            // PWA에서는 innerHeight 사용 (이미 safe area 포함됨)
+            vh = window.innerHeight;
+        }
+
+        document.documentElement.style.setProperty('--app-height', `${vh}px`);
+    };
+
+    // 즉시 첫 번째 높이 설정
+    setAppHeight();
+
+
     // 기존 타이틀 화면 제거 (이벤트 리스너도 함께 정리)
     const existingTitle = document.getElementById('titleScreen');
     if (existingTitle) {
@@ -26,19 +50,12 @@ function showTitleScreen() {
     // 원래 viewport 설정 저장
     window._originalViewport = originalViewportContent;
 
-    // 실제 화면 높이를 CSS 변수로 설정 (visualViewport 우선, 모바일 브라우저 주소창 고려)
-    const setAppHeight = () => {
-        const vv = window.visualViewport;
-        const vh = vv ? vv.height : window.innerHeight;
-        document.documentElement.style.setProperty('--app-height', `${vh}px`);
-    };
-
     const orientationChangeHandler = () => {
         setTimeout(setAppHeight, 100);
     };
 
-    // 초기 설정 + 더블 rAF로 정확한 뷰포트 보정 (오프닝처럼)
-    setAppHeight();
+    // 더블 rAF로 정확한 뷰포트 보정 (오프닝처럼)
+    // 첫 번째 setAppHeight()는 이미 위에서 실행됨
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             setAppHeight();
@@ -93,14 +110,30 @@ function showTitleScreen() {
     // 타이틀 화면 컨테이너 생성 (--app-height가 설정된 후)
     const titleScreen = document.createElement('div');
     titleScreen.id = 'titleScreen';
-    // 인라인 스타일은 높이 설정 제외 (CSS에서 처리)
+
+    // PWA standalone 모드면 클래스 추가
+    if (isStandalone) {
+        titleScreen.className = 'pwa-standalone';
+
+        // iOS인 경우 추가 클래스
+        if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+            titleScreen.className += ' ios-pwa';
+
+            // iPhone X 이상 노치 기기 감지 (화면 비율로 추정)
+            const isNotch = (window.screen.height / window.screen.width) > 2;
+            if (isNotch) {
+                titleScreen.className += ' has-notch';
+            }
+        }
+    }
+
+    // 간단한 인라인 스타일 - 전체 화면 채우기
     titleScreen.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100vw;
+        width: 100%;
+        height: 100%;
         background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
         z-index: 10000;
         display: flex;
@@ -120,42 +153,24 @@ function showTitleScreen() {
         const style = document.createElement('style');
         style.id = 'titleScreenStyles';
         style.textContent = `
-		    /* body, html 여백 제거 및 높이 설정 */
+		    /* body, html 기본 설정 */
 			html, body {
 				margin: 0 !important;
 				padding: 0 !important;
 				overflow: hidden !important;
 				width: 100% !important;
 				height: 100% !important;
-				height: var(--app-height, 100dvh) !important;
-				min-height: var(--app-height, 100dvh) !important;
 			}
     
-    /* 타이틀 화면 전체 채우기 */
+    /* 타이틀 화면 전체 채우기 - 간단하게 */
     #titleScreen {
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         right: 0 !important;
         bottom: 0 !important;
-        width: 100vw !important;
-
-        /* CSS 폴백은 역순 (나중에 선언된 것이 우선) */
-        /* 최후 폴백: 구형 브라우저용 */
-        height: 100vh !important;
-        min-height: 100vh !important;
-        max-height: 100vh !important;
-
-        /* 중간 폴백: dynamic viewport height (주소창 제외) */
-        height: 100dvh !important;
-        min-height: 100dvh !important;
-        max-height: 100dvh !important;
-
-        /* 최우선: JS로 계산한 실제 뷰포트 높이 (visualViewport 기반) */
-        height: var(--app-height, 100dvh) !important;
-        min-height: var(--app-height, 100dvh) !important;
-        max-height: var(--app-height, 100dvh) !important;
-
+        width: 100% !important;
+        height: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
         box-sizing: border-box !important;
@@ -652,7 +667,7 @@ function showTitleScreen() {
     // 한 프레임 후 최종 높이 보정
     requestAnimationFrame(() => {
         setAppHeight();
-        titleScreen.style.height = 'var(--app-height, 100dvh)';
+        // CSS에서 이미 처리하므로 인라인 스타일은 설정하지 않음
     });
 
     // 터치 이벤트도 추가 (모바일 지원)
@@ -721,9 +736,10 @@ function startOpeningSequence() {
             document.body.style.background = '#000';
 
             // 오프닝 완료 후 메뉴 표시
-            if (typeof hasSeenOpening !== 'undefined') {
-                hasSeenOpening = true;
-            }
+            // 매번 타이틀 화면 보여주기 위해 제거
+            // if (typeof hasSeenOpening !== 'undefined') {
+            //     hasSeenOpening = true;
+            // }
             if (typeof showMenu === 'function') {
                 showMenu();
             }

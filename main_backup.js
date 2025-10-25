@@ -618,9 +618,11 @@ function resizeCanvas() {
     const container = document.getElementById('gameContainer');
     const controls = document.getElementById('controls');
 
-    // 캔버스는 항상 전체 화면 (controls는 오버레이)
+    // 오프닝 중에는 controls 높이를 무시 (풀스크린)
+    const controlsHeight = (window.isOpeningPlaying || !controls) ? 0 : controls.offsetHeight;
+
     const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
+    const screenHeight = window.innerHeight - controlsHeight;
 
     canvas.width = screenWidth;
     canvas.height = screenHeight;
@@ -826,9 +828,6 @@ function checkIOSFullscreen() {
 
 // 게임 초기화
 function initGame() {
-    // 캔버스 다시 표시 (게임 시작 시)
-    document.getElementById('gameCanvas').style.display = 'block';
-
     gameState.running = true;
     gameState.score = 0;
     gameState.stage = 1;
@@ -1376,8 +1375,8 @@ function render() {
         );
     }
 
-    // 캔버스 클리어 (투명 배경)
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#5C94FC';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // 배경 그리기 (background.js에서)
     if (typeof drawBackground === 'function') {
@@ -1749,25 +1748,22 @@ function startSelectedGame() {
     document.getElementById('characterSelectMenu').style.display = 'none';
     document.getElementById('unitSelectMenu').style.display = 'none';
     document.getElementById('ui').style.display = 'block';
-
+    
     const displayText = gameState.selectedUnits.join(', ');
     document.getElementById('unitText').textContent = displayText;
-
-    // 캔버스 크기 조정 (게임 시작 시 전체화면으로)
-    resizeCanvas();
-
+    
     // 게임 시작 시 전체화면 모드 자동 활성화 (사용자가 이미 해제하지 않은 경우)
-    if (!isUserExiting && !document.fullscreenElement &&
-        !document.webkitFullscreenElement && !document.mozFullScreenElement &&
+    if (!isUserExiting && !document.fullscreenElement && 
+        !document.webkitFullscreenElement && !document.mozFullScreenElement && 
         !document.msFullscreenElement) {
-
+        
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         if (!isIOS) {
             isFullscreenDesired = true;
             toggleFullscreen();
         }
     }
-
+    
     initGame();
 }
 
@@ -1775,8 +1771,6 @@ function startSelectedGame() {
 function showMenu() {
     gameState.running = false;
 	 document.getElementById('gameContainer').classList.add('menu-mode');
-    // 캔버스 숨기기 (메뉴 화면에서)
-    document.getElementById('gameCanvas').style.display = 'none';
     document.getElementById('characterSelectMenu').style.display = 'flex';
     document.getElementById('unitSelectMenu').style.display = 'none';
     document.getElementById('ui').style.display = 'none';
