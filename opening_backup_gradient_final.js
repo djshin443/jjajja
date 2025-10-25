@@ -23,6 +23,11 @@ function showTitleScreen() {
     // 즉시 첫 번째 높이 설정
     setAppHeight();
 
+    // PWA 모드에서 body/html 배경 즉시 설정 (그라데이션)
+    if (isStandalone) {
+        document.body.style.background = 'linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD)';
+        document.documentElement.style.background = 'linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD)';
+    }
 
     // 기존 타이틀 화면 제거 (이벤트 리스너도 함께 정리)
     const existingTitle = document.getElementById('titleScreen');
@@ -105,6 +110,12 @@ function showTitleScreen() {
     const gameContainer = document.getElementById('gameContainer');
     if (gameContainer) {
         gameContainer.classList.add('menu-mode');
+
+        // PWA 모드에서는 gameContainer 완전히 숨김
+        if (isStandalone && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+            gameContainer.style.visibility = 'hidden'; // 완전히 숨김
+            gameContainer.style.background = 'transparent';
+        }
     }
 
     // 타이틀 화면 컨테이너 생성 (--app-height가 설정된 후)
@@ -127,13 +138,39 @@ function showTitleScreen() {
         }
     }
 
-    // 간단한 인라인 스타일 - 전체 화면 채우기
-    titleScreen.style.cssText = `
+    // 인라인 스타일 - PWA 모드 특별 처리
+    // PWA 모드에서는 상태바까지 완전히 덮기
+    const titleScreenStyles = isStandalone && /iPhone|iPad|iPod/.test(navigator.userAgent)
+        ? `
         position: fixed;
         top: 0;
         left: 0;
+        right: 0;
+        bottom: 0;
         width: 100%;
         height: 100%;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Jua', sans-serif;
+        overflow: hidden;
+        animation: backgroundShimmer 3s ease-in-out infinite alternate;
+        padding: env(safe-area-inset-top, 20px) 0 0 0;
+        margin: 0;
+        box-sizing: border-box;
+        `
+        : `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
         background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
         z-index: 10000;
         display: flex;
@@ -146,31 +183,125 @@ function showTitleScreen() {
         padding: 0;
         margin: 0;
         box-sizing: border-box;
-    `;
+        `;
+
+    titleScreen.style.cssText = titleScreenStyles;
 
     // CSS 애니메이션 추가
     if (!document.getElementById('titleScreenStyles')) {
         const style = document.createElement('style');
         style.id = 'titleScreenStyles';
         style.textContent = `
-		    /* body, html 기본 설정 */
+		    /* body, html 여백 제거 및 높이 설정 */
 			html, body {
 				margin: 0 !important;
 				padding: 0 !important;
 				overflow: hidden !important;
 				width: 100% !important;
 				height: 100% !important;
+				height: var(--app-height, 100dvh) !important;
+				min-height: var(--app-height, 100dvh) !important;
+				/* 타이틀 화면과 같은 배경색으로 설정 (파란 여백 방지) */
+				background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD) !important;
 			}
+
+            /* iOS PWA Standalone 모드 전용 스타일 */
+            @supports (-webkit-touch-callout: none) {
+                /* iOS Safari PWA */
+                @media all and (display-mode: standalone) {
+                    /* 전체 body를 그라데이션으로 설정 */
+                    body {
+                        background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD) !important;
+                    }
+
+                    /* gameContainer 숨기기 */
+                    #gameContainer {
+                        background: transparent !important;
+                    }
+
+                    #titleScreen {
+                        /* 화면 전체를 완전히 덮기 */
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        right: 0 !important;
+                        bottom: 0 !important;
+                        width: 100vw !important;
+                        width: 100% !important;
+                        height: 100vh !important;
+                        height: 100% !important;
+                        /* safe area를 무시하고 전체 화면 덮기 */
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        /* 내용물은 safe area 안쪽에 배치 */
+                        padding-top: env(safe-area-inset-top, 20px) !important;
+                        z-index: 99999 !important;
+                    }
+
+                    /* 콘텐츠 컨테이너도 조정 */
+                    #titleScreen > div {
+                        padding-top: env(safe-area-inset-top, 0px);
+                    }
+
+                    /* 노치가 있는 기기 (iPhone X 이상) 특별 처리 */
+                    #titleScreen.has-notch {
+                        /* 노치 영역까지 완전히 덮기 */
+                        top: 0 !important;
+                        height: 100% !important;
+                        padding-top: 44px !important;
+                    }
+
+                    /* 화면 전체를 그라데이션으로 확실하게 채우기 */
+                    #titleScreen::before {
+                        content: '';
+                        position: fixed;
+                        top: -100px;
+                        left: 0;
+                        right: 0;
+                        height: 200px;
+                        background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
+                        z-index: -1;
+                    }
+                }
+            }
+
+            /* Android PWA 지원 */
+            @media all and (display-mode: standalone) {
+                /* iOS가 아닌 경우 (주로 Android) */
+                @supports not (-webkit-touch-callout: none) {
+                    #titleScreen {
+                        height: 100vh !important;
+                        min-height: 100vh !important;
+                        max-height: 100vh !important;
+                    }
+                }
+            }
     
-    /* 타이틀 화면 전체 채우기 - 간단하게 */
+    /* 타이틀 화면 전체 채우기 */
     #titleScreen {
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         right: 0 !important;
         bottom: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
+        width: 100vw !important;
+
+        /* CSS 폴백은 역순 (나중에 선언된 것이 우선) */
+        /* 최후 폴백: 구형 브라우저용 */
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: 100vh !important;
+
+        /* 중간 폴백: dynamic viewport height (주소창 제외) */
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: 100dvh !important;
+
+        /* 최우선: JS로 계산한 실제 뷰포트 높이 (visualViewport 기반) */
+        height: var(--app-height, 100dvh) !important;
+        min-height: var(--app-height, 100dvh) !important;
+        max-height: var(--app-height, 100dvh) !important;
+
         margin: 0 !important;
         padding: 0 !important;
         box-sizing: border-box !important;
@@ -489,6 +620,10 @@ function showTitleScreen() {
             const gameContainer = document.getElementById('gameContainer');
             if (gameContainer) {
                 gameContainer.classList.remove('menu-mode');
+                // PWA 모드에서 설정했던 스타일 원복
+                gameContainer.style.visibility = '';  // 다시 표시
+                gameContainer.style.background = '';  // 원래 배경색으로 복원
+                gameContainer.style.paddingTop = '';
             }
 
             // 타이틀 화면 이벤트 리스너 정리
@@ -502,6 +637,10 @@ function showTitleScreen() {
 
             // 타이틀 화면 요소 제거
             titleScreen.remove();
+
+            // body 배경 원복
+            document.body.style.background = '';
+            document.documentElement.style.background = '';
 
             // 원래 viewport 복원
             const viewportMeta = document.querySelector('meta[name="viewport"]');
