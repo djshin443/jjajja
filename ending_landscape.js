@@ -191,22 +191,60 @@ function showRotateDeviceMessage() {
     rotateOverlay.appendChild(rotateSubtext);
     document.body.appendChild(rotateOverlay);
 
-    // 화면 회전 시 오버레이 제거
+    // PWA/Standalone 모드 감지
+    const isStandalone = window.navigator.standalone ||
+                         window.matchMedia('(display-mode: standalone)').matches;
+
+    // PWA는 더 긴 대기 시간 필요 (300ms), 일반 브라우저는 100ms
+    const orientationDelay = isStandalone ? 300 : 100;
+
+    // matchMedia를 사용한 정확한 방향 감지 (방법 1 - 메인)
+    const mediaQuery = window.matchMedia('(orientation: portrait)');
+
+    const updateOrientationByMedia = () => {
+        // 가로모드가 되면 오버레이 제거
+        if (!mediaQuery.matches && rotateOverlay.parentNode) {
+            rotateOverlay.remove();
+            // 이벤트 리스너 정리
+            if (mediaQuery.removeEventListener) {
+                mediaQuery.removeEventListener('change', updateOrientationByMedia);
+            } else {
+                mediaQuery.removeListener(updateOrientationByMedia);
+            }
+            window.removeEventListener('resize', checkOrientation);
+            window.removeEventListener('orientationchange', checkOrientation);
+        }
+    };
+
+    // setTimeout + requestAnimationFrame을 사용한 백업 방식 (방법 2 - 백업)
     const checkOrientation = () => {
-        // setTimeout으로 브라우저가 화면 크기를 업데이트할 시간을 줌
         setTimeout(() => {
-            // requestAnimationFrame으로 렌더링 시점에 정확하게 체크
             requestAnimationFrame(() => {
                 const isNowPortrait = window.innerHeight > window.innerWidth;
                 if (!isNowPortrait && rotateOverlay.parentNode) {
                     rotateOverlay.remove();
+                    // 이벤트 리스너 정리
+                    if (mediaQuery.removeEventListener) {
+                        mediaQuery.removeEventListener('change', updateOrientationByMedia);
+                    } else {
+                        mediaQuery.removeListener(updateOrientationByMedia);
+                    }
                     window.removeEventListener('resize', checkOrientation);
                     window.removeEventListener('orientationchange', checkOrientation);
                 }
             });
-        }, 100);
+        }, orientationDelay);
     };
 
+    // matchMedia 이벤트 리스너 (가장 정확함)
+    if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', updateOrientationByMedia);
+    } else {
+        // 구형 브라우저 대응
+        mediaQuery.addListener(updateOrientationByMedia);
+    }
+
+    // 백업용 이벤트 리스너 (이중 안전장치)
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
 }

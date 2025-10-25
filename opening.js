@@ -555,28 +555,55 @@ function showTitleScreen() {
     rotateOverlay.appendChild(rotateSubtext);
     titleScreen.appendChild(rotateOverlay);
 
-    // 실시간으로 화면 방향 감지하여 오버레이 표시/숨김
+    // PWA/Standalone 모드 감지
+    const isStandalone = window.navigator.standalone ||
+                         window.matchMedia('(display-mode: standalone)').matches;
+
+    // PWA는 더 긴 대기 시간 필요 (300ms), 일반 브라우저는 100ms
+    const orientationDelay = isStandalone ? 300 : 100;
+
+    // matchMedia를 사용한 정확한 방향 감지 (방법 1 - 메인)
+    const mediaQuery = window.matchMedia('(orientation: portrait)');
+
+    const updateOrientationByMedia = () => {
+        rotateOverlay.style.display = mediaQuery.matches ? 'flex' : 'none';
+    };
+
+    // setTimeout + requestAnimationFrame을 사용한 백업 방식 (방법 2 - 백업)
     const checkOrientation = () => {
-        // setTimeout으로 브라우저가 화면 크기를 업데이트할 시간을 줌
         setTimeout(() => {
-            // requestAnimationFrame으로 렌더링 시점에 정확하게 체크
             requestAnimationFrame(() => {
                 const isNowPortrait = window.innerHeight > window.innerWidth;
                 rotateOverlay.style.display = isNowPortrait ? 'flex' : 'none';
             });
-        }, 100);
+        }, orientationDelay);
     };
 
-    // 초기 체크
-    checkOrientation();
+    // 초기 설정 (matchMedia 우선 사용)
+    updateOrientationByMedia();
 
-    // 이벤트 리스너 등록
+    // matchMedia 이벤트 리스너 (가장 정확함)
+    if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', updateOrientationByMedia);
+    } else {
+        // 구형 브라우저 대응
+        mediaQuery.addListener(updateOrientationByMedia);
+    }
+
+    // 백업용 이벤트 리스너 (이중 안전장치)
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
 
     // 정리 함수에 이벤트 리스너 제거 추가
     const originalCleanup = window._titleScreenCleanup;
     window._titleScreenCleanup = () => {
+        // matchMedia 이벤트 리스너 제거
+        if (mediaQuery.removeEventListener) {
+            mediaQuery.removeEventListener('change', updateOrientationByMedia);
+        } else {
+            mediaQuery.removeListener(updateOrientationByMedia);
+        }
+        // resize/orientationchange 이벤트 리스너 제거
         window.removeEventListener('resize', checkOrientation);
         window.removeEventListener('orientationchange', checkOrientation);
         if (originalCleanup) originalCleanup();
