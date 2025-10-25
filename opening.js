@@ -38,29 +38,6 @@ function showTitleScreen() {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                      (navigator.maxTouchPoints > 0) || window.innerWidth <= 768;
     const isMobilePortrait = isPortrait && isMobile;
-    
-    // body와 html 스타일 임시 설정 (검정 공백 제거)
-    const originalBodyStyle = {
-        margin: document.body.style.margin,
-        padding: document.body.style.padding,
-        overflow: document.body.style.overflow,
-        height: document.body.style.height
-    };
-    const originalHtmlStyle = {
-        margin: document.documentElement.style.margin,
-        padding: document.documentElement.style.padding,
-        overflow: document.documentElement.style.overflow,
-        height: document.documentElement.style.height
-    };
-
-    document.body.style.margin = '0';
-    document.body.style.padding = '0';
-    document.body.style.overflow = 'hidden';
-    document.body.style.height = '100%';
-    document.documentElement.style.margin = '0';
-    document.documentElement.style.padding = '0';
-    document.documentElement.style.overflow = 'hidden';
-    document.documentElement.style.height = '100%';
 
     // 타이틀 화면 컨테이너 생성
     const titleScreen = document.createElement('div');
@@ -91,28 +68,12 @@ function showTitleScreen() {
         margin: 0;
     `;
 
-    // 원래 스타일 복원 함수 저장
-    titleScreen.dataset.restoreStyles = JSON.stringify({
-        body: originalBodyStyle,
-        html: originalHtmlStyle
-    });
-    
     // CSS 애니메이션 추가
     if (!document.getElementById('titleScreenStyles')) {
         const style = document.createElement('style');
         style.id = 'titleScreenStyles';
         style.textContent = `
-            /* 모바일 브라우저의 주소창을 고려한 스타일 */
-            html, body {
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow: hidden !important;
-                height: 100% !important;
-                width: 100% !important;
-                position: fixed !important;
-            }
-
-            /* 타이틀 화면 전체 채우기 - 여백 완전 제거 */
+            /* 타이틀 화면 전체 채우기 - html/body는 건드리지 않음 */
             #titleScreen {
                 position: fixed !important;
                 top: 0 !important;
@@ -132,9 +93,6 @@ function showTitleScreen() {
 
             @supports (-webkit-touch-callout: none) {
                 /* iOS Safari 전용 스타일 - 주소창 고려 */
-                html, body {
-                    height: -webkit-fill-available !important;
-                }
                 #titleScreen {
                     height: -webkit-fill-available !important;
                     min-height: -webkit-fill-available !important;
@@ -419,16 +377,12 @@ function showTitleScreen() {
         titleScreen.style.opacity = '0';
         
         setTimeout(() => {
-            // 원래 스타일 복원
-            try {
-                const styles = JSON.parse(titleScreen.dataset.restoreStyles);
-                if (styles) {
-                    Object.assign(document.body.style, styles.body);
-                    Object.assign(document.documentElement.style, styles.html);
-                }
-            } catch (e) {
-                console.error('스타일 복원 오류:', e);
-            }
+            // 타이틀 화면 스타일 태그 제거
+            const styleTag = document.getElementById('titleScreenStyles');
+            if (styleTag) styleTag.remove();
+
+            // 타이틀 화면 요소 제거
+            titleScreen.remove();
 
             // 원래 viewport 복원
             const viewportMeta = document.querySelector('meta[name="viewport"]');
@@ -436,10 +390,13 @@ function showTitleScreen() {
                 viewportMeta.content = window._originalViewport;
             }
 
-            titleScreen.remove();
-            const styleTag = document.getElementById('titleScreenStyles');
-            if (styleTag) styleTag.remove();
-            startOpeningSequence();
+            // 캔버스 크기 재조정 후 오프닝 시작
+            setTimeout(() => {
+                if (typeof resizeCanvas === 'function') {
+                    resizeCanvas();
+                }
+                startOpeningSequence();
+            }, 100);
         }, 800);
     };
     
@@ -1537,21 +1494,32 @@ function startOpening(canvas, ctx, onComplete) {
     const opening = new OpeningSequence(canvas, ctx);
     opening.onComplete = onComplete;
     
+    // orientation change 핸들러
+    const orientationHandler = () => {
+        setTimeout(resizeHandler, 100);
+    };
+
+    // 모든 리스너 제거 함수
+    const removeAllListeners = () => {
+        canvas.removeEventListener('click', clickHandler);
+        canvas.removeEventListener('touchend', touchHandler);
+        canvas.removeEventListener('mousemove', moveHandler);
+        window.removeEventListener('resize', resizeHandler);
+        window.removeEventListener('orientationchange', orientationHandler);
+    };
+
     // 클릭 이벤트 리스너
     const clickHandler = (e) => {
         const rect = canvas.getBoundingClientRect();
         const x = (e.clientX - rect.left) * (canvas.width / rect.width);
         const y = (e.clientY - rect.top) * (canvas.height / rect.height);
         opening.handleClick(x, y);
-        
+
         if (!opening.isPlaying) {
-            canvas.removeEventListener('click', clickHandler);
-            canvas.removeEventListener('touchend', touchHandler);
-            canvas.removeEventListener('mousemove', moveHandler);
-            window.removeEventListener('resize', resizeHandler);
+            removeAllListeners();
         }
     };
-    
+
     // 터치 이벤트 리스너
     const touchHandler = (e) => {
         e.preventDefault();
@@ -1560,12 +1528,9 @@ function startOpening(canvas, ctx, onComplete) {
         const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
         const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
         opening.handleClick(x, y);
-        
+
         if (!opening.isPlaying) {
-            canvas.removeEventListener('click', clickHandler);
-            canvas.removeEventListener('touchend', touchHandler);
-            canvas.removeEventListener('mousemove', moveHandler);
-            window.removeEventListener('resize', resizeHandler);
+            removeAllListeners();
         }
     };
     
@@ -1579,6 +1544,11 @@ function startOpening(canvas, ctx, onComplete) {
     
     // 리사이즈 이벤트
     const resizeHandler = () => {
+        // 먼저 캔버스 크기 재조정
+        if (typeof resizeCanvas === 'function') {
+            resizeCanvas();
+        }
+        // 그 다음 오프닝 요소들 재배치
         opening.handleResize();
     };
     
@@ -1586,7 +1556,8 @@ function startOpening(canvas, ctx, onComplete) {
     canvas.addEventListener('touchend', touchHandler);
     canvas.addEventListener('mousemove', moveHandler);
     window.addEventListener('resize', resizeHandler);
-    
+    window.addEventListener('orientationchange', orientationHandler);
+
     opening.run();
     
     return opening;
