@@ -26,9 +26,10 @@ function showTitleScreen() {
     // 원래 viewport 설정 저장
     window._originalViewport = originalViewportContent;
 
-    // 실제 화면 높이를 CSS 변수로 설정 (모바일 브라우저의 주소창 고려)
+    // 실제 화면 높이를 CSS 변수로 설정 (visualViewport 우선, 모바일 브라우저 주소창 고려)
     const setAppHeight = () => {
-        const vh = window.innerHeight;
+        const vv = window.visualViewport;
+        const vh = vv ? vv.height : window.innerHeight;
         document.documentElement.style.setProperty('--app-height', `${vh}px`);
     };
 
@@ -36,14 +37,33 @@ function showTitleScreen() {
         setTimeout(setAppHeight, 100);
     };
 
+    // 초기 설정 + 더블 rAF로 정확한 뷰포트 보정 (오프닝처럼)
     setAppHeight();
+    requestAnimationFrame(() => {
+        requestAnimationFrame(setAppHeight);
+    });
+
     window.addEventListener('resize', setAppHeight);
     window.addEventListener('orientationchange', orientationChangeHandler);
+
+    // visualViewport 이벤트 (주소창 접힘/펼침 실시간 반영)
+    let visualViewportCleanup = null;
+    if (window.visualViewport) {
+        const onVisualViewportChange = () => setAppHeight();
+        visualViewport.addEventListener('resize', onVisualViewportChange);
+        visualViewport.addEventListener('scroll', onVisualViewportChange);
+
+        visualViewportCleanup = () => {
+            visualViewport.removeEventListener('resize', onVisualViewportChange);
+            visualViewport.removeEventListener('scroll', onVisualViewportChange);
+        };
+    }
 
     // 타이틀 종료 시 이벤트 리스너 제거를 위한 함수 저장
     window._titleScreenCleanup = () => {
         window.removeEventListener('resize', setAppHeight);
         window.removeEventListener('orientationchange', orientationChangeHandler);
+        if (visualViewportCleanup) visualViewportCleanup();
         delete window._titleScreenCleanup;
     };
     
@@ -62,6 +82,7 @@ function showTitleScreen() {
     // 타이틀 화면 컨테이너 생성
     const titleScreen = document.createElement('div');
     titleScreen.id = 'titleScreen';
+    // CSS는 나중 선언이 우선이므로 역순으로!
     titleScreen.style.cssText = `
         position: fixed;
         top: 0;
@@ -70,10 +91,14 @@ function showTitleScreen() {
         bottom: 0;
         width: 100vw;
         height: 100vh;
+        height: 100dvh;
+        height: var(--app-height, 100dvh);
         min-height: 100vh;
-        min-height: -webkit-fill-available;
+        min-height: 100dvh;
+        min-height: var(--app-height, 100dvh);
         max-height: 100vh;
-        max-height: -webkit-fill-available;
+        max-height: 100dvh;
+        max-height: var(--app-height, 100dvh);
         background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
         z-index: 10000;
         display: flex;
@@ -110,23 +135,26 @@ function showTitleScreen() {
         right: 0 !important;
         bottom: 0 !important;
         width: 100vw !important;
+
+        /* CSS 폴백은 역순 (나중에 선언된 것이 우선) */
+        /* 최후 폴백: 구형 브라우저용 */
         height: 100vh !important;
         min-height: 100vh !important;
-        min-height: -webkit-fill-available !important;
         max-height: 100vh !important;
-        max-height: -webkit-fill-available !important;
+
+        /* 중간 폴백: dynamic viewport height (주소창 제외) */
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: 100dvh !important;
+
+        /* 최우선: JS로 계산한 실제 뷰포트 높이 (visualViewport 기반) */
+        height: var(--app-height, 100dvh) !important;
+        min-height: var(--app-height, 100dvh) !important;
+        max-height: var(--app-height, 100dvh) !important;
+
         margin: 0 !important;
         padding: 0 !important;
         box-sizing: border-box !important;
-    }
-
-    @supports (-webkit-touch-callout: none) {
-        /* iOS Safari 전용 스타일 - 주소창 고려 */
-        #titleScreen {
-            height: -webkit-fill-available !important;
-            min-height: -webkit-fill-available !important;
-            max-height: -webkit-fill-available !important;
-        }
     }
 
     @keyframes backgroundShimmer {
