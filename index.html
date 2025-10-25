@@ -738,23 +738,24 @@
         @media screen and (orientation: portrait) {
 			/* 메뉴가 아닌 게임 중일 때만 세로 모드 경고 표시 */
 			#gameContainer:not(.menu-mode)::before {
-				content: "💜 화면을 가로로 돌려주세요! 💜";
+				content: "🔄\A\A화면을 가로로\A돌려주세요!\A\A📱 ➜ 🖥️\A\A이 게임은\A가로 모드 전용입니다";
 				position: fixed;
 				top: 50%;
 				left: 50%;
 				transform: translate(-50%, -50%);
 				background: linear-gradient(135deg, #9370DB, #DDA0DD);
 				color: white;
-				padding: 5vh 10vw;
+				padding: 6vh 8vw;
 				border: 3px solid #FFF;
 				border-radius: 20px;
-				font-size: min(5vw, 20px);
+				font-size: min(4.5vw, 18px);
 				z-index: 9999;
 				font-family: 'Jua', sans-serif;
 				text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 				box-shadow: 0 5px 20px rgba(0,0,0,0.5);
 				text-align: center;
-				line-height: 1.5;
+				line-height: 1.6;
+				white-space: pre-line;
 			}
 			
 			/* 게임 중일 때만 UI 숨김 */
