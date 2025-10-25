@@ -82,6 +82,15 @@ function showTitleScreen() {
         const style = document.createElement('style');
         style.id = 'titleScreenStyles';
         style.textContent = `
+		    /* body, html 여백 제거 */
+			html, body {
+				margin: 0 !important;
+				padding: 0 !important;
+				overflow: hidden !important;
+				width: 100% !important;
+				height: 100% !important;
+			}
+        
             /* 타이틀 화면 전체 채우기 - html/body는 건드리지 않음 */
             #titleScreen {
                 position: fixed !important;
