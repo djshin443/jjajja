@@ -6,6 +6,12 @@ function showTitleScreen() {
         existingTitle.remove();
     }
 
+    // gameContainer 숨기기 (파란색 배경 제거)
+    const gameContainer = document.getElementById('gameContainer');
+    if (gameContainer) {
+        gameContainer.style.display = 'none';
+    }
+
     // 모바일 뷰포트 메타 태그 설정 (검정 공백 방지)
     let viewportMeta = document.querySelector('meta[name="viewport"]');
     const originalViewportContent = viewportMeta ? viewportMeta.content : '';
@@ -44,23 +50,27 @@ function showTitleScreen() {
         margin: document.body.style.margin,
         padding: document.body.style.padding,
         overflow: document.body.style.overflow,
-        height: document.body.style.height
+        height: document.body.style.height,
+        background: document.body.style.background
     };
     const originalHtmlStyle = {
         margin: document.documentElement.style.margin,
         padding: document.documentElement.style.padding,
         overflow: document.documentElement.style.overflow,
-        height: document.documentElement.style.height
+        height: document.documentElement.style.height,
+        background: document.documentElement.style.background
     };
 
     document.body.style.margin = '0';
     document.body.style.padding = '0';
     document.body.style.overflow = 'hidden';
     document.body.style.height = '100%';
+    document.body.style.background = 'linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD)';
     document.documentElement.style.margin = '0';
     document.documentElement.style.padding = '0';
     document.documentElement.style.overflow = 'hidden';
     document.documentElement.style.height = '100%';
+    document.documentElement.style.background = 'linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD)';
 
     // 타이틀 화면 컨테이너 생성
     const titleScreen = document.createElement('div');
@@ -110,6 +120,7 @@ function showTitleScreen() {
                 height: 100% !important;
                 width: 100% !important;
                 position: fixed !important;
+                background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD) !important;
             }
 
             /* 타이틀 화면 전체 채우기 - 여백 완전 제거 */
@@ -134,6 +145,7 @@ function showTitleScreen() {
                 /* iOS Safari 전용 스타일 - 주소창 고려 */
                 html, body {
                     height: -webkit-fill-available !important;
+                    background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD) !important;
                 }
                 #titleScreen {
                     height: -webkit-fill-available !important;
@@ -419,6 +431,12 @@ function showTitleScreen() {
         titleScreen.style.opacity = '0';
         
         setTimeout(() => {
+            // gameContainer 다시 보이기
+            const gameContainer = document.getElementById('gameContainer');
+            if (gameContainer) {
+                gameContainer.style.display = 'flex';
+            }
+
             // 원래 스타일 복원
             try {
                 const styles = JSON.parse(titleScreen.dataset.restoreStyles);
