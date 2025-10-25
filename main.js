@@ -2371,4 +2371,40 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// 모바일 가로 모드 고정 시도
+function lockOrientation() {
+    try {
+        // Screen Orientation API 사용 (최신 방법)
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(err => {
+                console.log('가로 모드 고정 실패 (권한 필요):', err);
+            });
+        }
+        // 레거시 방법들
+        else if (screen.lockOrientation) {
+            screen.lockOrientation('landscape');
+        } else if (screen.mozLockOrientation) {
+            screen.mozLockOrientation('landscape');
+        } else if (screen.msLockOrientation) {
+            screen.msLockOrientation('landscape');
+        }
+    } catch (err) {
+        console.log('가로 모드 고정을 지원하지 않는 브라우저입니다:', err);
+    }
+}
+
+// 전체화면 모드에서만 orientation lock이 작동하므로 전체화면 진입 시 시도
+document.addEventListener('fullscreenchange', function() {
+    if (document.fullscreenElement) {
+        lockOrientation();
+    }
+});
+
+// 페이지 로드 시 가로 모드 고정 시도
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', lockOrientation);
+} else {
+    lockOrientation();
+}
+
 console.log('✨ 지율이의 픽셀 영어 게임 준비 완료! ✨');

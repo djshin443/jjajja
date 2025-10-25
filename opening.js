@@ -71,20 +71,22 @@ function showTitleScreen() {
         left: 0;
         right: 0;
         bottom: 0;
-        width: 100%;
-        height: 100%;
+        width: 100vw;
+        height: 100vh;
+        min-height: 100vh;
         min-height: -webkit-fill-available;
+        max-height: 100vh;
+        max-height: -webkit-fill-available;
         background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
         z-index: 10000;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: ${isMobilePortrait ? 'flex-start' : 'center'};
+        justify-content: center;
         font-family: 'Jua', sans-serif;
-        overflow-y: ${isMobilePortrait ? 'auto' : 'hidden'};
-        overflow-x: hidden;
+        overflow: hidden;
         animation: backgroundShimmer 3s ease-in-out infinite alternate;
-        padding: ${isMobilePortrait ? '10px' : '20px'};
+        padding: ${isMobilePortrait ? '20px 10px' : '20px'};
         box-sizing: border-box;
         margin: 0;
     `;
@@ -102,31 +104,41 @@ function showTitleScreen() {
         style.textContent = `
             /* 모바일 브라우저의 주소창을 고려한 스타일 */
             html, body {
-                margin: 0;
-                padding: 0;
-                overflow: hidden;
-                height: 100%;
-                width: 100%;
-                position: fixed;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                height: 100% !important;
+                width: 100% !important;
+                position: fixed !important;
             }
 
-            /* 타이틀 화면 전체 채우기 */
+            /* 타이틀 화면 전체 채우기 - 여백 완전 제거 */
             #titleScreen {
                 position: fixed !important;
                 top: 0 !important;
                 left: 0 !important;
                 right: 0 !important;
                 bottom: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
+                width: 100vw !important;
+                height: 100vh !important;
                 min-height: 100vh !important;
                 min-height: -webkit-fill-available !important;
+                max-height: 100vh !important;
+                max-height: -webkit-fill-available !important;
+                margin: 0 !important;
+                padding: 20px !important;
+                box-sizing: border-box !important;
             }
 
             @supports (-webkit-touch-callout: none) {
-                /* iOS Safari 전용 스타일 */
+                /* iOS Safari 전용 스타일 - 주소창 고려 */
+                html, body {
+                    height: -webkit-fill-available !important;
+                }
                 #titleScreen {
                     height: -webkit-fill-available !important;
+                    min-height: -webkit-fill-available !important;
+                    max-height: -webkit-fill-available !important;
                 }
             }
 
