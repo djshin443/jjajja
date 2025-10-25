@@ -40,7 +40,18 @@ function showTitleScreen() {
     // 초기 설정 + 더블 rAF로 정확한 뷰포트 보정 (오프닝처럼)
     setAppHeight();
     requestAnimationFrame(() => {
-        requestAnimationFrame(setAppHeight);
+        requestAnimationFrame(() => {
+            setAppHeight();
+
+            // iOS에서 주소창 자동 숨기기 (초기 로드 시)
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            if (isIOS && window.scrollY === 0) {
+                setTimeout(() => {
+                    window.scrollTo(0, 1);
+                    setTimeout(setAppHeight, 100);
+                }, 100);
+            }
+        });
     });
 
     window.addEventListener('resize', setAppHeight);
@@ -79,10 +90,10 @@ function showTitleScreen() {
         gameContainer.classList.add('menu-mode');
     }
 
-    // 타이틀 화면 컨테이너 생성
+    // 타이틀 화면 컨테이너 생성 (--app-height가 설정된 후)
     const titleScreen = document.createElement('div');
     titleScreen.id = 'titleScreen';
-    // CSS는 나중 선언이 우선이므로 역순으로!
+    // 인라인 스타일은 높이 설정 제외 (CSS에서 처리)
     titleScreen.style.cssText = `
         position: fixed;
         top: 0;
@@ -90,15 +101,6 @@ function showTitleScreen() {
         right: 0;
         bottom: 0;
         width: 100vw;
-        height: 100vh;
-        height: 100dvh;
-        height: var(--app-height, 100dvh);
-        min-height: 100vh;
-        min-height: 100dvh;
-        min-height: var(--app-height, 100dvh);
-        max-height: 100vh;
-        max-height: 100dvh;
-        max-height: var(--app-height, 100dvh);
         background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
         z-index: 10000;
         display: flex;
@@ -118,13 +120,15 @@ function showTitleScreen() {
         const style = document.createElement('style');
         style.id = 'titleScreenStyles';
         style.textContent = `
-		    /* body, html 여백 제거 */
+		    /* body, html 여백 제거 및 높이 설정 */
 			html, body {
 				margin: 0 !important;
 				padding: 0 !important;
 				overflow: hidden !important;
 				width: 100% !important;
 				height: 100% !important;
+				height: var(--app-height, 100dvh) !important;
+				min-height: var(--app-height, 100dvh) !important;
 			}
     
     /* 타이틀 화면 전체 채우기 */
@@ -638,8 +642,18 @@ function showTitleScreen() {
         if (originalCleanup) originalCleanup();
     };
 
-    // 타이틀 화면을 페이지에 추가
+    // 타이틀 화면을 페이지에 추가 (--app-height 설정 보장)
+    // 즉시 추가하되, 다음 프레임에서 강제 리플로우
     document.body.appendChild(titleScreen);
+
+    // 강제로 레이아웃 재계산 (리플로우)
+    titleScreen.offsetHeight;
+
+    // 한 프레임 후 최종 높이 보정
+    requestAnimationFrame(() => {
+        setAppHeight();
+        titleScreen.style.height = 'var(--app-height, 100dvh)';
+    });
 
     // 터치 이벤트도 추가 (모바일 지원)
     startButton.addEventListener('touchend', (e) => {
