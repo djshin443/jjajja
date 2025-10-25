@@ -34,9 +34,17 @@ function showTitleScreen() {
     };
 
     setAppHeight();
-    window.addEventListener('resize', setAppHeight);
+
+    // 화면 크기 변경 시 CSS 변수만 업데이트
+    const updateTitleScreenSize = () => {
+        setAppHeight();
+        // position: fixed + top/left/right/bottom이 자동으로 크기를 조정하므로
+        // 별도의 width/height 설정은 불필요
+    };
+
+    window.addEventListener('resize', updateTitleScreenSize);
     window.addEventListener('orientationchange', () => {
-        setTimeout(setAppHeight, 100);
+        setTimeout(updateTitleScreenSize, 100);
     });
     
     // 화면 방향 및 크기 체크
@@ -75,18 +83,16 @@ function showTitleScreen() {
     // 타이틀 화면 컨테이너 생성
     const titleScreen = document.createElement('div');
     titleScreen.id = 'titleScreen';
+
+    // 타이틀 화면 스타일 - position fixed로 전체 화면 덮기
     titleScreen.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100vw;
-        height: 100vh;
-        min-height: 100vh;
-        min-height: -webkit-fill-available;
-        max-height: 100vh;
-        max-height: -webkit-fill-available;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
         background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
         z-index: 10000;
         display: flex;
@@ -117,40 +123,38 @@ function showTitleScreen() {
                 margin: 0 !important;
                 padding: 0 !important;
                 overflow: hidden !important;
-                height: 100% !important;
                 width: 100% !important;
+                height: 100% !important;
+                min-height: 100vh !important;
+                min-height: 100dvh !important;
                 position: fixed !important;
+                inset: 0 !important;
                 background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD) !important;
             }
 
             /* 타이틀 화면 전체 채우기 - 여백 완전 제거 */
             #titleScreen {
                 position: fixed !important;
+                inset: 0 !important;
                 top: 0 !important;
                 left: 0 !important;
                 right: 0 !important;
                 bottom: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
+                width: 100% !important;
+                height: 100% !important;
                 min-height: 100vh !important;
-                min-height: -webkit-fill-available !important;
-                max-height: 100vh !important;
-                max-height: -webkit-fill-available !important;
+                min-height: 100dvh !important;
                 margin: 0 !important;
                 padding: 20px !important;
                 box-sizing: border-box !important;
+                overflow: hidden !important;
             }
 
             @supports (-webkit-touch-callout: none) {
                 /* iOS Safari 전용 스타일 - 주소창 고려 */
-                html, body {
-                    height: -webkit-fill-available !important;
-                    background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD) !important;
-                }
-                #titleScreen {
+                html, body, #titleScreen {
                     height: -webkit-fill-available !important;
                     min-height: -webkit-fill-available !important;
-                    max-height: -webkit-fill-available !important;
                 }
             }
 
@@ -488,7 +492,26 @@ function showTitleScreen() {
     
     // 타이틀 화면을 페이지에 추가
     document.body.appendChild(titleScreen);
-    
+
+    // 모바일에서 스크롤/오버스크롤 완전히 방지
+    const preventScroll = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    };
+
+    // 모든 터치 이벤트에서 스크롤 방지
+    titleScreen.addEventListener('touchstart', preventScroll, { passive: false });
+    titleScreen.addEventListener('touchmove', preventScroll, { passive: false });
+    titleScreen.addEventListener('touchend', (e) => {
+        if (e.target !== startButton && !startButton.contains(e.target)) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    document.body.addEventListener('touchmove', preventScroll, { passive: false });
+    document.documentElement.addEventListener('touchmove', preventScroll, { passive: false });
+
     // 터치 이벤트도 추가 (모바일 지원)
     startButton.addEventListener('touchend', (e) => {
         e.preventDefault();
