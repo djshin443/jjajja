@@ -1,16 +1,5 @@
 // HTML 스타일 타이틀 화면 표시 함수
 function showTitleScreen() {
-    // 실제 화면 높이를 CSS 변수로 설정 (visualViewport 우선, 모바일 브라우저 주소창 고려)
-    // 맨 먼저 설정하여 DOM 생성 전에 --app-height가 준비되도록 함
-    const setAppHeight = () => {
-        const vv = window.visualViewport;
-        const vh = vv ? vv.height : window.innerHeight;
-        document.documentElement.style.setProperty('--app-height', `${vh}px`);
-    };
-
-    // 즉시 첫 번째 높이 설정
-    setAppHeight();
-
     // 기존 타이틀 화면 제거 (이벤트 리스너도 함께 정리)
     const existingTitle = document.getElementById('titleScreen');
     if (existingTitle) {
@@ -37,12 +26,19 @@ function showTitleScreen() {
     // 원래 viewport 설정 저장
     window._originalViewport = originalViewportContent;
 
+    // 실제 화면 높이를 CSS 변수로 설정 (visualViewport 우선, 모바일 브라우저 주소창 고려)
+    const setAppHeight = () => {
+        const vv = window.visualViewport;
+        const vh = vv ? vv.height : window.innerHeight;
+        document.documentElement.style.setProperty('--app-height', `${vh}px`);
+    };
+
     const orientationChangeHandler = () => {
         setTimeout(setAppHeight, 100);
     };
 
-    // 더블 rAF로 정확한 뷰포트 보정 (오프닝처럼)
-    // 첫 번째 setAppHeight()는 이미 위에서 실행됨
+    // 초기 설정 + 더블 rAF로 정확한 뷰포트 보정 (오프닝처럼)
+    setAppHeight();
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             setAppHeight();
@@ -97,7 +93,7 @@ function showTitleScreen() {
     // 타이틀 화면 컨테이너 생성 (--app-height가 설정된 후)
     const titleScreen = document.createElement('div');
     titleScreen.id = 'titleScreen';
-    // 인라인 스타일에 초기 height 폴백 포함
+    // 인라인 스타일은 높이 설정 제외 (CSS에서 처리)
     titleScreen.style.cssText = `
         position: fixed;
         top: 0;
@@ -105,8 +101,6 @@ function showTitleScreen() {
         right: 0;
         bottom: 0;
         width: 100vw;
-        height: 100vh;
-        height: 100dvh;
         background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
         z-index: 10000;
         display: flex;
@@ -658,7 +652,7 @@ function showTitleScreen() {
     // 한 프레임 후 최종 높이 보정
     requestAnimationFrame(() => {
         setAppHeight();
-        // CSS에서 이미 처리하므로 인라인 스타일은 설정하지 않음
+        titleScreen.style.height = 'var(--app-height, 100dvh)';
     });
 
     // 터치 이벤트도 추가 (모바일 지원)
