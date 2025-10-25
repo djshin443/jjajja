@@ -90,7 +90,11 @@ function showTitleScreen() {
 				width: 100% !important;
 				height: 100% !important;
 			}
-        
+    
+    /* 타이틀 화면 전체 채우기 */
+    #titleScreen {
+        position: fixed !important;
+        top: 0 !important;
             /* 타이틀 화면 전체 채우기 - html/body는 건드리지 않음 */
             #titleScreen {
                 position: fixed !important;
@@ -478,7 +482,7 @@ function startOpeningSequence() {
     if (typeof startOpening === 'function') {
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        
+
         // 모든 UI 요소 숨기기
         document.getElementById('characterSelectMenu').style.display = 'none';
         document.getElementById('unitSelectMenu').style.display = 'none';
@@ -486,8 +490,18 @@ function startOpeningSequence() {
         document.getElementById('questionPanel').style.display = 'none';
         document.getElementById('fullscreenBtn').style.display = 'none';
         document.getElementById('controls').style.display = 'none';
-        
+
+        // body 배경을 그라데이션으로 변경 (오프닝 중)
+        document.body.style.background = 'linear-gradient(135deg, #87CEEB, #98D8E8)';
+
+        // 캔버스를 전체 화면으로 설정
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
         startOpening(canvas, ctx, function() {
+            // 오프닝 완료 후 body 배경 복원
+            document.body.style.background = '#000';
+
             // 오프닝 완료 후 메뉴 표시
             if (typeof hasSeenOpening !== 'undefined') {
                 hasSeenOpening = true;
@@ -870,6 +884,12 @@ class OpeningSequence {
     
     // 렌더링
     render() {
+        // 세로모드일 때 가로모드 권장 메시지 표시 (모바일만)
+        if (!this.isLandscape && this.isMobile) {
+            this.drawRotateMessage();
+            return;
+        }
+
         // 화면 흔들림 적용
         this.ctx.save();
         if (this.shakeAmount > 0.1) {
@@ -878,28 +898,67 @@ class OpeningSequence {
                 (Math.random() - 0.5) * this.shakeAmount
             );
         }
-        
+
         // 배경 그리기
         this.drawBackground();
-        
+
         // 씬 그리기
         this.drawScene();
-        
+
         // 코믹 효과 그리기
         this.drawComicEffects();
-        
+
         this.ctx.restore();
-        
+
         // 대화 텍스트 (캐릭터와 겹치지 않게)
         this.drawDialogue();
-        
+
         // Skip 버튼
         this.drawSkipButton();
-        
+
         // 클릭 힌트
         if (this.canProceed) {
             this.drawClickHint();
         }
+    }
+
+    // 가로모드 권장 메시지
+    drawRotateMessage() {
+        // 그라데이션 배경
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+        gradient.addColorStop(0, '#DDA0DD');
+        gradient.addColorStop(1, '#9370DB');
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // 회전 아이콘
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+        const iconSize = Math.min(this.canvas.width, this.canvas.height) * 0.15;
+
+        this.ctx.save();
+        this.ctx.translate(centerX, centerY);
+        this.ctx.rotate(Math.PI / 2);
+        this.ctx.font = `${iconSize}px Arial`;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('📱', 0, 0);
+        this.ctx.restore();
+
+        // 메시지 텍스트
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.font = 'bold 24px "Jua", sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        this.ctx.shadowBlur = 10;
+        this.ctx.fillText('가로 모드로 돌려주세요', centerX, centerY + iconSize + 40);
+        this.ctx.shadowBlur = 0;
+
+        // 작은 안내 텍스트
+        this.ctx.font = '16px "Jua", sans-serif';
+        this.ctx.fillStyle = '#FFD700';
+        this.ctx.fillText('최적의 게임 경험을 위해', centerX, centerY + iconSize + 75);
     }
     
     // 배경 그리기
@@ -1582,11 +1641,11 @@ function startOpening(canvas, ctx, onComplete) {
     
     // 리사이즈 이벤트
     const resizeHandler = () => {
-        // 먼저 캔버스 크기 재조정
-        if (typeof resizeCanvas === 'function') {
-            resizeCanvas();
-        }
-        // 그 다음 오프닝 요소들 재배치
+        // 오프닝 중에는 전체 화면 사용 (controls 무시)
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // 오프닝 요소들 재배치
         opening.handleResize();
     };
     
