@@ -482,6 +482,7 @@ function startOpeningSequence() {
     if (typeof startOpening === 'function') {
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const controls = document.getElementById('controls');
 
         // 모든 UI 요소 숨기기
         document.getElementById('characterSelectMenu').style.display = 'none';
@@ -489,7 +490,13 @@ function startOpeningSequence() {
         document.getElementById('ui').style.display = 'none';
         document.getElementById('questionPanel').style.display = 'none';
         document.getElementById('fullscreenBtn').style.display = 'none';
-        document.getElementById('controls').style.display = 'none';
+        controls.style.display = 'none';
+
+        // 강제 레이아웃 재계산 (Forced Reflow)
+        controls.offsetHeight;
+
+        // 오프닝 플래그 설정
+        window.isOpeningPlaying = true;
 
         // body 배경을 그라데이션으로 변경 (오프닝 중)
         document.body.style.background = 'linear-gradient(135deg, #87CEEB, #98D8E8)';
@@ -499,6 +506,9 @@ function startOpeningSequence() {
         canvas.height = window.innerHeight;
 
         startOpening(canvas, ctx, function() {
+            // 오프닝 플래그 해제
+            window.isOpeningPlaying = false;
+
             // 오프닝 완료 후 body 배경 복원
             document.body.style.background = '#000';
 
@@ -1641,6 +1651,10 @@ function startOpening(canvas, ctx, onComplete) {
     
     // 리사이즈 이벤트
     const resizeHandler = () => {
+        // 강제 레이아웃 재계산
+        const controls = document.getElementById('controls');
+        if (controls) controls.offsetHeight;
+
         // 오프닝 중에는 전체 화면 사용 (controls 무시)
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
