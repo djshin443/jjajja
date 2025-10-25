@@ -372,6 +372,23 @@ function showTitleScreen() {
         if (startButton.disabled) return;
         startButton.disabled = true;
 
+        // 전체화면 진입 시도
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen().catch(() => {});
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        }
+
+        // 화면 방향 잠금 시도 (가로 모드)
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
+
         // 화면 전체 폭죽 효과 (모바일에서는 개수 줄이기)
         const fireworkCount = isMobilePortrait ? 15 : 30;
         const fireworkElements = [];
@@ -1010,8 +1027,11 @@ class OpeningSequence {
     
     // 렌더링
     render() {
+        // 실시간으로 세로모드 확인 (매 프레임마다)
+        const currentIsLandscape = this.canvas.width > this.canvas.height;
+
         // 세로모드일 때 무조건 가로모드 권장 메시지 표시
-        if (!this.isLandscape) {
+        if (!currentIsLandscape) {
             this.drawRotateMessage();
             return;
         }

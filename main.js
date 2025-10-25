@@ -1374,7 +1374,7 @@ function render() {
             Math.random() * gameState.screenShake - gameState.screenShake / 2
         );
     }
-    
+
     ctx.fillStyle = '#5C94FC';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
