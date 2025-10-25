@@ -496,77 +496,85 @@ function showTitleScreen() {
     // 컨테이너를 타이틀 화면에 추가
     titleScreen.appendChild(contentContainer);
 
-    // 세로모드일 때 회전 메시지 오버레이 추가
-    if (isPortrait) {
-        const rotateOverlay = document.createElement('div');
-        rotateOverlay.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10001;
-            pointer-events: auto;
-        `;
+    // 세로모드 회전 메시지 오버레이 (항상 추가, CSS로 제어)
+    const rotateOverlay = document.createElement('div');
+    rotateOverlay.id = 'titleRotateOverlay';
+    rotateOverlay.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 10001;
+        pointer-events: auto;
+    `;
 
-        // 회전 아이콘
-        const rotateIcon = document.createElement('div');
-        rotateIcon.innerHTML = '📱';
-        rotateIcon.style.cssText = `
-            font-size: min(20vw, 100px);
-            transform: rotate(90deg);
-            animation: pulse 2s ease-in-out infinite;
-            margin-bottom: 30px;
-        `;
+    // 회전 아이콘
+    const rotateIcon = document.createElement('div');
+    rotateIcon.innerHTML = '📱';
+    rotateIcon.style.cssText = `
+        font-size: min(20vw, 100px);
+        transform: rotate(90deg);
+        animation: pulse 2s ease-in-out infinite;
+        margin-bottom: 30px;
+    `;
 
-        // 메시지 텍스트
-        const rotateText = document.createElement('div');
-        rotateText.innerHTML = '💜 화면을 가로로 돌려주세요! 💜';
-        rotateText.style.cssText = `
-            font-family: 'Jua', sans-serif;
-            font-size: min(6vw, 28px);
-            color: #FFFFFF;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
-            text-align: center;
-            padding: 0 20px;
-            line-height: 1.5;
-        `;
+    // 메시지 텍스트
+    const rotateText = document.createElement('div');
+    rotateText.innerHTML = '💜 화면을 가로로 돌려주세요! 💜';
+    rotateText.style.cssText = `
+        font-family: 'Jua', sans-serif;
+        font-size: min(6vw, 28px);
+        color: #FFFFFF;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+        text-align: center;
+        padding: 0 20px;
+        line-height: 1.5;
+        font-weight: bold;
+    `;
 
-        // 작은 안내 텍스트
-        const rotateSubtext = document.createElement('div');
-        rotateSubtext.innerHTML = '최적의 게임 경험을 위해';
-        rotateSubtext.style.cssText = `
-            font-family: 'Jua', sans-serif;
-            font-size: min(4vw, 18px);
-            color: #FFD700;
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
-            margin-top: 15px;
-            text-align: center;
-        `;
+    // 작은 안내 텍스트
+    const rotateSubtext = document.createElement('div');
+    rotateSubtext.innerHTML = '최적의 게임 경험을 위해';
+    rotateSubtext.style.cssText = `
+        font-family: 'Jua', sans-serif;
+        font-size: min(4vw, 18px);
+        color: #FFD700;
+        text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+        margin-top: 15px;
+        text-align: center;
+    `;
 
-        rotateOverlay.appendChild(rotateIcon);
-        rotateOverlay.appendChild(rotateText);
-        rotateOverlay.appendChild(rotateSubtext);
-        titleScreen.appendChild(rotateOverlay);
+    rotateOverlay.appendChild(rotateIcon);
+    rotateOverlay.appendChild(rotateText);
+    rotateOverlay.appendChild(rotateSubtext);
+    titleScreen.appendChild(rotateOverlay);
 
-        // 화면 회전 시 오버레이 제거
-        const checkOrientation = () => {
-            const isNowPortrait = window.innerHeight > window.innerWidth;
-            if (!isNowPortrait && rotateOverlay.parentNode) {
-                rotateOverlay.remove();
-                window.removeEventListener('resize', checkOrientation);
-                window.removeEventListener('orientationchange', checkOrientation);
-            }
-        };
+    // 실시간으로 화면 방향 감지하여 오버레이 표시/숨김
+    const checkOrientation = () => {
+        const isNowPortrait = window.innerHeight > window.innerWidth;
+        rotateOverlay.style.display = isNowPortrait ? 'flex' : 'none';
+    };
 
-        window.addEventListener('resize', checkOrientation);
-        window.addEventListener('orientationchange', checkOrientation);
-    }
+    // 초기 체크
+    checkOrientation();
+
+    // 이벤트 리스너 등록
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+
+    // 정리 함수에 이벤트 리스너 제거 추가
+    const originalCleanup = window._titleScreenCleanup;
+    window._titleScreenCleanup = () => {
+        window.removeEventListener('resize', checkOrientation);
+        window.removeEventListener('orientationchange', checkOrientation);
+        if (originalCleanup) originalCleanup();
+    };
 
     // 타이틀 화면을 페이지에 추가
     document.body.appendChild(titleScreen);
