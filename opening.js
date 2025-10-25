@@ -30,16 +30,31 @@ function showTitleScreen() {
     // 실제 화면 높이를 CSS 변수로 설정 (모바일 브라우저의 주소창 고려)
     const setAppHeight = () => {
         const vh = window.innerHeight;
+        const vw = window.innerWidth;
         document.documentElement.style.setProperty('--app-height', `${vh}px`);
+        document.documentElement.style.setProperty('--app-width', `${vw}px`);
+
+        // html, body 높이를 직접 픽셀값으로 강제 설정
+        document.documentElement.style.height = vh + 'px';
+        document.body.style.height = vh + 'px';
+        document.documentElement.style.width = vw + 'px';
+        document.body.style.width = vw + 'px';
     };
 
     setAppHeight();
 
-    // 화면 크기 변경 시 CSS 변수만 업데이트
+    // 화면 크기 변경 시 모든 요소 업데이트
     const updateTitleScreenSize = () => {
+        const newVh = window.innerHeight;
+        const newVw = window.innerWidth;
+
         setAppHeight();
-        // position: fixed + top/left/right/bottom이 자동으로 크기를 조정하므로
-        // 별도의 width/height 설정은 불필요
+
+        // html, body 크기 재설정
+        document.body.style.width = newVw + 'px';
+        document.body.style.height = newVh + 'px';
+        document.documentElement.style.width = newVw + 'px';
+        document.documentElement.style.height = newVh + 'px';
     };
 
     window.addEventListener('resize', updateTitleScreenSize);
@@ -69,16 +84,29 @@ function showTitleScreen() {
         background: document.documentElement.style.background
     };
 
-    document.body.style.margin = '0';
-    document.body.style.padding = '0';
-    document.body.style.overflow = 'hidden';
-    document.body.style.height = '100%';
-    document.body.style.background = 'linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD)';
-    document.documentElement.style.margin = '0';
-    document.documentElement.style.padding = '0';
-    document.documentElement.style.overflow = 'hidden';
-    document.documentElement.style.height = '100%';
-    document.documentElement.style.background = 'linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD)';
+    // 이미 setAppHeight()에서 픽셀값으로 설정했으므로 여기서는 기타 스타일만 설정
+    document.body.style.cssText = `
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        width: ${window.innerWidth}px !important;
+        height: ${window.innerHeight}px !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD) !important;
+    `;
+    document.documentElement.style.cssText = `
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        width: ${window.innerWidth}px !important;
+        height: ${window.innerHeight}px !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD) !important;
+    `;
 
     // 타이틀 화면 컨테이너 생성
     const titleScreen = document.createElement('div');
