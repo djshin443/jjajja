@@ -2,12 +2,21 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="screen-orientation" content="landscape">
     <meta name="x5-orientation" content="landscape">
+    <!-- Android Chrome -->
+    <meta name="theme-color" content="#9370DB">
+    <!-- iOS specific -->
+    <meta name="format-detection" content="telephone=no">
+    <!-- Fullscreen mode for various browsers -->
+    <meta name="full-screen" content="yes">
+    <meta name="browsermode" content="application">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="x5-page-mode" content="app">
     <title>지율이의 픽셀 영어 게임</title>
 	<link rel="apple-touch-icon" href="ico.png">
     <link rel="icon" type="image/png" href="ico.png">
@@ -21,32 +30,75 @@
             padding: 0;
         }
 
+        /* HTML과 Body 완벽한 전체화면 설정 */
+        html {
+            width: 100%;
+            height: 100%;
+            height: -webkit-fill-available;
+            height: 100vh;
+            height: 100dvh; /* Dynamic viewport height for modern browsers */
+            overflow: hidden;
+        }
+
         body {
             background: #000;
             font-family: 'Jua', sans-serif;
             overflow: hidden;
             touch-action: none;
             position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             width: 100%;
             height: 100%;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            min-height: 100dvh;
             margin: 0;
             padding: 0;
+            /* Safe Area Insets with fallbacks */
+            padding-top: env(safe-area-inset-top, 0);
+            padding-bottom: env(safe-area-inset-bottom, 0);
+            padding-left: env(safe-area-inset-left, 0);
+            padding-right: env(safe-area-inset-right, 0);
+            /* iOS specific */
+            -webkit-padding-start: env(safe-area-inset-left, 0);
+            -webkit-padding-end: env(safe-area-inset-right, 0);
+            -webkit-padding-before: env(safe-area-inset-top, 0);
+            -webkit-padding-after: env(safe-area-inset-bottom, 0);
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
             -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
             user-select: none;
+            /* Prevent bounce scrolling on iOS */
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: none;
         }
 
         #gameContainer {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
+            right: 0;
+            bottom: 0;
             width: 100%;
             height: 100%;
+            /* Safe Area aware positioning */
+            padding-top: env(safe-area-inset-top, 0);
+            padding-bottom: env(safe-area-inset-bottom, 0);
+            padding-left: env(safe-area-inset-left, 0);
+            padding-right: env(safe-area-inset-right, 0);
             background: #5C94FC;
             display: flex;
             flex-direction: column;
+            /* Ensure full viewport coverage */
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            min-height: 100dvh;
         }
 
         #gameCanvas {
@@ -597,7 +649,51 @@
             background: rgba(255,255,255,0.3);
         }
 
-        /* 반응형 디자인 */
+        /* iPad Pro 12.9" 및 대형 태블릿 */
+        @media screen and (min-width: 1024px) and (orientation: landscape) {
+            .menu-container {
+                max-width: 1200px;
+                padding: 48px;
+            }
+
+            #controls {
+                max-height: 100px;
+                padding: 0 5%;
+            }
+
+            .control-btn {
+                font-size: 18px;
+                padding: 20px;
+            }
+
+            #jumpBtn {
+                font-size: 24px;
+            }
+        }
+
+        /* iPad 일반 및 중형 태블릿 */
+        @media screen and (min-width: 768px) and (max-width: 1023px) {
+            .menu-container {
+                max-width: 900px;
+                padding: 36px;
+            }
+
+            #questionPanel {
+                max-width: 600px;
+                font-size: 18px;
+            }
+
+            #questionText {
+                font-size: 36px;
+            }
+
+            .choice-btn {
+                font-size: 18px;
+                min-height: 90px;
+            }
+        }
+
+        /* 반응형 디자인 - 스마트폰 */
         @media screen and (max-width: 768px) {
             .menu-container {
                 padding: 24px;
@@ -745,9 +841,9 @@
             }
         }
 
-        /* 세로모드 실시간 감지 (CSS 미디어 쿼리) */
-        @media screen and (orientation: portrait) {
-            /* 검은 반투명 배경 (모든 화면에서 표시) */
+        /* 세로모드 처리 - 태블릿은 제외 */
+        @media screen and (orientation: portrait) and (max-width: 767px) {
+            /* 스마트폰에서만 회전 요청 */
             #gameContainer::before {
                 content: "";
                 position: fixed;
@@ -755,11 +851,10 @@
                 left: 0;
                 right: 0;
                 bottom: 0;
-                background: rgba(0, 0, 0, 0.8);
+                background: rgba(0, 0, 0, 0.9);
                 z-index: 9998;
             }
 
-            /* 메인 메시지 (회전 아이콘 포함, 모든 화면에서 표시) */
             #gameContainer::after {
                 content: "📱\A\A💜 화면을 가로로 돌려주세요! 💜\A\A최적의 게임 경험을 위해";
                 position: fixed;
@@ -775,9 +870,12 @@
                 line-height: 1.5;
                 font-weight: bold;
                 white-space: pre-line;
+                padding: 20px;
+                background: rgba(147, 112, 219, 0.9);
+                border-radius: 20px;
+                border: 3px solid white;
             }
 
-            /* 모든 메뉴와 게임 UI 숨김 */
             #gameContainer #gameCanvas,
             #gameContainer #controls,
             #gameContainer #ui,
@@ -785,6 +883,29 @@
             #gameContainer #characterSelectMenu,
             #gameContainer #unitSelectMenu {
                 display: none !important;
+            }
+        }
+
+        /* iPad 세로모드 - 게임 허용 */
+        @media screen and (orientation: portrait) and (min-width: 768px) {
+            #gameContainer {
+                /* iPad 세로모드에서는 게임 실행 허용 */
+                padding-top: env(safe-area-inset-top, 20px);
+                padding-bottom: env(safe-area-inset-bottom, 20px);
+            }
+
+            .menu-container {
+                max-width: 90%;
+            }
+
+            #controls {
+                height: 10vh;
+                min-height: 80px;
+            }
+
+            #questionPanel {
+                width: 80vw;
+                max-width: 600px;
             }
         }
 
@@ -956,6 +1077,85 @@
     </div>
 
     <script>
+        // 기기 감지 및 최적화
+        (function() {
+            // iOS 감지
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            // iPad 감지
+            const isIPad = navigator.userAgent.match(/iPad/) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            // Android 감지
+            const isAndroid = /Android/.test(navigator.userAgent);
+
+            // 전체화면 지원 확인
+            const fullscreenEnabled = document.fullscreenEnabled ||
+                                    document.webkitFullscreenEnabled ||
+                                    document.mozFullScreenEnabled ||
+                                    document.msFullscreenEnabled;
+
+            // 기기별 클래스 추가
+            if (isIOS) document.body.classList.add('ios-device');
+            if (isIPad) document.body.classList.add('ipad-device');
+            if (isAndroid) document.body.classList.add('android-device');
+
+            // Safe Area 폴백 처리 (구형 기기)
+            if (!CSS.supports('padding-top: env(safe-area-inset-top)')) {
+                // env() 미지원 기기
+                const style = document.createElement('style');
+                style.textContent = `
+                    body { padding: 20px !important; }
+                    #gameContainer {
+                        top: 20px !important;
+                        left: 20px !important;
+                        right: 20px !important;
+                        bottom: 20px !important;
+                        width: calc(100% - 40px) !important;
+                        height: calc(100% - 40px) !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            // 화면 회전 이벤트 처리
+            window.addEventListener('orientationchange', function() {
+                setTimeout(function() {
+                    window.scrollTo(0, 0);
+                    if (typeof resizeCanvas === 'function') {
+                        resizeCanvas();
+                    }
+                }, 100);
+            });
+
+            // 뷰포트 높이 재계산 (주소바 숨김 처리)
+            function updateViewportHeight() {
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            }
+
+            updateViewportHeight();
+            window.addEventListener('resize', updateViewportHeight);
+            window.addEventListener('orientationchange', updateViewportHeight);
+
+            // iOS Safari 바운스 스크롤 방지
+            if (isIOS) {
+                document.addEventListener('touchmove', function(e) {
+                    if (e.target.closest('#gameContainer')) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+            }
+
+            // Android 뒤로가기 버튼 처리
+            if (isAndroid) {
+                window.addEventListener('popstate', function(e) {
+                    if (typeof showMenu === 'function') {
+                        e.preventDefault();
+                        showMenu();
+                        return false;
+                    }
+                });
+            }
+        })();
+
         // 캐릭터 픽셀 데이터
         const characterPixelData = {
             jiyul: {
