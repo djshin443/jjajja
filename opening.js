@@ -1,37 +1,8 @@
 // HTML 스타일 타이틀 화면 표시 함수
 function showTitleScreen() {
-    // PWA/Standalone 모드 감지
-    const isStandalone = window.navigator.standalone === true ||
-                        window.matchMedia('(display-mode: standalone)').matches ||
-                        window.matchMedia('(display-mode: fullscreen)').matches;
-
-    // 실제 화면 높이를 CSS 변수로 설정 (visualViewport 우선, 모바일 브라우저 주소창 고려)
-    // 맨 먼저 설정하여 DOM 생성 전에 --app-height가 준비되도록 함
-    const setAppHeight = () => {
-        const vv = window.visualViewport;
-        let vh = vv ? vv.height : window.innerHeight;
-
-        // iOS PWA 모드에서는 상태바 영역 보정
-        if (isStandalone && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
-            // PWA에서는 innerHeight 사용 (이미 safe area 포함됨)
-            vh = window.innerHeight;
-        }
-
-        document.documentElement.style.setProperty('--app-height', `${vh}px`);
-    };
-
-    // 즉시 첫 번째 높이 설정
-    setAppHeight();
-
-
-    // 기존 타이틀 화면 제거 (이벤트 리스너도 함께 정리)
+    // 기존 타이틀 화면 제거
     const existingTitle = document.getElementById('titleScreen');
     if (existingTitle) {
-        // ✅ 이벤트 리스너 먼저 제거!
-        if (window._titleScreenCleanup) {
-            window._titleScreenCleanup();
-        }
-        // 그 다음 DOM 제거
         existingTitle.remove();
     }
 
@@ -50,48 +21,24 @@ function showTitleScreen() {
     // 원래 viewport 설정 저장
     window._originalViewport = originalViewportContent;
 
+    // 실제 화면 높이를 CSS 변수로 설정 (모바일 브라우저의 주소창 고려)
+    const setAppHeight = () => {
+        const vh = window.innerHeight;
+        document.documentElement.style.setProperty('--app-height', `${vh}px`);
+    };
+
     const orientationChangeHandler = () => {
         setTimeout(setAppHeight, 100);
     };
 
-    // 더블 rAF로 정확한 뷰포트 보정 (오프닝처럼)
-    // 첫 번째 setAppHeight()는 이미 위에서 실행됨
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            setAppHeight();
-
-            // iOS에서 주소창 자동 숨기기 (초기 로드 시)
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            if (isIOS && window.scrollY === 0) {
-                setTimeout(() => {
-                    window.scrollTo(0, 1);
-                    setTimeout(setAppHeight, 100);
-                }, 100);
-            }
-        });
-    });
-
+    setAppHeight();
     window.addEventListener('resize', setAppHeight);
     window.addEventListener('orientationchange', orientationChangeHandler);
-
-    // visualViewport 이벤트 (주소창 접힘/펼침 실시간 반영)
-    let visualViewportCleanup = null;
-    if (window.visualViewport) {
-        const onVisualViewportChange = () => setAppHeight();
-        visualViewport.addEventListener('resize', onVisualViewportChange);
-        visualViewport.addEventListener('scroll', onVisualViewportChange);
-
-        visualViewportCleanup = () => {
-            visualViewport.removeEventListener('resize', onVisualViewportChange);
-            visualViewport.removeEventListener('scroll', onVisualViewportChange);
-        };
-    }
 
     // 타이틀 종료 시 이벤트 리스너 제거를 위한 함수 저장
     window._titleScreenCleanup = () => {
         window.removeEventListener('resize', setAppHeight);
         window.removeEventListener('orientationchange', orientationChangeHandler);
-        if (visualViewportCleanup) visualViewportCleanup();
         delete window._titleScreenCleanup;
     };
     
@@ -107,33 +54,21 @@ function showTitleScreen() {
         gameContainer.classList.add('menu-mode');
     }
 
-    // 타이틀 화면 컨테이너 생성 (--app-height가 설정된 후)
+    // 타이틀 화면 컨테이너 생성
     const titleScreen = document.createElement('div');
     titleScreen.id = 'titleScreen';
-
-    // PWA standalone 모드면 클래스 추가
-    if (isStandalone) {
-        titleScreen.className = 'pwa-standalone';
-
-        // iOS인 경우 추가 클래스
-        if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-            titleScreen.className += ' ios-pwa';
-
-            // iPhone X 이상 노치 기기 감지 (화면 비율로 추정)
-            const isNotch = (window.screen.height / window.screen.width) > 2;
-            if (isNotch) {
-                titleScreen.className += ' has-notch';
-            }
-        }
-    }
-
-    // 간단한 인라인 스타일 - 전체 화면 채우기
     titleScreen.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+        max-height: 100vh;
+        max-height: -webkit-fill-available;
         background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
         z-index: 10000;
         display: flex;
@@ -153,7 +88,7 @@ function showTitleScreen() {
         const style = document.createElement('style');
         style.id = 'titleScreenStyles';
         style.textContent = `
-		    /* body, html 기본 설정 */
+		    /* body, html 여백 제거 */
 			html, body {
 				margin: 0 !important;
 				padding: 0 !important;
@@ -162,81 +97,98 @@ function showTitleScreen() {
 				height: 100% !important;
 			}
     
-    /* 타이틀 화면 전체 채우기 - 간단하게 */
+    /* 타이틀 화면 전체 채우기 */
     #titleScreen {
         position: fixed !important;
         top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
-    }
+            /* 타이틀 화면 전체 채우기 - html/body는 건드리지 않음 */
+            #titleScreen {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                min-height: 100vh !important;
+                min-height: -webkit-fill-available !important;
+                max-height: 100vh !important;
+                max-height: -webkit-fill-available !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+            }
 
-    @keyframes backgroundShimmer {
-        0% { background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD); }
-        50% { background: linear-gradient(135deg, #87CEEB, #DDA0DD, #FFB6C1); }
-        100% { background: linear-gradient(135deg, #DDA0DD, #FFB6C1, #87CEEB); }
-    }
+            @supports (-webkit-touch-callout: none) {
+                /* iOS Safari 전용 스타일 - 주소창 고려 */
+                #titleScreen {
+                    height: -webkit-fill-available !important;
+                    min-height: -webkit-fill-available !important;
+                    max-height: -webkit-fill-available !important;
+                }
+            }
 
-    @keyframes titleBounce {
-        0%, 20%, 50%, 80%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
-        40% { transform: translateY(-30px) scale(1.1) rotate(-2deg); }
-        60% { transform: translateY(-15px) scale(1.05) rotate(2deg); }
-    }
-
-    @keyframes sparkle {
-        0% { opacity: 0; transform: scale(0) rotate(0deg); }
-        50% { opacity: 1; transform: scale(1.5) rotate(180deg); }
-        100% { opacity: 0; transform: scale(0) rotate(360deg); }
-    }
-
-    @keyframes float {
-        0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-        25% { transform: translateY(-15px) translateX(5px) rotate(5deg); }
-        50% { transform: translateY(-10px) translateX(-5px) rotate(-5deg); }
-        75% { transform: translateY(-5px) translateX(3px) rotate(3deg); }
-    }
-
-    @keyframes buttonGlow {
-        0% { box-shadow: 0 5px 20px rgba(255, 105, 180, 0.3), 0 0 30px rgba(255, 105, 180, 0.2); }
-        50% { box-shadow: 0 8px 40px rgba(255, 105, 180, 0.6), 0 0 50px rgba(255, 105, 180, 0.4); }
-        100% { box-shadow: 0 5px 20px rgba(255, 105, 180, 0.3), 0 0 30px rgba(255, 105, 180, 0.2); }
-    }
-
-    @keyframes pixelMove {
-        0%, 100% { transform: translateX(0); }
-        50% { transform: translateX(10px); }
-    }
-
-    @keyframes coinRotate {
-        0% { transform: rotateY(0deg); }
-        100% { transform: rotateY(360deg); }
-    }
-
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.2); opacity: 0.8; }
-    }
-
-    @keyframes fall {
-        0% {
-            transform: translateY(0);
-        }
-        100% {
-            transform: translateY(calc(100vh + 100px));
-            /* 모바일에서도 작동하도록 대체값 설정 */
-            transform: translateY(calc(var(--app-height, 100vh) + 100px));
-        }
-    }
-
-    @keyframes flashFade {
-        from { opacity: 1; }
-        to { opacity: 0; }
-    }
+            @keyframes backgroundShimmer {
+                0% { background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD); }
+                50% { background: linear-gradient(135deg, #87CEEB, #DDA0DD, #FFB6C1); }
+                100% { background: linear-gradient(135deg, #DDA0DD, #FFB6C1, #87CEEB); }
+            }
+            
+            @keyframes titleBounce {
+                0%, 20%, 50%, 80%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+                40% { transform: translateY(-30px) scale(1.1) rotate(-2deg); }
+                60% { transform: translateY(-15px) scale(1.05) rotate(2deg); }
+            }
+            
+            @keyframes sparkle {
+                0% { opacity: 0; transform: scale(0) rotate(0deg); }
+                50% { opacity: 1; transform: scale(1.5) rotate(180deg); }
+                100% { opacity: 0; transform: scale(0) rotate(360deg); }
+            }
+            
+            @keyframes float {
+                0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+                25% { transform: translateY(-15px) translateX(5px) rotate(5deg); }
+                50% { transform: translateY(-10px) translateX(-5px) rotate(-5deg); }
+                75% { transform: translateY(-5px) translateX(3px) rotate(3deg); }
+            }
+            
+            @keyframes buttonGlow {
+                0% { box-shadow: 0 5px 20px rgba(255, 105, 180, 0.3), 0 0 30px rgba(255, 105, 180, 0.2); }
+                50% { box-shadow: 0 8px 40px rgba(255, 105, 180, 0.6), 0 0 50px rgba(255, 105, 180, 0.4); }
+                100% { box-shadow: 0 5px 20px rgba(255, 105, 180, 0.3), 0 0 30px rgba(255, 105, 180, 0.2); }
+            }
+            
+            @keyframes pixelMove {
+                0%, 100% { transform: translateX(0); }
+                50% { transform: translateX(10px); }
+            }
+            
+            @keyframes coinRotate {
+                0% { transform: rotateY(0deg); }
+                100% { transform: rotateY(360deg); }
+            }
+            
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); opacity: 1; }
+                50% { transform: scale(1.2); opacity: 0.8; }
+            }
+            
+            @keyframes fall {
+                0% {
+                    transform: translateY(0);
+                }
+                100% {
+                    transform: translateY(calc(100vh + 100px));
+                    /* 모바일에서도 작동하도록 대체값 설정 */
+                    transform: translateY(calc(var(--app-height, 100vh) + 100px));
+                }
+            }
+            
+            @keyframes flashFade {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
         `;
         document.head.appendChild(style);
     }
@@ -603,72 +555,29 @@ function showTitleScreen() {
     rotateOverlay.appendChild(rotateSubtext);
     titleScreen.appendChild(rotateOverlay);
 
-    // PWA/Standalone 모드 감지
-    const isStandalone = window.navigator.standalone ||
-                         window.matchMedia('(display-mode: standalone)').matches;
-
-    // PWA는 더 긴 대기 시간 필요 (300ms), 일반 브라우저는 100ms
-    const orientationDelay = isStandalone ? 300 : 100;
-
-    // matchMedia를 사용한 정확한 방향 감지 (방법 1 - 메인)
-    const mediaQuery = window.matchMedia('(orientation: portrait)');
-
-    const updateOrientationByMedia = () => {
-        rotateOverlay.style.display = mediaQuery.matches ? 'flex' : 'none';
-    };
-
-    // setTimeout + requestAnimationFrame을 사용한 백업 방식 (방법 2 - 백업)
+    // 실시간으로 화면 방향 감지하여 오버레이 표시/숨김
     const checkOrientation = () => {
-        setTimeout(() => {
-            requestAnimationFrame(() => {
-                const isNowPortrait = window.innerHeight > window.innerWidth;
-                rotateOverlay.style.display = isNowPortrait ? 'flex' : 'none';
-            });
-        }, orientationDelay);
+        const isNowPortrait = window.innerHeight > window.innerWidth;
+        rotateOverlay.style.display = isNowPortrait ? 'flex' : 'none';
     };
 
-    // 초기 설정 (matchMedia 우선 사용)
-    updateOrientationByMedia();
+    // 초기 체크
+    checkOrientation();
 
-    // matchMedia 이벤트 리스너 (가장 정확함)
-    if (mediaQuery.addEventListener) {
-        mediaQuery.addEventListener('change', updateOrientationByMedia);
-    } else {
-        // 구형 브라우저 대응
-        mediaQuery.addListener(updateOrientationByMedia);
-    }
-
-    // 백업용 이벤트 리스너 (이중 안전장치)
+    // 이벤트 리스너 등록
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
 
     // 정리 함수에 이벤트 리스너 제거 추가
     const originalCleanup = window._titleScreenCleanup;
     window._titleScreenCleanup = () => {
-        // matchMedia 이벤트 리스너 제거
-        if (mediaQuery.removeEventListener) {
-            mediaQuery.removeEventListener('change', updateOrientationByMedia);
-        } else {
-            mediaQuery.removeListener(updateOrientationByMedia);
-        }
-        // resize/orientationchange 이벤트 리스너 제거
         window.removeEventListener('resize', checkOrientation);
         window.removeEventListener('orientationchange', checkOrientation);
         if (originalCleanup) originalCleanup();
     };
 
-    // 타이틀 화면을 페이지에 추가 (--app-height 설정 보장)
-    // 즉시 추가하되, 다음 프레임에서 강제 리플로우
+    // 타이틀 화면을 페이지에 추가
     document.body.appendChild(titleScreen);
-
-    // 강제로 레이아웃 재계산 (리플로우)
-    titleScreen.offsetHeight;
-
-    // 한 프레임 후 최종 높이 보정
-    requestAnimationFrame(() => {
-        setAppHeight();
-        // CSS에서 이미 처리하므로 인라인 스타일은 설정하지 않음
-    });
 
     // 터치 이벤트도 추가 (모바일 지원)
     startButton.addEventListener('touchend', (e) => {
@@ -736,10 +645,9 @@ function startOpeningSequence() {
             document.body.style.background = '#000';
 
             // 오프닝 완료 후 메뉴 표시
-            // 매번 타이틀 화면 보여주기 위해 제거
-            // if (typeof hasSeenOpening !== 'undefined') {
-            //     hasSeenOpening = true;
-            // }
+            if (typeof hasSeenOpening !== 'undefined') {
+                hasSeenOpening = true;
+            }
             if (typeof showMenu === 'function') {
                 showMenu();
             }
