@@ -1053,6 +1053,30 @@ class OpeningSequence {
         this.ctx.imageSmoothingEnabled = false;
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.drawImage(this._pixCanvas, 0, 0, this.canvas.width, this.canvas.height);
+
+        // CRT 스캔라인 오버레이 (패턴을 한 번만 만들어 재사용)
+        if (!this._scanCanvas || this._scanCanvas.width !== this.canvas.width || this._scanCanvas.height !== this.canvas.height) {
+            this._scanCanvas = document.createElement('canvas');
+            this._scanCanvas.width = this.canvas.width;
+            this._scanCanvas.height = this.canvas.height;
+            const sctx = this._scanCanvas.getContext('2d');
+            sctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
+            for (let y = 0; y < this._scanCanvas.height; y += 3) {
+                sctx.fillRect(0, y, this._scanCanvas.width, 1);
+            }
+            // 가장자리 비네트
+            const vg = sctx.createRadialGradient(
+                this._scanCanvas.width / 2, this._scanCanvas.height / 2,
+                Math.min(this._scanCanvas.width, this._scanCanvas.height) * 0.45,
+                this._scanCanvas.width / 2, this._scanCanvas.height / 2,
+                Math.max(this._scanCanvas.width, this._scanCanvas.height) * 0.75
+            );
+            vg.addColorStop(0, 'rgba(0,0,0,0)');
+            vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+            sctx.fillStyle = vg;
+            sctx.fillRect(0, 0, this._scanCanvas.width, this._scanCanvas.height);
+        }
+        this.ctx.drawImage(this._scanCanvas, 0, 0);
     }
 
     _renderScene() {
@@ -1140,54 +1164,82 @@ class OpeningSequence {
     drawBackground() {
         const dialogue = this.dialogues[this.currentDialogue];
         if (!dialogue) return;
-        
-        // 그라데이션 하늘
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        
-        switch(dialogue.effect) {
-            case 'peaceful':
-                gradient.addColorStop(0, '#87CEEB');
-                gradient.addColorStop(1, '#98D8E8');
-                break;
-            case 'alert':
-            case 'villain':
-                gradient.addColorStop(0, '#4B0082');
-                gradient.addColorStop(1, '#8B008B');
-                break;
-            case 'angry':
-                gradient.addColorStop(0, '#FF6B6B');
-                gradient.addColorStop(1, '#FFA500');
-                break;
-            case 'confident':
-                gradient.addColorStop(0, '#FFD700');
-                gradient.addColorStop(1, '#FFA500');
-                break;
-            case 'heroic':
-                gradient.addColorStop(0, '#FF69B4');
-                gradient.addColorStop(1, '#FFB6C1');
-                break;
-            default:
-                gradient.addColorStop(0, '#87CEEB');
-                gradient.addColorStop(1, '#98D8E8');
-        }
-        
+        const w = this.canvas.width, h = this.canvas.height;
+
+        // 오락실풍: 어두운 밤하늘 + 씬 분위기별 네온 액센트
+        const accents = {
+            peaceful:  { sky: '#0B1030', glow: '#3BC9DB', grid: '#17677A' },
+            alert:     { sky: '#1E0428', glow: '#FF3B3B', grid: '#8A1B38' },
+            villain:   { sky: '#1E0428', glow: '#B44BFF', grid: '#5C2191' },
+            angry:     { sky: '#240A05', glow: '#FF7B00', grid: '#8A3A00' },
+            confident: { sky: '#1F1905', glow: '#FFD700', grid: '#8A7500' },
+            heroic:    { sky: '#240519', glow: '#FF69B4', grid: '#8A2161' },
+        };
+        const a = accents[dialogue.effect] || accents.peaceful;
+
+        // 하늘 (위는 칠흑, 지평선 쪽으로 액센트)
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, h);
+        gradient.addColorStop(0, '#050510');
+        gradient.addColorStop(0.7, a.sky);
+        gradient.addColorStop(1, '#02020A');
         this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        // 별 그리기 (밤 씬)
-        if (dialogue.effect === 'villain' || dialogue.effect === 'alert') {
-            this.drawStars();
-        }
-        
-        // 땅 (가로모드에서 더 낮게)
+        this.ctx.fillRect(0, 0, w, h);
+
+        // 별은 모든 씬에서
+        this.drawStars();
+
+        // 지평선 네온 라인 + 원근 그리드 바닥
         const groundHeight = this.isLandscape ? 80 : 100;
-        this.ctx.fillStyle = '#228B22';
-        this.ctx.fillRect(0, this.canvas.height - groundHeight, this.canvas.width, groundHeight);
-        
-        // 꽃밭 (평화로운 씬)
-        if (dialogue.effect === 'peaceful') {
-            this.drawFlowers(groundHeight);
+        const horizonY = h - groundHeight;
+        this.ctx.fillStyle = '#02020A';
+        this.ctx.fillRect(0, horizonY, w, groundHeight);
+        this.ctx.strokeStyle = a.glow;
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, horizonY);
+        this.ctx.lineTo(w, horizonY);
+        this.ctx.stroke();
+        this.ctx.strokeStyle = a.grid;
+        this.ctx.lineWidth = 1.5;
+        // 가로 그리드 (멀수록 촘촘)
+        for (let i = 1; i <= 5; i++) {
+            const gy = horizonY + Math.pow(i / 5, 1.7) * groundHeight;
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, gy);
+            this.ctx.lineTo(w, gy);
+            this.ctx.stroke();
         }
+        // 세로 원근 그리드 (스크롤 느낌으로 천천히 흐름)
+        const cx = w / 2 + Math.sin(this.frame * 0.01) * 20;
+        for (let i = -8; i <= 8; i++) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(cx + i * 45, horizonY);
+            this.ctx.lineTo(cx + i * 220, h);
+            this.ctx.stroke();
+        }
+
+        // 아케이드 HUD 헤더
+        this.drawArcadeHUD();
+    }
+
+    // 오락실 상단 HUD (1UP / HI-SCORE / CREDIT)
+    drawArcadeHUD() {
+        const w = this.canvas.width;
+        this.ctx.save();
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'top';
+        this.ctx.font = 'bold 14px DungGeunMo, Jua, monospace';
+        this.ctx.fillStyle = '#FF4444';
+        this.ctx.fillText('1UP', w * 0.14, 8);
+        this.ctx.fillText('HI-SCORE', w * 0.5, 8);
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.fillText('00', w * 0.14, 26);
+        this.ctx.fillText('50000', w * 0.5, 26);
+        if (Math.floor(this.frame / 30) % 2 === 0) {
+            this.ctx.fillStyle = '#FFD700';
+            this.ctx.fillText('CREDIT 1', w * 0.85, 8);
+        }
+        this.ctx.restore();
     }
     
     // 별 그리기
@@ -1503,18 +1555,29 @@ class OpeningSequence {
             const boxX = 20;
             const boxWidth = this.canvas.width - 40;
             
-            // 말풍선 스타일 대화 박스
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            // 오락실풍 메시지 창: 검은 배경 + 흰색/화자색 이중 테두리
+            this.ctx.fillStyle = 'rgba(2, 2, 12, 0.92)';
             this.ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-            
-            // 대화 박스 테두리
+            this.ctx.strokeStyle = '#FFFFFF';
+            this.ctx.lineWidth = 3;
+            this.ctx.strokeRect(boxX + 2, boxY + 2, boxWidth - 4, boxHeight - 4);
             this.ctx.strokeStyle = this.getSpeakerColor(dialogue.speaker);
-            this.ctx.lineWidth = 4;
-            this.ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
-            
-            // 말풍선 꼬리 (화자에 따라 위치 변경)
+            this.ctx.lineWidth = 1.5;
+            this.ctx.strokeRect(boxX + 7, boxY + 7, boxWidth - 14, boxHeight - 14);
+
+            // 화자 이름 라벨 (창 좌상단)
             if (dialogue.speaker !== 'narrator') {
-                this.drawSpeechBubbleTail(dialogue.speaker, boxX, boxY, boxWidth, boxHeight);
+                this.ctx.save();
+                this.ctx.font = 'bold 12px DungGeunMo, Jua, sans-serif';
+                this.ctx.textAlign = 'left';
+                this.ctx.textBaseline = 'middle';
+                const label = ` ${this.getSpeakerName ? this.getSpeakerName(dialogue.speaker) : dialogue.speaker} `;
+                const lw = this.ctx.measureText(label).width;
+                this.ctx.fillStyle = this.getSpeakerColor(dialogue.speaker);
+                this.ctx.fillRect(boxX + 12, boxY - 8, lw + 8, 18);
+                this.ctx.fillStyle = '#FFFFFF';
+                this.ctx.fillText(label, boxX + 16, boxY + 1);
+                this.ctx.restore();
             }
             
             // 텍스트 렌더링
@@ -1529,8 +1592,8 @@ class OpeningSequence {
                 (this.isMobile ? '16px' : '20px') : 
                 '18px';
             
-            // 텍스트 그리기
-            this.ctx.fillStyle = '#000000';
+            // 텍스트 그리기 (오락실풍: 검은 창에 흰 글자)
+            this.ctx.fillStyle = '#FFFFFF';
             this.ctx.font = `bold ${fontSize} DungGeunMo, Jua, sans-serif`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
@@ -1617,6 +1680,18 @@ class OpeningSequence {
             default: return '#9370DB';
         }
     }
+
+    // 화자 표시 이름
+    getSpeakerName(speaker) {
+        switch(speaker) {
+            case 'jiyul': return '지율';
+            case 'kiwi': return '키위';
+            case 'whitehouse': return '화이트하우스';
+            case 'alien': return 'ABC 대마왕';
+            case 'all': return '모두';
+            default: return '';
+        }
+    }
     
     // 클릭 힌트 그리기
     drawClickHint() {
@@ -1626,35 +1701,28 @@ class OpeningSequence {
             this.canvas.height - 80 : 
             this.canvas.height - 180;
         
-        // 클릭 아이콘
-        this.ctx.fillStyle = `rgba(255, 215, 0, ${this.clickHintAlpha})`;
-        this.ctx.font = 'bold 16px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('▼ 클릭하여 계속 ▼', this.canvas.width / 2, hintY);
+        // 오락실풍 깜빡임: PRESS START 스타일
+        if (Math.floor(this.frame / 25) % 2 === 0) {
+            this.ctx.fillStyle = '#FFD700';
+            this.ctx.font = 'bold 16px DungGeunMo, Jua, monospace';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('▼ PUSH TO CONTINUE ▼', this.canvas.width / 2, hintY);
+        }
         
         this.ctx.restore();
     }
     
     // Skip 버튼 그리기
     drawSkipButton() {
-        // 버튼 스타일
-        const gradient = this.ctx.createLinearGradient(
-            this.skipButton.x, 
-            this.skipButton.y,
-            this.skipButton.x + this.skipButton.width,
-            this.skipButton.y + this.skipButton.height
-        );
-        gradient.addColorStop(0, 'rgba(147, 112, 219, 0.8)');
-        gradient.addColorStop(1, 'rgba(221, 160, 221, 0.8)');
-        
-        // 버튼 배경
-        this.ctx.fillStyle = gradient;
+        // 오락실풍: 검은 바탕 + 빨간 이중 테두리
+        this.ctx.fillStyle = 'rgba(2, 2, 12, 0.9)';
         this.ctx.fillRect(this.skipButton.x, this.skipButton.y, this.skipButton.width, this.skipButton.height);
-        
-        // 버튼 테두리
-        this.ctx.strokeStyle = '#FFFFFF';
+        this.ctx.strokeStyle = '#FF4444';
         this.ctx.lineWidth = 2;
         this.ctx.strokeRect(this.skipButton.x, this.skipButton.y, this.skipButton.width, this.skipButton.height);
+        this.ctx.strokeStyle = '#FFFFFF';
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(this.skipButton.x + 3, this.skipButton.y + 3, this.skipButton.width - 6, this.skipButton.height - 6);
         
         // 호버 효과
         if (this.isHoveringSkip) {
