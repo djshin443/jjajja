@@ -1017,14 +1017,14 @@
             if (t) {
                 t.innerHTML = '';
                 t.appendChild(createPixelTextCanvas('🌟 영어 히어로를 선택하세요! 🌟', {
-                    fontPx: 16, scale: 2, color: '#9932CC', outline: '#FFFFFF', shadow: 'rgba(0,0,0,0.2)'
+                    fontPx: 22, scale: 2, color: '#9932CC', outline: '#FFFFFF', shadow: 'rgba(0,0,0,0.2)'
                 }));
             }
             const s = document.getElementById('menuSubtitle');
             if (s) {
                 s.innerHTML = '';
                 s.appendChild(createPixelTextCanvas('ABC 대마왕으로부터 지구를 지킬 히어로는?', {
-                    fontPx: 11, scale: 2, color: '#6B3AA0', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)'
+                    fontPx: 14, scale: 2, color: '#6B3AA0', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)'
                 }));
             }
         }
@@ -1043,12 +1043,13 @@
                 if (!text) return;
                 el.dataset.pixelSrc = text;
                 const small = el.classList.contains('unit-btn') || el.tagName === 'SPAN';
-                const light = lightText[el.id];
+                // 캐릭터 카드 라벨은 선택(보라)/비선택(흰) 배경 모두에서 읽히도록 흰 글자+진한 외곽선
+                const light = lightText[el.id] || el.tagName === 'SPAN';
                 setPixelText(el, text, {
-                    fontPx: small ? 10 : 12,
+                    fontPx: small ? 12 : 14,
                     scale: 2,
                     color: light ? '#FFFFFF' : (getComputedStyle(el).color || '#6B3AA0'),
-                    outline: light ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.85)',
+                    outline: light ? 'rgba(60, 20, 90, 0.85)' : 'rgba(255,255,255,0.85)',
                     shadow: 'rgba(0,0,0,0)'
                 });
             });
@@ -1093,7 +1094,7 @@
             if (greetingElement) {
                 if (characterGreetings[characterName]) {
                     setPixelText(greetingElement, characterGreetings[characterName],
-                        { fontPx: 10, scale: 2, color: '#6B3AA0', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', wrapPx: 280 });
+                        { fontPx: 13, scale: 2, color: '#6B3AA0', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', wrapPx: 340 });
                 } else {
                     greetingElement.textContent = '안녕하세요! 함께 영어 공부해볼까요? 💜';
                 }

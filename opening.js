@@ -781,21 +781,21 @@ class OpeningSequence {
             this.jiyul = { 
                 x: centerX - spacing, 
                 y: centerY,
-                scale: this.isMobile ? 3 : 4,
+                scale: this.isMobile ? 4 : 5,
                 rotation: 0,
                 expression: 'normal'
             };
             this.kiwi = { 
                 x: centerX, 
                 y: centerY + 20,
-                scale: this.isMobile ? 3 : 4,
+                scale: this.isMobile ? 4 : 5,
                 rotation: 0,
                 expression: 'normal'
             };
             this.whitehouse = { 
                 x: centerX + spacing, 
                 y: centerY,
-                scale: this.isMobile ? 3 : 4,
+                scale: this.isMobile ? 4 : 5,
                 rotation: 0,
                 expression: 'normal'
             };
@@ -1054,29 +1054,39 @@ class OpeningSequence {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.drawImage(this._pixCanvas, 0, 0, this.canvas.width, this.canvas.height);
 
-        // CRT 스캔라인 오버레이 (패턴을 한 번만 만들어 재사용)
+        // CRT 스캔라인 오버레이 (가독성을 위해 약하게, 패턴은 한 번만 생성)
         if (!this._scanCanvas || this._scanCanvas.width !== this.canvas.width || this._scanCanvas.height !== this.canvas.height) {
             this._scanCanvas = document.createElement('canvas');
             this._scanCanvas.width = this.canvas.width;
             this._scanCanvas.height = this.canvas.height;
             const sctx = this._scanCanvas.getContext('2d');
-            sctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
+            sctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
             for (let y = 0; y < this._scanCanvas.height; y += 3) {
                 sctx.fillRect(0, y, this._scanCanvas.width, 1);
             }
-            // 가장자리 비네트
+            // 가장자리 비네트 (약하게)
             const vg = sctx.createRadialGradient(
                 this._scanCanvas.width / 2, this._scanCanvas.height / 2,
-                Math.min(this._scanCanvas.width, this._scanCanvas.height) * 0.45,
+                Math.min(this._scanCanvas.width, this._scanCanvas.height) * 0.5,
                 this._scanCanvas.width / 2, this._scanCanvas.height / 2,
-                Math.max(this._scanCanvas.width, this._scanCanvas.height) * 0.75
+                Math.max(this._scanCanvas.width, this._scanCanvas.height) * 0.8
             );
             vg.addColorStop(0, 'rgba(0,0,0,0)');
-            vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+            vg.addColorStop(1, 'rgba(0,0,0,0.16)');
             sctx.fillStyle = vg;
             sctx.fillRect(0, 0, this._scanCanvas.width, this._scanCanvas.height);
         }
         this.ctx.drawImage(this._scanCanvas, 0, 0);
+
+        // 가독성이 중요한 요소는 원본 해상도로 선명하게 그린다
+        if (this.canvas.width > this.canvas.height) {
+            this.drawArcadeHUD();
+            this.drawDialogue();
+            this.drawSkipButton();
+            if (this.canProceed) {
+                this.drawClickHint();
+            }
+        }
     }
 
     _renderScene() {
@@ -1108,17 +1118,7 @@ class OpeningSequence {
         this.drawComicEffects();
 
         this.ctx.restore();
-
-        // 대화 텍스트 (캐릭터와 겹치지 않게)
-        this.drawDialogue();
-
-        // Skip 버튼
-        this.drawSkipButton();
-
-        // 클릭 힌트
-        if (this.canProceed) {
-            this.drawClickHint();
-        }
+        // 대화창·HUD·버튼은 가독성을 위해 저해상 패스 밖(원본 해상도)에서 그린다 → render() 참고
     }
 
     // 가로모드 권장 메시지
@@ -1218,8 +1218,6 @@ class OpeningSequence {
             this.ctx.stroke();
         }
 
-        // 아케이드 HUD 헤더
-        this.drawArcadeHUD();
     }
 
     // 오락실 상단 HUD (1UP / HI-SCORE / CREDIT)
@@ -1228,7 +1226,7 @@ class OpeningSequence {
         this.ctx.save();
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'top';
-        this.ctx.font = 'bold 14px DungGeunMo, Jua, monospace';
+        this.ctx.font = 'bold 16px DungGeunMo, Jua, monospace';
         this.ctx.fillStyle = '#FF4444';
         this.ctx.fillText('1UP', w * 0.14, 8);
         this.ctx.fillText('HI-SCORE', w * 0.5, 8);
@@ -1543,8 +1541,8 @@ class OpeningSequence {
             // 대화 박스 위치 (캐릭터와 겹치지 않게)
             let boxY, boxHeight;
             if (this.isLandscape) {
-                // 가로모드: 화면 하단에 작게
-                boxHeight = 60;
+                // 가로모드: 두 줄까지 여유 있게
+                boxHeight = 84;
                 boxY = this.canvas.height - boxHeight - 10;
             } else {
                 // 세로모드: 기존 위치
@@ -1589,8 +1587,8 @@ class OpeningSequence {
             
             // 텍스트 크기 조정
             const fontSize = this.isLandscape ? 
-                (this.isMobile ? '16px' : '20px') : 
-                '18px';
+                (this.isMobile ? '18px' : '24px') : 
+                '20px';
             
             // 텍스트 그리기 (오락실풍: 검은 창에 흰 글자)
             this.ctx.fillStyle = '#FFFFFF';
@@ -1704,7 +1702,7 @@ class OpeningSequence {
         // 오락실풍 깜빡임: PRESS START 스타일
         if (Math.floor(this.frame / 25) % 2 === 0) {
             this.ctx.fillStyle = '#FFD700';
-            this.ctx.font = 'bold 16px DungGeunMo, Jua, monospace';
+            this.ctx.font = 'bold 20px DungGeunMo, Jua, monospace';
             this.ctx.textAlign = 'center';
             this.ctx.fillText('▼ PUSH TO CONTINUE ▼', this.canvas.width / 2, hintY);
         }
