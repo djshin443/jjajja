@@ -38,19 +38,19 @@ const bossMessages = {
             { speaker: "boss", text: "어... 어떻게! 내 완벽한 영어 실력이! 이럴 수가!" },
             { speaker: "jiyul", text: "어? 생각보다 약하네! 영어 공부 열심히 한 보람이 있어!" },
             { speaker: "boss", text: "아직 끝나지 않았다! 내가 숨겨둔 비밀 병기... 초고난도 영어 단어들!" },
-            { speaker: "boss", text: "이제부터가 진짜야! 준비끝나, 지구 꼬맹아?" }
+            { speaker: "boss", text: "이제부터가 진짜야! 준비됐나, 지구 꼬맹아?" }
         ],
         kiwi: [
             { speaker: "boss", text: "어... 어떻게! 내 완벽한 영어 실력이! 이럴 수가!" },
             { speaker: "kiwi", text: "라룩라룩! (번역: 하하! 내가 이기고 있어!)" },
             { speaker: "boss", text: "아직 끝나지 않았다! 내가 숨겨둔 비밀 병기... 초고난도 영어 단어들!" },
-            { speaker: "boss", text: "이제부터가 진짜야! 준비끝나, 지구 꼬맹아?" }
+            { speaker: "boss", text: "이제부터가 진짜야! 준비됐나, 지구 꼬맹아?" }
         ],
         whitehouse: [
             { speaker: "boss", text: "어... 어떻게! 내 완벽한 영어 실력이! 이럴 수가!" },
             { speaker: "whitehouse", text: "계산 결과... 승리 확률 87.3%! 거의 다 왔다!" },
             { speaker: "boss", text: "아직 끝나지 않았다! 내가 숨겨둔 비밀 병기... 초고난도 영어 단어들!" },
-            { speaker: "boss", text: "이제부터가 진짜야! 준비끝나, 지구 꼬맹아?" }
+            { speaker: "boss", text: "이제부터가 진짜야! 준비됐나, 지구 꼬맹아?" }
         ]
     },
     defeat: {
@@ -663,7 +663,18 @@ function resizeCanvas() {
             obstacle.width = 16 * PIXEL_SCALE;
             obstacle.height = 16 * PIXEL_SCALE;
         });
-        console.log(`🔧 장애물 위치 조정: 총 ${obstacles.length}개`);
+    }
+
+    // 적들의 크기/위치도 새로운 PIXEL_SCALE·GROUND_Y에 맞게 조정
+    // (기존엔 장애물만 갱신되어 화면 회전 후 적 히트박스가 어긋나는 버그가 있었음)
+    if (typeof enemies !== 'undefined' && enemies.length > 0) {
+        enemies.forEach(enemy => {
+            enemy.width = 16 * PIXEL_SCALE;
+            enemy.height = 16 * PIXEL_SCALE;
+            if (enemy.onGround) {
+                enemy.y = GROUND_Y - (16 * PIXEL_SCALE);  // 적의 y는 상단 기준
+            }
+        });
     }
     
     // 플레이어 위치 재조정
@@ -942,15 +953,9 @@ function generateMoreEnemies() {
         const baseSpeed = 1.5; // 고정 속도 (스테이지와 무관)
         const direction = Math.random() > 0.5 ? 1 : -1;
         
-        // 스테이지별 알파벳 몬스터 선택
-        let monsterType;
-        if (gameState.stage === 20) {
-            const randomAlphabet = stageAlphabets[Math.floor(Math.random() * stageAlphabets.length)];
-            monsterType = `alphabet${randomAlphabet}`;
-        } else {
-            const randomAlphabet = stageAlphabets[Math.floor(Math.random() * stageAlphabets.length)];
-            monsterType = `alphabet${randomAlphabet}`;
-        }
+        // 스테이지별 알파벳 몬스터 선택 (스테이지 20은 getStageAlphabets가 전체 알파벳 반환)
+        const randomAlphabet = stageAlphabets[Math.floor(Math.random() * stageAlphabets.length)];
+        const monsterType = `alphabet${randomAlphabet}`;
         
         const enemyX = startX + i * 400 + Math.random() * 200;
         
@@ -1394,7 +1399,12 @@ function updateAnimations() {
     
     enemies.forEach(enemy => {
         if (enemy.alive) {
-            enemy.animFrame = (enemy.animFrame + 1) % 2;
+            // 플레이어와 동일하게 타이머 게이팅 (기존엔 매 프레임 토글되어 60fps로 깜빡임)
+            enemy.animTimer = (enemy.animTimer || 0) + 1;
+            if (enemy.animTimer >= 20) {
+                enemy.animFrame = (enemy.animFrame + 1) % 2;
+                enemy.animTimer = 0;
+            }
         }
     });
 }
@@ -1917,7 +1927,7 @@ function jump() {
         if (typeof createParticles === 'function') {
             createParticles(player.x, player.y, 'hint');
         }
-        gameState.score += 1;
+        // (점프당 +1점은 제자리 점프 연타로 점수를 무한 획득하는 파밍 수단이라 제거)
         updateUI();
     }
 }

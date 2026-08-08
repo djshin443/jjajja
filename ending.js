@@ -1104,7 +1104,7 @@ function animateKiwiEndingScene(ctx, canvas) {
         const discoX = canvas.width / 2;
         const discoY = 80;
         ctx.save();
-        ctx.fillStyle = '#SILVER';
+        ctx.fillStyle = '#C0C0C0'; // 은색 (기존 '#SILVER'는 무효한 색상값)
         ctx.beginPath();
         ctx.arc(discoX, discoY, 30, 0, Math.PI * 2);
         ctx.fill();

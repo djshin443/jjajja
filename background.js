@@ -311,9 +311,13 @@ function drawFlowerField() {
             ctx.strokeStyle = '#228B22';
             ctx.lineWidth = 2;
             for (let j = 0; j < 3; j++) {
+                // 시드 기반 결정적 랜덤 (기존 Math.random()은 매 프레임 잔디가 떨리는 문제)
+                const seed = i * 7 + j * 13;
+                const tipX = ((seed * 31) % 5) - 2;      // -2 ~ 2
+                const tipY = 3 + ((seed * 17) % 6);      // 3 ~ 8
                 ctx.beginPath();
                 ctx.moveTo(x + j * 3, GROUND_Y + 5);
-                ctx.lineTo(x + j * 3 + Math.random() * 4 - 2, GROUND_Y - 3 - Math.random() * 5);
+                ctx.lineTo(x + j * 3 + tipX, GROUND_Y - tipY);
                 ctx.stroke();
             }
         }
@@ -389,8 +393,8 @@ function drawMagicalParticles() {
             ctx.arc(x, y, 3 + Math.sin(gameState.distance * 0.08 + i) * 2, 0, Math.PI * 2);
             ctx.fill();
             
-            // 반짝이는 효과
-            if (Math.random() < 0.1) {
+            // 반짝이는 효과 (입자별 위상 기반 - 기존 Math.random()은 무작위로 깜빡였음)
+            if (Math.sin(gameState.distance * 0.1 + i * 2.4) > 0.9) {
                 ctx.fillStyle = '#FFFFFF';
                 ctx.beginPath();
                 ctx.arc(x, y, 1, 0, Math.PI * 2);
