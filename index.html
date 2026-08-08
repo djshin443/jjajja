@@ -361,11 +361,8 @@
             display: flex;
             gap: 12px;
             justify-content: center;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            flex-wrap: wrap;
             padding: 5px;
-            touch-action: pan-x;
         }
         
         #unitGrid::-webkit-scrollbar {
@@ -382,18 +379,37 @@
             border-radius: 4px;
         }
 
+        /* 도트 텍스트 캔버스가 버튼/카드 폭을 밀어내지 않도록 축소 */
+        .character-btn canvas:not(.character-pixel),
+        .unit-btn canvas,
+        .vehicle-btn canvas,
+        .choice-btn canvas,
+        .card-title canvas,
+        .control-btn canvas,
+        #startGameBtn canvas,
+        #nextToUnitBtn canvas,
+        #backToCharacterBtn canvas,
+        #fullscreenBtn canvas {
+            max-width: 100%;
+            height: auto !important;
+            display: block;
+            margin: 0 auto;
+        }
+
         .character-btn {
             background: linear-gradient(135deg, #ffffff, #E6E6FA);
             border: 3px solid #9370DB;
             border-radius: 12px;
-            padding: 16px;
+            padding: 14px 8px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             gap: 8px;
-            min-width: 120px;
+            width: 136px;
+            min-width: 0;
             font-family: 'DungGeunMo', 'Jua', sans-serif;
             font-weight: 500;
             color: #9932CC;
@@ -436,7 +452,8 @@
             background: linear-gradient(135deg, #ffffff, #e6f3ff);
             border: 2px solid #4169E1;
             border-radius: 8px;
-            padding: 12px 20px;
+            padding: 12px 14px;
+            min-width: 92px;
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'DungGeunMo', 'Jua', sans-serif;
@@ -632,11 +649,10 @@
 
             #unitGrid {
                 display: flex;
-                gap: 12px;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
+                gap: 8px;
+                justify-content: center;
+                flex-wrap: wrap;
                 padding-bottom: 10px;
-                flex-wrap: nowrap;
             }
             
             #unitGrid::-webkit-scrollbar {
@@ -747,9 +763,9 @@
 
             #unitGrid {
                 display: flex;
-                gap: 12px;
+                gap: 8px;
                 justify-content: center;
-                flex-wrap: nowrap;
+                flex-wrap: wrap;
             }
         }
 
@@ -1032,7 +1048,7 @@
         function pixelateStaticUI() {
             if (typeof createPixelTextCanvas !== 'function') return;
             const targets = document.querySelectorAll(
-                '.card-title, .unit-btn, .character-btn > span, .vehicle-btn, ' +
+                '.card-title, .unit-btn, .character-btn > span, .vehicle-btn > span, ' +
                 '#nextToUnitBtn, #backToCharacterBtn, #startGameBtn, ' +
                 '#jumpBtn, #menuBtn, #helpBtn, #fullscreenBtn'
             );
