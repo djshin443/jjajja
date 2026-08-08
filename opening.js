@@ -78,583 +78,351 @@ function setPixelText(el, text, opts = {}) {
 }
 
 function showTitleScreen() {
-    // 기존 타이틀 화면 제거
-    const existingTitle = document.getElementById('titleScreen');
-    if (existingTitle) {
-        existingTitle.remove();
-    }
+    // ── 순수 캔버스 메탈슬러그풍 도트 타이틀 (DOM/이모지 없음) ──
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta) window._originalViewport = viewportMeta.content;
 
-    // 모바일 뷰포트 메타 태그 설정 (검정 공백 방지)
-    let viewportMeta = document.querySelector('meta[name="viewport"]');
-    const originalViewportContent = viewportMeta ? viewportMeta.content : '';
-
-    if (!viewportMeta) {
-        viewportMeta = document.createElement('meta');
-        viewportMeta.name = 'viewport';
-        document.head.appendChild(viewportMeta);
-    }
-
-    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
-
-    // 원래 viewport 설정 저장
-    window._originalViewport = originalViewportContent;
-
-    // 실제 화면 높이를 CSS 변수로 설정 (모바일 브라우저의 주소창 고려)
-    const setAppHeight = () => {
-        const vh = window.innerHeight;
-        document.documentElement.style.setProperty('--app-height', `${vh}px`);
-    };
-
-    const orientationChangeHandler = () => {
-        setTimeout(setAppHeight, 100);
-    };
-
-    setAppHeight();
-    window.addEventListener('resize', setAppHeight);
-    window.addEventListener('orientationchange', orientationChangeHandler);
-
-    // 타이틀 종료 시 이벤트 리스너 제거를 위한 함수 저장
-    window._titleScreenCleanup = () => {
-        window.removeEventListener('resize', setAppHeight);
-        window.removeEventListener('orientationchange', orientationChangeHandler);
-        delete window._titleScreenCleanup;
-    };
-    
-    // 화면 방향 및 크기 체크
-    const isPortrait = window.innerHeight > window.innerWidth;
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                     (navigator.maxTouchPoints > 0) || window.innerWidth <= 768;
-    const isMobilePortrait = isPortrait && isMobile;
-
-    // gameContainer에 menu-mode 클래스 추가 (타이틀 화면은 메뉴 모드)
-    const gameContainer = document.getElementById('gameContainer');
-    if (gameContainer) {
-        gameContainer.classList.add('menu-mode');
-    }
-
-    // 타이틀 화면 컨테이너 생성
     const titleScreen = document.createElement('div');
     titleScreen.id = 'titleScreen';
-    titleScreen.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100vw;
-        height: 100vh;
-        min-height: 100vh;
-        min-height: -webkit-fill-available;
-        max-height: 100vh;
-        max-height: -webkit-fill-available;
-        background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD);
-        z-index: 10000;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-family: 'DungGeunMo', 'Jua', sans-serif;
-        overflow: hidden;
-        animation: backgroundShimmer 3s ease-in-out infinite alternate;
-        padding: 0;
-        margin: 0;
-        box-sizing: border-box;
-    `;
+    titleScreen.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#000;overflow:hidden;';
+    const cv = document.createElement('canvas');
+    cv.style.cssText = 'width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:manipulation;';
+    titleScreen.appendChild(cv);
+    document.body.appendChild(titleScreen);
+    const c = cv.getContext('2d');
 
-    // CSS 애니메이션 추가
-    if (!document.getElementById('titleScreenStyles')) {
-        const style = document.createElement('style');
-        style.id = 'titleScreenStyles';
-        style.textContent = `
-		    /* body, html 여백 제거 */
-			html, body {
-				margin: 0 !important;
-				padding: 0 !important;
-				overflow: hidden !important;
-				width: 100% !important;
-				height: 100% !important;
-			}
-    
-    /* 타이틀 화면 전체 채우기 */
-    #titleScreen {
-        position: fixed !important;
-        top: 0 !important;
-            /* 타이틀 화면 전체 채우기 - html/body는 건드리지 않음 */
-            #titleScreen {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                min-height: 100vh !important;
-                min-height: -webkit-fill-available !important;
-                max-height: 100vh !important;
-                max-height: -webkit-fill-available !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                box-sizing: border-box !important;
+    // ── 금속 그라데이션 램프 ──
+    const RAMP_GOLD   = ['#FFFBE8', '#FFF3A0', '#FFD84A', '#FFB020', '#E8821A', '#B35510'];
+    const RAMP_SILVER = ['#FFFFFF', '#EAEFF5', '#C6CEDA', '#98A4B6', '#6C788E'];
+    const RAMP_ORANGE = ['#FFE8B0', '#FFB84A', '#FF7A1A', '#C4441A'];
+    const OUTLINE = '#180C04';
+
+    // ── 텍스트 → 픽셀 그리드 (0 빈칸, 1 채움, 2 외곽선) ──
+    function buildLogoGrid(text, fontPx) {
+        const off = document.createElement('canvas');
+        let octx = off.getContext('2d');
+        octx.font = `bold ${fontPx}px 'DungGeunMo', 'Jua', sans-serif`;
+        off.width = Math.ceil(octx.measureText(text).width) + 6;
+        off.height = Math.ceil(fontPx * 1.5);
+        octx = off.getContext('2d');
+        octx.font = `bold ${fontPx}px 'DungGeunMo', 'Jua', sans-serif`;
+        octx.textBaseline = 'top';
+        octx.fillStyle = '#FFFFFF';
+        octx.fillText(text, 3, Math.floor(fontPx * 0.15));
+        const img = octx.getImageData(0, 0, off.width, off.height).data;
+        let g = [];
+        for (let y = 0; y < off.height; y++) {
+            const row = [];
+            for (let x = 0; x < off.width; x++) {
+                row.push(img[(y * off.width + x) * 4 + 3] > 100 ? 1 : 0);
             }
-
-            @supports (-webkit-touch-callout: none) {
-                /* iOS Safari 전용 스타일 - 주소창 고려 */
-                #titleScreen {
-                    height: -webkit-fill-available !important;
-                    min-height: -webkit-fill-available !important;
-                    max-height: -webkit-fill-available !important;
+            g.push(row);
+        }
+        // 빈 행/열 잘라내기
+        const rowHas = g.map(r => r.some(v => v));
+        const top = rowHas.indexOf(true), bot = rowHas.lastIndexOf(true);
+        let left = g[0].length, right = 0;
+        for (let y = top; y <= bot; y++) {
+            const f = g[y].indexOf(1), l = g[y].lastIndexOf(1);
+            if (f !== -1) { left = Math.min(left, f); right = Math.max(right, l); }
+        }
+        g = g.slice(top, bot + 1).map(r => r.slice(left, right + 1));
+        // 외곽선 셀 확장 (1픽셀 패딩 후 팽창)
+        const H = g.length + 2, W = g[0].length + 2;
+        const p = Array.from({ length: H }, () => new Array(W).fill(0));
+        for (let y = 0; y < g.length; y++)
+            for (let x = 0; x < g[0].length; x++)
+                if (g[y][x]) p[y + 1][x + 1] = 1;
+        for (let y = 0; y < H; y++)
+            for (let x = 0; x < W; x++)
+                if (!p[y][x]) {
+                    for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]]) {
+                        const ny = y + dy, nx = x + dx;
+                        if (ny >= 0 && ny < H && nx >= 0 && nx < W && p[ny][nx] === 1) { p[y][x] = 2; break; }
+                    }
                 }
-            }
+        return p;
+    }
 
-            @keyframes backgroundShimmer {
-                0% { background: linear-gradient(135deg, #FFB6C1, #87CEEB, #DDA0DD); }
-                50% { background: linear-gradient(135deg, #87CEEB, #DDA0DD, #FFB6C1); }
-                100% { background: linear-gradient(135deg, #DDA0DD, #FFB6C1, #87CEEB); }
-            }
-            
-            @keyframes titleBounce {
-                0%, 20%, 50%, 80%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
-                40% { transform: translateY(-30px) scale(1.1) rotate(-2deg); }
-                60% { transform: translateY(-15px) scale(1.05) rotate(2deg); }
-            }
-            
-            @keyframes sparkle {
-                0% { opacity: 0; transform: scale(0) rotate(0deg); }
-                50% { opacity: 1; transform: scale(1.5) rotate(180deg); }
-                100% { opacity: 0; transform: scale(0) rotate(360deg); }
-            }
-            
-            @keyframes float {
-                0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-                25% { transform: translateY(-15px) translateX(5px) rotate(5deg); }
-                50% { transform: translateY(-10px) translateX(-5px) rotate(-5deg); }
-                75% { transform: translateY(-5px) translateX(3px) rotate(3deg); }
-            }
-            
-            @keyframes buttonGlow {
-                0% { box-shadow: 0 5px 20px rgba(255, 105, 180, 0.3), 0 0 30px rgba(255, 105, 180, 0.2); }
-                50% { box-shadow: 0 8px 40px rgba(255, 105, 180, 0.6), 0 0 50px rgba(255, 105, 180, 0.4); }
-                100% { box-shadow: 0 5px 20px rgba(255, 105, 180, 0.3), 0 0 30px rgba(255, 105, 180, 0.2); }
-            }
-            
-            @keyframes pixelMove {
-                0%, 100% { transform: translateX(0); }
-                50% { transform: translateX(10px); }
-            }
-            
-            @keyframes coinRotate {
-                0% { transform: rotateY(0deg); }
-                100% { transform: rotateY(360deg); }
-            }
-            
-            @keyframes pulse {
-                0%, 100% { transform: scale(1); opacity: 1; }
-                50% { transform: scale(1.2); opacity: 0.8; }
-            }
-            
-            @keyframes fall {
-                0% {
-                    transform: translateY(0);
+    // ── 금속 도트 텍스트 렌더 (정수 스냅) ──
+    function drawMetalGrid(grid, cx, cy, px, ramp, shineX) {
+        px = Math.max(1, Math.round(px));
+        const gw = grid[0].length, gh = grid.length;
+        const x0 = Math.round(cx - (gw * px) / 2);
+        const y0 = Math.round(cy - (gh * px) / 2);
+        for (let y = 0; y < gh; y++) {
+            const band = ramp[Math.min(ramp.length - 1, Math.floor((y / gh) * ramp.length))];
+            for (let x = 0; x < gw; x++) {
+                const v = grid[y][x];
+                if (!v) continue;
+                if (v === 2) {
+                    c.fillStyle = OUTLINE;
+                } else if (grid[y - 1] && !grid[y - 1][x]) {
+                    c.fillStyle = '#FFFFFF';                 // 상단 하이라이트
+                } else if (shineX !== undefined && x + y >= shineX && x + y < shineX + 4) {
+                    c.fillStyle = '#FFFFFF';                 // 반짝임 스윕
+                } else {
+                    c.fillStyle = band;
                 }
-                100% {
-                    transform: translateY(calc(100vh + 100px));
-                    /* 모바일에서도 작동하도록 대체값 설정 */
-                    transform: translateY(calc(var(--app-height, 100vh) + 100px));
-                }
+                c.fillRect(x0 + x * px, y0 + y * px, px, px);
             }
-            
-            @keyframes flashFade {
-                from { opacity: 1; }
-                to { opacity: 0; }
+        }
+        return { x0, y0, w: gw * px, h: gh * px };
+    }
+
+    // ── 캐릭터 베이크 (외곽선은 스프라이트에 이미 포함) ──
+    const bakeCache = new Map();
+    function bakeSprite(name, pose) {
+        const key = name + ':' + pose;
+        if (bakeCache.has(key)) return bakeCache.get(key);
+        const data = (typeof pixelData !== 'undefined') && pixelData[name];
+        if (!data || !data[pose]) return null;
+        const sp = data[pose];
+        const off = document.createElement('canvas');
+        off.width = sp[0].length; off.height = sp.length;
+        const o = off.getContext('2d');
+        for (let y = 0; y < sp.length; y++)
+            for (let x = 0; x < sp[0].length; x++) {
+                const v = sp[y][x];
+                if (v && data.colorMap[v]) { o.fillStyle = data.colorMap[v]; o.fillRect(x, y, 1, 1); }
             }
-        `;
-        document.head.appendChild(style);
-    }
-    
-    // 반짝이는 별들 배경 - 화면 가득
-    const starCount = isMobilePortrait ? 20 : 30;
-    for (let i = 0; i < starCount; i++) {
-        const star = document.createElement('div');
-        star.appendChild(createPixelTextCanvas('✨', { fontPx: 12, scale: 2, outline: 'rgba(0,0,0,0)', shadow: 'rgba(0,0,0,0)' }));
-        star.style.cssText = `
-            position: absolute;
-            font-size: ${Math.random() * 20 + 15}px;
-            left: ${Math.random() * 100}%;
-            top: ${Math.random() * 100}%;
-            animation: sparkle ${2 + Math.random() * 3}s infinite;
-            animation-delay: ${Math.random() * 2}s;
-            pointer-events: none;
-            opacity: ${0.6 + Math.random() * 0.4};
-        `;
-        titleScreen.appendChild(star);
+        bakeCache.set(key, off);
+        return off;
     }
 
-    // 하트 이모지들 - 화면 가득
-    const heartCount = isMobilePortrait ? 10 : 15;
-    for (let i = 0; i < heartCount; i++) {
-        const heart = document.createElement('div');
-        heart.appendChild(createPixelTextCanvas('💖', { fontPx: 14, scale: 2, outline: 'rgba(0,0,0,0)', shadow: 'rgba(0,0,0,0)' }));
-        heart.style.cssText = `
-            position: absolute;
-            font-size: ${Math.random() * 15 + 20}px;
-            left: ${Math.random() * 100}%;
-            top: ${Math.random() * 100}%;
-            animation: float ${3 + Math.random() * 2}s ease-in-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-            pointer-events: none;
-            opacity: ${0.5 + Math.random() * 0.5};
-        `;
-        titleScreen.appendChild(heart);
+    // ── 상태 ──
+    let W = 0, H = 0, U = 4;
+    let frame = 0, running = true, started = false;
+    let logoMain = null, logoTop = null, logoSub = null, logoTouch = null;
+    let phase = 'drop', dropT = 0, shake = 0, shineT = -60;
+    const dust = [];
+    const clouds = [{ x: 0.15, y: 0.12, s: 1.4 }, { x: 0.72, y: 0.2, s: 1 }, { x: 0.45, y: 0.07, s: 0.8 }];
+    const marchers = ['jiyul', 'kiwi', 'whitehouse'];
+    const walkPoses = ['walking1', 'walking2', 'walking3', 'walking4'];
+
+    function buildLogos() {
+        logoTop = buildLogoGrid('지율이의', 14);
+        logoMain = buildLogoGrid('잉글리쉬 어드벤쳐', 22);
+        logoSub = buildLogoGrid("JIYUL'S ENGLISH ADVENTURE", 10);
+        logoTouch = buildLogoGrid('터치해서 시작!', 12);
     }
 
-    // 게임 코인들 - 화면 가득
-    const coinCount = isMobilePortrait ? 12 : 20;
-    for (let i = 0; i < coinCount; i++) {
-        const coin = document.createElement('div');
-        coin.appendChild(createPixelTextCanvas('🪙', { fontPx: 14, scale: 2, outline: 'rgba(0,0,0,0)', shadow: 'rgba(0,0,0,0)' }));
-        const randomLeft = Math.random() * 100;
-        coin.style.cssText = `
-            position: absolute;
-            font-size: ${Math.random() * 20 + 20}px;
-            left: ${randomLeft}%;
-            top: -50px;
-            animation: fall ${5 + Math.random() * 5}s linear infinite, coinRotate 2s linear infinite;
-            animation-delay: ${Math.random() * 5}s;
-            pointer-events: none;
-            z-index: 3;
-            opacity: ${0.7 + Math.random() * 0.3};
-        `;
-        titleScreen.appendChild(coin);
+    function resize() {
+        W = cv.width = window.innerWidth;
+        H = cv.height = window.innerHeight;
+        U = Math.max(3, Math.round(H / 100));   // 기본 도트 단위
     }
-    
-    
-    // 컨텐츠를 담을 중앙 컨테이너 - 완전 풀스크린
-    const contentContainer = document.createElement('div');
-    const isLandscape = window.innerWidth > window.innerHeight;
-    contentContainer.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
-        box-sizing: border-box;
-        z-index: 5;
-    `;
-    
-    // 메인 타이틀 컨테이너
-    const mainTitle = document.createElement('div');
-    mainTitle.style.cssText = `
-        text-align: center;
-        margin-bottom: ${isMobilePortrait ? '20px' : '40px'};
-        animation: titleBounce 2s ease-in-out infinite;
-        width: 100%;
-        padding: 0 10px;
-    `;
-    
-    // 게임 제목 (반응형 폰트 크기)
-    // 제목/부제목: 저해상 캔버스에 그려 확대한 '진짜 도트 글자'
-    const titleWrap = document.createElement('div');
-    const subtitleWrap = document.createElement('div');
-    subtitleWrap.style.cssText = `
-        margin: ${isMobilePortrait ? '10px 0 15px 0' : '20px 0 25px 0'};
-        animation: float 2.5s ease-in-out infinite;
-    `;
 
-    function renderTitleTexts() {
-        // 아이폰 가로 등 낮은 화면에서는 축소해 한 화면에 들어오게
-        const isLowLandscape = window.innerHeight <= 520 && window.innerWidth > window.innerHeight;
-        const bigScale = (isMobilePortrait || isLowLandscape) ? 2 : 3;
-        titleWrap.innerHTML = '';
-        titleWrap.appendChild(createPixelTextCanvas('🚀 지율이의 잉글리쉬 어드벤쳐 🚀', {
-            fontPx: 20, scale: bigScale,
-            color: '#FF69B4', outline: '#FFFFFF', shadow: '#FFD700'
-        }));
-        subtitleWrap.innerHTML = '';
-        subtitleWrap.appendChild(createPixelTextCanvas('👽 ABC 대마왕의 지구 침공! 👾', {
-            fontPx: 14, scale: isLowLandscape ? 2 : (isMobilePortrait ? 2 : 3),
-            color: '#FFD700', outline: '#8B008B', shadow: 'rgba(0,0,0,0.3)'
-        }));
-        if (isLowLandscape) {
-            subtitleWrap.style.margin = '6px 0 8px 0';
+    // ── 배경: 노을 밴드 하늘 + 도트 태양/구름/별 + 타일 지면 ──
+    const SKY_BANDS = ['#1B1035', '#2A1A4A', '#3D2560', '#5A2E6E', '#7C3A6E', '#A34A63', '#C75B4E', '#E87A3C', '#F5A048'];
+
+    function drawBackground(ox, oy) {
+        const groundH = Math.round(H * 0.18);
+        const skyH = H - groundH;
+        const bandH = Math.ceil(skyH / SKY_BANDS.length);
+        SKY_BANDS.forEach((col, i) => {
+            c.fillStyle = col;
+            c.fillRect(0, oy + i * bandH, W, bandH);
+        });
+        // 별 (위쪽 어두운 밴드에만, 깜빡임)
+        for (let i = 0; i < 26; i++) {
+            const sx = Math.round(((i * 137) % 100) / 100 * W);
+            const sy = Math.round(((i * 71) % 40) / 100 * H);
+            if ((Math.floor(frame / 20) + i) % 4 !== 0) {
+                c.fillStyle = i % 3 ? '#FFE9A0' : '#FFFFFF';
+                c.fillRect(ox + sx, oy + sy, 2, 2);
+            }
+        }
+        // 도트 태양 (계단형 원 + 이중 톤)
+        const sunX = Math.round(W * 0.82), sunY = Math.round(skyH * 0.62);
+        const su = Math.max(2, Math.round(U * 0.7));
+        const sunRows = [4, 7, 9, 10, 10, 10, 9, 7, 4];
+        sunRows.forEach((wRow, i) => {
+            const yy = oy + sunY + (i - sunRows.length / 2) * su;
+            c.fillStyle = '#FFD84A';
+            c.fillRect(Math.round(ox + sunX - wRow * su / 2), Math.round(yy), wRow * su, su);
+        });
+        // 태양 안쪽 밝은 코어
+        const coreRows = [3, 5, 6, 6, 5, 3];
+        coreRows.forEach((wRow, i) => {
+            const yy = oy + sunY + (i - coreRows.length / 2) * su;
+            c.fillStyle = '#FFF3B0';
+            c.fillRect(Math.round(ox + sunX - wRow * su / 2), Math.round(yy), wRow * su, su);
+        });
+        // 구름 (블록 뭉게)
+        clouds.forEach(cl => {
+            cl.x += 0.0002 * cl.s;
+            if (cl.x > 1.1) cl.x = -0.15;
+            const bx = Math.round(cl.x * W), by = Math.round(cl.y * H), s = U * cl.s;
+            c.fillStyle = '#E8D8C8';
+            c.fillRect(Math.round(ox + bx), Math.round(oy + by), Math.round(8 * s), Math.round(2 * s));
+            c.fillRect(Math.round(ox + bx + 2 * s), Math.round(oy + by - 1.5 * s), Math.round(4 * s), Math.round(2 * s));
+            c.fillStyle = '#C9B4A4';
+            c.fillRect(Math.round(ox + bx), Math.round(oy + by + 1.2 * s), Math.round(8 * s), Math.round(0.8 * s));
+        });
+        // 지면: 잔디 띠 + 흙 체커 타일
+        const gy = oy + skyH;
+        c.fillStyle = '#3E8E2F';
+        c.fillRect(0, gy, W, Math.round(U * 1.6));
+        c.fillStyle = '#5FB53E';
+        for (let x = 0; x < W; x += U * 2) c.fillRect(ox + x, gy, U, Math.round(U * 0.7));
+        const tile = U * 4;
+        for (let ty = gy + Math.round(U * 1.6); ty < H + tile; ty += tile) {
+            for (let tx = -tile; tx < W + tile; tx += tile) {
+                const odd = ((tx / tile | 0) + (ty / tile | 0)) % 2 === 0;
+                c.fillStyle = odd ? '#5C3A24' : '#4E3120';
+                c.fillRect(Math.round(ox + tx), Math.round(ty), tile, tile);
+                c.fillStyle = odd ? '#6B462C' : '#5C3A24';
+                c.fillRect(Math.round(ox + tx), Math.round(ty), tile, Math.round(U * 0.6));
+            }
+        }
+        return gy;
+    }
+
+    function spawnDust(x, y, n) {
+        for (let i = 0; i < n; i++) {
+            dust.push({
+                x, y,
+                vx: (Math.random() - 0.5) * 6,
+                vy: -Math.random() * 4 - 1,
+                life: 30 + Math.random() * 20,
+                max: 50,
+                col: Math.random() < 0.5 ? '#C9A47C' : '#8A6A48'
+            });
         }
     }
-    renderTitleTexts();
-    // 도트 폰트 로드가 끝나면 다시 그려 확실히 픽셀 글꼴로 표시
-    if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(renderTitleTexts);
+
+    function draw() {
+        if (!running) return;
+        frame++;
+        let ox = 0, oy = 0;
+        if (shake > 0.5) {
+            ox = Math.round((Math.random() - 0.5) * shake);
+            oy = Math.round((Math.random() - 0.5) * shake);
+            shake *= 0.86;
+        }
+
+        const groundY = drawBackground(ox, oy);
+
+        // ── 행진하는 캐릭터들 ──
+        const step = Math.floor(frame / 9) % walkPoses.length;
+        marchers.forEach((name, i) => {
+            const baked = bakeSprite(name, walkPoses[(step + i) % walkPoses.length]) || bakeSprite(name, 'idle');
+            if (!baked) return;
+            const scale = Math.max(2, Math.round(U * 0.6));
+            const spd = 0.00045;
+            const mx = ((frame * spd + i * 0.18) % 1.2 - 0.1) * W;
+            const my = groundY + Math.round(U * 1.6) - baked.height * scale;
+            c.imageSmoothingEnabled = false;
+            c.drawImage(baked, Math.round(ox + mx), Math.round(oy + my), baked.width * scale, baked.height * scale);
+        });
+
+        // ── 로고 (등장 연출: 거대 → 쾅 착지) ──
+        if (logoMain) {
+            const cxm = W / 2;
+            const baseY = H * 0.36;
+            let zoom = 1;
+            if (phase === 'drop') {
+                dropT++;
+                const t = Math.min(1, dropT / 40);
+                zoom = 4 - 3 * (t * t);                     // ease-in 낙하
+                if (t >= 1) {
+                    phase = 'idle';
+                    shake = 22;
+                    const gw = logoMain[0].length * basePx();
+                    spawnDust(cxm - gw / 2, baseY + logoMain.length * basePx() / 2, 20);
+                    spawnDust(cxm + gw / 2, baseY + logoMain.length * basePx() / 2, 20);
+                    if (typeof playSound === 'function') { try { playSound('correct'); } catch (e) {} }
+                }
+            } else if (frame - shineT > 200) {
+                shineT = frame;
+            }
+            const shine = phase === 'idle' ? Math.floor((frame - shineT) * 1.6) : undefined;
+
+            function basePx() {
+                return Math.max(2, Math.min(Math.round(U * 1.05), Math.floor((W * 0.92) / logoMain[0].length)));
+            }
+            const mainPx = basePx() * zoom;
+            drawMetalGrid(logoTop, cxm, baseY - logoMain.length * basePx() / 2 - logoTop.length * basePx() * 0.4,
+                Math.max(1, Math.round(basePx() * 0.55)), RAMP_SILVER);
+            drawMetalGrid(logoMain, cxm + ox, baseY + oy, mainPx, RAMP_GOLD, shine);
+            if (phase === 'idle') {
+                drawMetalGrid(logoSub, cxm, baseY + logoMain.length * basePx() / 2 + logoSub.length * basePx() * 0.5 + U,
+                    Math.max(1, Math.round(basePx() * 0.45)), RAMP_ORANGE);
+            }
+        }
+
+        // ── 터치해서 시작! (깜빡임) ──
+        if (phase === 'idle' && logoTouch && Math.floor(frame / 26) % 2 === 0) {
+            drawMetalGrid(logoTouch, W / 2, H * 0.6, Math.max(1, Math.round(U * 0.5)), RAMP_GOLD);
+        }
+
+        // ── 먼지 파티클 ──
+        for (let i = dust.length - 1; i >= 0; i--) {
+            const d = dust[i];
+            d.x += d.vx; d.y += d.vy; d.vy += 0.25; d.vx *= 0.96; d.life--;
+            if (d.life <= 0) { dust.splice(i, 1); continue; }
+            c.globalAlpha = d.life / d.max;
+            c.fillStyle = d.col;
+            const s = Math.max(2, Math.round(U * 0.5));
+            c.fillRect(Math.round(d.x), Math.round(d.y), s, s);
+            c.globalAlpha = 1;
+        }
+
+        // 세로 모드 안내
+        if (H > W && logoTouch) {
+            c.fillStyle = 'rgba(0,0,0,0.55)';
+            c.fillRect(0, 0, W, H);
+            const rot = buildLogoGrid('화면을 옆으로 돌려주세요!', 12);
+            drawMetalGrid(rot, W / 2, H / 2, Math.max(1, Math.floor(W * 0.9 / rot[0].length)), RAMP_GOLD);
+        }
+
+        requestAnimationFrame(draw);
     }
 
-    mainTitle.appendChild(titleWrap);
-    mainTitle.appendChild(subtitleWrap);
-
-    // 시작 버튼 (반응형 크기)
-    const startButton = document.createElement('button');
-    startButton.innerHTML = '⚔️ 지구를 지켜라! ⚔️';
-    
-    const buttonFontSize = isMobilePortrait ? 
-        'min(5vw, 20px)' : 
-        (isMobile ? '1.5em' : '2em');
-    
-    const isLowLandscape = window.innerHeight <= 520 && window.innerWidth > window.innerHeight;
-    const buttonPadding = isLowLandscape ? '10px 24px' :
-        (isMobilePortrait ? '15px 25px' : '20px 40px');
-    
-    startButton.style.cssText = `
-        background: linear-gradient(135deg, #FF69B4, #FFB6C1);
-        border: 4px solid #FFFFFF;
-        color: white;
-        font-size: ${buttonFontSize};
-        font-weight: bold;
-        font-family: 'DungGeunMo', 'Jua', sans-serif;
-        padding: ${buttonPadding};
-        border-radius: 0;
-        cursor: pointer;
-        text-shadow: 3px 3px 0 rgba(0,0,0,0.35);
-        transition: all 0.15s ease;
-        animation: buttonGlow 2s ease-in-out infinite;
-        margin-top: ${isLowLandscape ? '10px' : (isMobilePortrait ? '20px' : '30px')};
-        box-shadow: 0 8px 0 #C4457F, 0 8px 0 4px rgba(0,0,0,0.2), inset -4px -4px 0 rgba(0,0,0,0.15);
-        image-rendering: pixelated;
-        white-space: nowrap;
-    `;
-    
-    startButton.onmouseover = () => {
-        startButton.style.transform = 'scale(1.1)';
-        startButton.style.background = 'linear-gradient(135deg, #FF1493, #FF69B4)';
-    };
-    
-    startButton.onmouseout = () => {
-        startButton.style.transform = 'scale(1)';
-        startButton.style.background = 'linear-gradient(135deg, #FF69B4, #FFB6C1)';
-    };
-    
-    startButton.onclick = () => {
-        // 중복 클릭 방지
-        if (startButton.disabled) return;
-        startButton.disabled = true;
-
-        // 전체화면 진입 시도
+    // ── 시작 전환 ──
+    function startGame() {
+        if (started) return;
+        started = true;
         const elem = document.documentElement;
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen().catch(() => {});
-        } else if (elem.webkitRequestFullscreen) {
-            elem.webkitRequestFullscreen();
-        } else if (elem.mozRequestFullScreen) {
-            elem.mozRequestFullScreen();
-        } else if (elem.msRequestFullscreen) {
-            elem.msRequestFullscreen();
-        }
-
-        // 화면 방향 잠금 시도 (가로 모드)
+        if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
         if (screen.orientation && screen.orientation.lock) {
             screen.orientation.lock('landscape').catch(() => {});
         }
-
-        // 화면 전체 폭죽 효과 (모바일에서는 개수 줄이기)
-        const fireworkCount = isMobilePortrait ? 15 : 30;
-        const fireworkElements = [];
-
-        for (let i = 0; i < fireworkCount; i++) {
-            setTimeout(() => {
-                const firework = document.createElement('div');
-                const colors = ['✨', '🌟', '💫', '⭐', '🎆'];
-                firework.innerHTML = colors[Math.floor(Math.random() * colors.length)];
-                firework.style.cssText = `
-                    position: absolute;
-                    font-size: ${Math.random() * 30 + 20}px;
-                    left: ${Math.random() * window.innerWidth}px;
-                    top: ${Math.random() * window.innerHeight}px;
-                    animation: sparkle 1s ease-out forwards;
-                    pointer-events: none;
-                    z-index: 10002;
-                `;
-                titleScreen.appendChild(firework);
-                fireworkElements.push(firework);
-                setTimeout(() => firework.remove(), 1000);
-            }, i * 50);
-        }
-        
-        // 화면 플래시 효과
-        const flash = document.createElement('div');
-        flash.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(255,255,255,0.8), transparent);
-            z-index: 10001;
-            animation: flashFade 0.5s ease-out forwards;
-            pointer-events: none;
-        `;
-        titleScreen.appendChild(flash);
-        setTimeout(() => flash.remove(), 500);
-        
-        // 타이틀 화면 회전하며 사라지기
-        titleScreen.style.transition = 'all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
-        titleScreen.style.transform = 'scale(0) rotate(720deg)';
+        titleScreen.style.transition = 'all 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+        titleScreen.style.transform = 'scale(0) rotate(360deg)';
         titleScreen.style.opacity = '0';
-        
         setTimeout(() => {
-            // gameContainer의 menu-mode 클래스 제거 (게임 모드로 전환)
             const gameContainer = document.getElementById('gameContainer');
-            if (gameContainer) {
-                gameContainer.classList.remove('menu-mode');
-            }
-
-            // 타이틀 화면 이벤트 리스너 정리
-            if (window._titleScreenCleanup) {
-                window._titleScreenCleanup();
-            }
-
-            // 타이틀 화면 스타일 태그 제거
-            const styleTag = document.getElementById('titleScreenStyles');
-            if (styleTag) styleTag.remove();
-
-            // 타이틀 화면 요소 제거
+            if (gameContainer) gameContainer.classList.remove('menu-mode');
+            running = false;
+            window.removeEventListener('resize', onResize);
             titleScreen.remove();
-
-            // 원래 viewport 복원
-            const viewportMeta = document.querySelector('meta[name="viewport"]');
-            if (viewportMeta && window._originalViewport) {
-                viewportMeta.content = window._originalViewport;
-            }
-
-            // 캔버스 크기 재조정 후 오프닝 시작
+            if (viewportMeta && window._originalViewport) viewportMeta.content = window._originalViewport;
             setTimeout(() => {
-                if (typeof resizeCanvas === 'function') {
-                    resizeCanvas();
-                }
+                if (typeof resizeCanvas === 'function') resizeCanvas();
                 startOpeningSequence();
             }, 100);
-        }, 800);
-    };
-    
-    // 작은 도움말 텍스트 (도트 캔버스)
-    const helpText = document.createElement('div');
-    helpText.style.cssText = `
-        margin-top: ${isLowLandscape ? '8px' : (isMobilePortrait ? '15px' : '30px')};
-        animation: float 3s ease-in-out infinite;
-        text-align: center;
-    `;
-    function renderHelpText() {
-        helpText.innerHTML = '';
-        helpText.appendChild(createPixelTextCanvas('💥 지율이와 함께 ABC 대마왕을 물리치자! 💥', {
-            fontPx: 12, scale: 2,
-            color: '#8B008B', outline: '#FFFFFF', shadow: 'rgba(0,0,0,0.2)'
-        }));
+        }, 700);
     }
-    renderHelpText();
-    if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(renderHelpText);
-    }
-    
-    // 모든 요소를 컨테이너에 추가
-    contentContainer.appendChild(mainTitle);
-    contentContainer.appendChild(startButton);
-    contentContainer.appendChild(helpText);
 
-    // 컨테이너를 타이틀 화면에 추가
-    titleScreen.appendChild(contentContainer);
-
-    // 세로모드 회전 메시지 오버레이 (항상 추가, CSS로 제어)
-    const rotateOverlay = document.createElement('div');
-    rotateOverlay.id = 'titleRotateOverlay';
-    rotateOverlay.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.8);
-        display: none;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 10001;
-        pointer-events: auto;
-    `;
-
-    // 회전 아이콘
-    const rotateIcon = document.createElement('div');
-    rotateIcon.innerHTML = '📱';
-    rotateIcon.style.cssText = `
-        font-size: min(20vw, 100px);
-        transform: rotate(90deg);
-        animation: pulse 2s ease-in-out infinite;
-        margin-bottom: 30px;
-    `;
-
-    // 메시지 텍스트
-    const rotateText = document.createElement('div');
-    rotateText.innerHTML = '💜 화면을 가로로 돌려주세요! 💜';
-    rotateText.style.cssText = `
-        font-family: 'DungGeunMo', 'Jua', sans-serif;
-        font-size: min(6vw, 28px);
-        color: #FFFFFF;
-        text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
-        text-align: center;
-        padding: 0 20px;
-        line-height: 1.5;
-        font-weight: bold;
-    `;
-
-    // 작은 안내 텍스트
-    const rotateSubtext = document.createElement('div');
-    rotateSubtext.innerHTML = '최적의 게임 경험을 위해';
-    rotateSubtext.style.cssText = `
-        font-family: 'DungGeunMo', 'Jua', sans-serif;
-        font-size: min(4vw, 18px);
-        color: #FFD700;
-        text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
-        margin-top: 15px;
-        text-align: center;
-    `;
-
-    rotateOverlay.appendChild(rotateIcon);
-    rotateOverlay.appendChild(rotateText);
-    rotateOverlay.appendChild(rotateSubtext);
-    titleScreen.appendChild(rotateOverlay);
-
-    // 실시간으로 화면 방향 감지하여 오버레이 표시/숨김
-    const checkOrientation = () => {
-        const isNowPortrait = window.innerHeight > window.innerWidth;
-        rotateOverlay.style.display = isNowPortrait ? 'flex' : 'none';
-    };
-
-    // 초기 체크
-    checkOrientation();
-
-    // 이벤트 리스너 등록
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
-
-    // 정리 함수에 이벤트 리스너 제거 추가
-    const originalCleanup = window._titleScreenCleanup;
+    function onResize() { resize(); }
+    window.addEventListener('resize', onResize);
     window._titleScreenCleanup = () => {
-        window.removeEventListener('resize', checkOrientation);
-        window.removeEventListener('orientationchange', checkOrientation);
-        if (originalCleanup) originalCleanup();
+        running = false;
+        window.removeEventListener('resize', onResize);
     };
 
-    // 타이틀 화면을 페이지에 추가
-    document.body.appendChild(titleScreen);
+    cv.addEventListener('click', startGame);
+    cv.addEventListener('touchend', e => { e.preventDefault(); startGame(); }, { passive: false });
 
-    // 터치 이벤트도 추가 (모바일 지원)
-    startButton.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        startButton.click();
-    });
+    resize();
+    buildLogos();
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => { bakeCache.clear(); buildLogos(); });
+    }
+    draw();
 }
 
 // 방향 체크 후 타이틀 화면 시작 (세로모드든 가로모드든 항상 타이틀 표시)
