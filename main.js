@@ -966,7 +966,10 @@ function generateMoreEnemies() {
     const stageAlphabets = getStageAlphabets(gameState.stage);
     
     for (let i = 0; i < 5; i++) {
-        const baseSpeed = 1.5; // 고정 속도 (스테이지와 무관)
+        // 복습 스테이지(9+)는 스테이지가 오를수록 몬스터가 빨라진다 (최대 +60%)
+        const reviewBoost = gameState.stage > ALL_UNITS.length
+            ? Math.min(1.6, 1 + (gameState.stage - ALL_UNITS.length) * 0.06) : 1;
+        const baseSpeed = 1.5 * reviewBoost;
         const direction = Math.random() > 0.5 ? 1 : -1;
         
         // 스테이지별 알파벳 몬스터 선택 (스테이지 20은 getStageAlphabets가 전체 알파벳 반환)
@@ -1654,8 +1657,9 @@ function generateEnglishQuestion() {
         return;
     }
 
-    // 오답 노트 복습 출제: 틀린 단어가 있으면 30% 확률로 다시 출제 (학습 강화)
-    if (gameStats.wrongWords.length > 0 && Math.random() < 0.3 &&
+    // 오답 노트 복습 출제: 평소 30%, 복습 스테이지(9+)에선 50% 확률
+    const reviewChance = gameState.stage > ALL_UNITS.length ? 0.5 : 0.3;
+    if (gameStats.wrongWords.length > 0 && Math.random() < reviewChance &&
         typeof wordManager.generateMultipleChoiceFor === 'function') {
         const reviewWord = gameStats.wrongWords[Math.floor(Math.random() * gameStats.wrongWords.length)];
         gameState.currentQuestion = wordManager.generateMultipleChoiceFor(reviewWord, gameState.selectedUnits);
@@ -1934,6 +1938,8 @@ function toggleUnit(unit) {
 function updateSelectedDisplay() {
     const selectedUnitsElement = document.getElementById('selectedUnits');
     const startButton = document.getElementById('startGameBtn');
+    if (startButton) startButton.disabled = false;
+    if (!selectedUnitsElement) return;
     
     let unitMsg;
     if (gameState.selectedUnits.length > 0) {
@@ -1956,18 +1962,12 @@ function updateSelectedDisplay() {
 
 // 게임 시작
 function startSelectedGame() {
-    if (gameState.selectedUnits.length === 0) {
-        alert('Unit을 하나 이상 선택해주세요!');
-        return;
-    }
+    // 유닛은 스테이지에 따라 자동 배정된다
+    applyStageUnits();
     document.getElementById('gameContainer').classList.remove('menu-mode');
     document.getElementById('characterSelectMenu').style.display = 'none';
     document.getElementById('unitSelectMenu').style.display = 'none';
     document.getElementById('ui').style.display = 'block';
-    
-    const displayText = gameState.selectedUnits.join(', ');
-    gameState.unitDisplay = displayText;
-    updateUI();
     
     // 게임 시작 시 전체화면 모드 자동 활성화 (사용자가 이미 해제하지 않은 경우)
     if (!isUserExiting && !document.fullscreenElement && 
@@ -2056,6 +2056,26 @@ function gameOver() {
 }
 
 // 다음 스테이지
+// ── 스테이지별 자동 유닛 배정 ──
+// 1~8 스테이지: Unit1~8을 순서대로 하나씩 (한 스테이지 = 한 유닛 집중 학습)
+// 9스테이지부터: 전 유닛 혼합 '복습 작전' (오답 노트 출제 확률 상향 + 몬스터 가속)
+const ALL_UNITS = ['Unit1', 'Unit2', 'Unit3', 'Unit4', 'Unit5', 'Unit6', 'Unit7', 'Unit8'];
+
+function unitsForStage(stage) {
+    if (stage <= ALL_UNITS.length) return [ALL_UNITS[stage - 1]];
+    return ALL_UNITS.slice();
+}
+
+function stageUnitLabel(stage) {
+    return stage <= ALL_UNITS.length ? `Unit ${stage}` : `복습 (전 유닛)`;
+}
+
+function applyStageUnits() {
+    gameState.selectedUnits = unitsForStage(gameState.stage);
+    gameState.unitDisplay = stageUnitLabel(gameState.stage);
+    updateUI();
+}
+
 function nextStage() {
     if (gameState.stage >= 20) {
         triggerEnding();
@@ -2064,8 +2084,10 @@ function nextStage() {
     
     gameState.stage++;
     gameState.speed += 0.5;
-	// gameState.bossSpawned = false;
-    alert(`🎉 스테이지 ${gameState.stage - 1} 클리어! 🎉\n스테이지 ${gameState.stage}로 이동합니다!`);
+    applyStageUnits();
+    const label = stageUnitLabel(gameState.stage);
+    alert(`스테이지 ${gameState.stage - 1} 클리어!\n스테이지 ${gameState.stage} 시작 - ${label}` +
+        (gameState.stage === ALL_UNITS.length + 1 ? '\n지금까지 배운 단어가 모두 나와요. 더 빨라진 몬스터를 조심!' : ''));
     
     generateMoreEnemies();
 }
@@ -2402,11 +2424,7 @@ function updateUnitSelection() {
 
 // 게임 재시작
 function restartGame() {
-    if (gameState.selectedUnits.length === 0) {
-        alert('Unit을 하나 이상 선택해주세요!');
-        return;
-    }
-    
+    applyStageUnits();
     gameState.running = false;
     setTimeout(() => {
         initGame();
