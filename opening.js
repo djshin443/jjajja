@@ -586,77 +586,6 @@ function showTitleScreen() {
     });
 }
 
-// 오프닝 시퀀스를 시작하는 함수 (기존 코드와 연결) - 나머지 코드 계속...
-function startOpeningSequence() {
-    if (typeof startOpening === 'function') {
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const controls = document.getElementById('controls');
-
-        // 모든 UI 요소 숨기기
-        document.getElementById('characterSelectMenu').style.display = 'none';
-        document.getElementById('unitSelectMenu').style.display = 'none';
-        document.getElementById('ui').style.display = 'none';
-        document.getElementById('questionPanel').style.display = 'none';
-        document.getElementById('fullscreenBtn').style.display = 'none';
-        controls.style.display = 'none';
-
-        // 캔버스를 flex에서 분리 (완전 풀스크린)
-        canvas.style.flex = 'none';
-        canvas.style.position = 'fixed';
-        canvas.style.top = '0';
-        canvas.style.left = '0';
-        canvas.style.width = '100vw';
-        canvas.style.height = '100vh';
-        canvas.style.zIndex = '10';
-
-        // 오프닝 플래그 설정
-        window.isOpeningPlaying = true;
-
-        // body 배경을 그라데이션으로 변경 (오프닝 중)
-        document.body.style.background = 'linear-gradient(135deg, #87CEEB, #98D8E8)';
-
-        // 강제 레이아웃 재계산 (더 확실하게)
-        canvas.offsetHeight;
-        controls.offsetHeight;
-
-        // requestAnimationFrame으로 레이아웃 완료 후 캔버스 크기 설정
-        requestAnimationFrame(() => {
-            // 한 프레임 더 기다려서 확실하게 레이아웃 완료
-            requestAnimationFrame(() => {
-                // 캔버스를 전체 화면으로 설정
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-
-                startOpening(canvas, ctx, function() {
-            // 캔버스 원래대로 복원
-            canvas.style.flex = '1';
-            canvas.style.position = '';
-            canvas.style.top = '';
-            canvas.style.left = '';
-            canvas.style.width = '';
-            canvas.style.height = '';
-            canvas.style.zIndex = '';
-
-            // 오프닝 플래그 해제
-            window.isOpeningPlaying = false;
-
-            // 오프닝 완료 후 body 배경 복원
-            document.body.style.background = '#000';
-
-            // 오프닝 완료 후 메뉴 표시
-            if (typeof hasSeenOpening !== 'undefined') {
-                hasSeenOpening = true;
-            }
-            if (typeof showMenu === 'function') {
-                showMenu();
-            }
-        });
-            });
-        });
-    }
-}
-
 // 방향 체크 후 타이틀 화면 시작 (세로모드든 가로모드든 항상 타이틀 표시)
 function checkOrientationAndShowTitle() {
     // 세로모드든 가로모드든 항상 타이틀 화면 표시
@@ -665,7 +594,6 @@ function checkOrientationAndShowTitle() {
 
 // 전역 함수로 등록
 window.showTitleScreen = showTitleScreen;
-window.startOpeningSequence = startOpeningSequence;
 window.checkOrientationAndShowTitle = checkOrientationAndShowTitle;
 
 // 오프닝 시퀀스 클래스 (코믹 버전 + 클릭 진행) - 기존 코드 유지
