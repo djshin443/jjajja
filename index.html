@@ -182,6 +182,39 @@
             color: white;
         }
 
+        /* 선택된 답 강조 (제출 전) */
+        .choice-btn.chosen {
+            background: linear-gradient(135deg, #FFF3B0, #FFE066);
+            border-color: #FF8C00;
+            transform: scale(1.03);
+            box-shadow: 0 0 14px rgba(255, 140, 0, 0.55);
+        }
+
+        #submitAnswerBtn {
+            background: linear-gradient(135deg, #32CD32, #7ED957);
+            border: 3px solid #FFF;
+            color: white;
+            padding: 12px 34px;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
+            border-radius: 15px;
+            cursor: pointer;
+            margin-top: 2px;
+            box-shadow: 0 5px 12px rgba(50, 205, 50, 0.4);
+            touch-action: manipulation;
+            transition: all 0.15s ease;
+        }
+        #submitAnswerBtn:disabled {
+            background: linear-gradient(135deg, #C8C8D2, #E2E2EA);
+            box-shadow: none;
+            opacity: 0.75;
+            cursor: default;
+        }
+        #submitAnswerBtn:not(:disabled):active {
+            transform: scale(0.95);
+        }
+
         .choice-btn:active {
             transform: translateY(0);
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
@@ -799,6 +832,8 @@
             #choicesContainer { gap: 8px; margin: 8px 0 2px; padding: 0 4px; }
             .choice-btn { min-height: 44px; padding: 5px 6px; border-width: 2px; border-radius: 10px; }
             .choice-btn canvas { width: auto !important; max-height: 24px; }
+            #submitAnswerBtn { padding: 7px 26px; border-width: 2px; border-radius: 10px; margin-top: 0; }
+            #submitAnswerBtn canvas { width: auto !important; max-height: 18px; }
 
             /* ── 보스 대화창 ── */
             #dialogueBox { height: 150px; bottom: 8px; border-width: 3px; border-radius: 14px; }
@@ -1068,6 +1103,7 @@
             <div id="choicesContainer">
                 <!-- 4지선다 버튼들이 여기에 동적으로 생성됩니다 -->
             </div>
+            <button id="submitAnswerBtn" disabled>정답 제출!</button>
         </div>
 
         <div id="controls">
@@ -1148,10 +1184,10 @@
             const targets = document.querySelectorAll(
                 '.card-title, .unit-btn, .character-btn > span, .vehicle-btn > span, ' +
                 '#nextToUnitBtn, #backToCharacterBtn, #startGameBtn, ' +
-                '#jumpBtn, #menuBtn, #helpBtn, #fullscreenBtn'
+                '#jumpBtn, #menuBtn, #helpBtn, #fullscreenBtn, #submitAnswerBtn'
             );
             // 배경이 짙은 버튼은 흰 글자+어두운 외곽선을 강제
-            const lightText = { jumpBtn: 1, startGameBtn: 1, nextToUnitBtn: 1, fullscreenBtn: 1 };
+            const lightText = { jumpBtn: 1, startGameBtn: 1, nextToUnitBtn: 1, fullscreenBtn: 1, submitAnswerBtn: 1 };
             targets.forEach(el => {
                 const text = (el.dataset.pixelSrc || el.textContent).trim();
                 if (!text) return;
@@ -1169,6 +1205,9 @@
             });
         }
         window.addEventListener('load', () => {
+            document.getElementById('submitAnswerBtn')?.addEventListener('click', () => {
+                if (typeof submitAnswer === 'function') submitAnswer();
+            });
             pixelateMenuTitles();
             pixelateStaticUI();
             if (document.fonts && document.fonts.ready) {

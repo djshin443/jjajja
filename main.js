@@ -1705,7 +1705,12 @@ function updateChoiceButtons() {
     if (!choicesContainer || !gameState.currentQuestion) return;
     
     choicesContainer.innerHTML = '';
-    
+
+    // 실수 방지: 답을 고른 뒤 '정답 제출!'을 눌러야 확정된다
+    gameState.pendingChoice = null;
+    const submitBtn = document.getElementById('submitAnswerBtn');
+    if (submitBtn) submitBtn.disabled = true;
+
     gameState.currentQuestion.choices.forEach((choice, index) => {
         const button = document.createElement('button');
         button.className = 'choice-btn';
@@ -1714,12 +1719,35 @@ function updateChoiceButtons() {
             outline: 'rgba(255,255,255,0.85)', shadow: 'rgba(0,0,0,0)', wrapPx: 150
         });
         button.setAttribute('data-choice', index);
-        button.onclick = () => selectChoice(index);
+        button.onclick = () => chooseAnswer(index);
         choicesContainer.appendChild(button);
     });
 }
 
 // 선택지 선택
+// 답 고르기 (강조만, 아직 제출 아님)
+function chooseAnswer(index) {
+    if (!gameState.currentQuestion) return;
+    gameState.pendingChoice = index;
+    document.querySelectorAll('.choice-btn').forEach(b => {
+        b.classList.toggle('chosen', parseInt(b.getAttribute('data-choice'), 10) === index);
+    });
+    const submitBtn = document.getElementById('submitAnswerBtn');
+    if (submitBtn) submitBtn.disabled = false;
+    playSound('jump');
+}
+
+// 고른 답 제출 (여기서 정답 판정)
+function submitAnswer() {
+    if (gameState.pendingChoice === null || gameState.pendingChoice === undefined) return;
+    if (!gameState.currentQuestion) return;
+    const idx = gameState.pendingChoice;
+    gameState.pendingChoice = null;
+    const submitBtn = document.getElementById('submitAnswerBtn');
+    if (submitBtn) submitBtn.disabled = true;
+    selectChoice(idx);
+}
+
 function selectChoice(choiceIndex) {
     if (!gameState.currentQuestion) return;
     
@@ -2585,6 +2613,18 @@ document.addEventListener('keydown', function(e) {
         case 'Space':
             e.preventDefault();
             jump();
+            break;
+        case 'Digit1': case 'Digit2': case 'Digit3': case 'Digit4':
+            if (gameState.questionActive) {
+                e.preventDefault();
+                chooseAnswer(parseInt(e.code.slice(-1), 10) - 1);
+            }
+            break;
+        case 'Enter':
+            if (gameState.questionActive) {
+                e.preventDefault();
+                submitAnswer();
+            }
             break;
         case 'Escape':
             e.preventDefault();
