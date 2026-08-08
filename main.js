@@ -594,7 +594,10 @@ let wordManager;
 let gameStats = {
     startTime: null,
     correctAnswers: 0,
-    totalQuestions: 0
+    totalQuestions: 0,
+    combo: 0,          // 연속 정답 콤보
+    maxCombo: 0,       // 이번 판 최고 콤보
+    wrongWords: []     // 오답 노트: 틀린 단어 목록 (복습 출제에 사용)
 };
 
 // 플레이어 캐릭터 초기화
@@ -882,6 +885,9 @@ function initGame() {
     gameStats.startTime = Date.now();
     gameStats.correctAnswers = 0;
     gameStats.totalQuestions = 0;
+    gameStats.combo = 0;
+    gameStats.maxCombo = 0;
+    gameStats.wrongWords = [];
     
     // 파티클 시스템 초기화
     if (typeof initParticleSystem === 'function') {
@@ -1628,8 +1634,18 @@ function generateEnglishQuestion() {
         return;
     }
 
-    // 일반전/보스전 모두 사용자가 선택한 모든 Unit에서 출제
-    gameState.currentQuestion = wordManager.generateMultipleChoice(gameState.selectedUnits);
+    // 오답 노트 복습 출제: 틀린 단어가 있으면 30% 확률로 다시 출제 (학습 강화)
+    if (gameStats.wrongWords.length > 0 && Math.random() < 0.3 &&
+        typeof wordManager.generateMultipleChoiceFor === 'function') {
+        const reviewWord = gameStats.wrongWords[Math.floor(Math.random() * gameStats.wrongWords.length)];
+        gameState.currentQuestion = wordManager.generateMultipleChoiceFor(reviewWord, gameState.selectedUnits);
+        if (gameState.currentQuestion) {
+            gameState.currentQuestion.isReview = true;
+        }
+    } else {
+        // 일반전/보스전 모두 사용자가 선택한 모든 Unit에서 출제
+        gameState.currentQuestion = wordManager.generateMultipleChoice(gameState.selectedUnits);
+    }
 
     // 문제 생성 실패 시(단어 부족 등) 전투를 안전하게 종료해 소프트락 방지
     if (!gameState.currentQuestion) {
@@ -1655,9 +1671,19 @@ function endBattleGracefully() {
 // 문제 패널 업데이트
 function updateQuestionPanel() {
     if (!gameState.questionActive || !gameState.currentQuestion) return;
-    
-    // 영어 단어 표시
-    document.getElementById('questionText').innerHTML = `✨ ${gameState.currentQuestion.question}`;
+
+    // 영어 단어 표시 (+ 복습 문제 표시, 품사 힌트)
+    const q = gameState.currentQuestion;
+    const posNames = { '동': '동사', '명': '명사', '형': '형용사', '부': '부사',
+                       '전': '전치사', '대': '대명사', '감': '감탄사', '접': '접속사', '수': '수사' };
+    let posHint = '';
+    if (q.wordInfo && q.wordInfo.pos) {
+        posHint = q.wordInfo.pos.split('').map(c => posNames[c] || c).join('·');
+    }
+    const badge = q.isReview ? '📝 복습! ' : '✨ ';
+    document.getElementById('questionText').innerHTML =
+        `${badge}${q.question}` +
+        (posHint ? `<div style="font-size:14px;color:#9370DB;margin-top:6px;">💡 품사 힌트: ${posHint}</div>` : '');
     
     // 적 정보 표시
 	if (gameState.currentEnemy) {
@@ -1703,10 +1729,28 @@ function selectChoice(choiceIndex) {
     gameStats.totalQuestions++;
     
     if (choiceIndex === gameState.currentQuestion.correctIndex) {
-        // 정답!
-        gameState.score += 20;
+        // 정답! 콤보에 따라 보너스 점수 (기본 20 + 콤보당 5, 최대 +25)
+        gameStats.combo++;
+        gameStats.maxCombo = Math.max(gameStats.maxCombo, gameStats.combo);
+        const comboBonus = Math.min(gameStats.combo - 1, 5) * 5;
+        gameState.score += 20 + comboBonus;
         gameStats.correctAnswers++;
-        
+        playSound('correct');
+
+        // 콤보 연출
+        if (gameStats.combo >= 2 && typeof showFloatingText === 'function') {
+            showFloatingText(player.x + 40, player.y - 60, `🔥 콤보 x${gameStats.combo}! +${20 + comboBonus}점`, '#FF8C00', 18);
+        }
+
+        // 복습 문제를 맞히면 오답 노트에서 제거 (완전히 익힌 것으로 간주)
+        if (gameState.currentQuestion.isReview) {
+            const eng = gameState.currentQuestion.wordInfo.english;
+            gameStats.wrongWords = gameStats.wrongWords.filter(w => w.english !== eng);
+            if (typeof showFloatingText === 'function') {
+                showFloatingText(player.x, player.y - 80, '📝 복습 성공! 오답 노트에서 지웠어요', '#32CD32', 14);
+            }
+        }
+
         if (gameState.currentEnemy) {
             gameState.currentEnemy.hp -= 1;
             gameState.currentEnemy.hitTimer = 12;  // 피격 플래시 연출
@@ -1718,6 +1762,7 @@ function selectChoice(choiceIndex) {
             if (gameState.currentEnemy.hp <= 0) {
                 gameState.currentEnemy.alive = false;
                 gameState.score += gameState.currentEnemy.type === 'boss' ? 100 : 50;
+                playSound('defeat');
                 if (typeof createParticles === 'function') {
                     createParticles(enemyScreenX, gameState.currentEnemy.y, 'defeat');
                 }
@@ -1766,7 +1811,16 @@ function selectChoice(choiceIndex) {
 			}
         }
     } else {
-        // 오답 - 화이트하우스와 함께라면 튼튼한 텐트가 데미지를 줄여줌 (15 → 10)
+        // 오답 - 콤보 초기화, 오답 노트에 기록
+        gameStats.combo = 0;
+        playSound('wrong');
+
+        const wrongInfo = gameState.currentQuestion.wordInfo;
+        if (wrongInfo && !gameStats.wrongWords.some(w => w.english === wrongInfo.english)) {
+            gameStats.wrongWords.push(wrongInfo);
+        }
+
+        // 화이트하우스와 함께라면 튼튼한 텐트가 데미지를 줄여줌 (15 → 10)
         const damage = hasWhitehousePower() ? 10 : 15;
         player.hp -= damage;
         player.hurtTimer = 30;  // 피격 깜빡임 연출
@@ -1922,6 +1976,11 @@ function showHelp() {
           '3. 움직이는 몬스터를 만나면 영어 문제를 풀어요!\n' +
           '4. 영어 단어의 뜻을 4지선다에서 고르세요!\n' +
           '5. 정답을 맞추면 몬스터를 물리칠 수 있어요!\n\n' +
+          '✨ 특별한 능력 ✨\n' +
+          '🥝 키위와 함께라면: 공중에서 더블 점프!\n' +
+          '🏕️ 화이트하우스와 함께라면: 오답 데미지 감소!\n' +
+          '🔥 연속 정답 콤보로 보너스 점수를 노려보세요!\n' +
+          '📝 틀린 단어는 오답 노트에 저장되어 다시 나와요!\n\n' +
           '💕 지율이 화이팅! 💕');
 }
 
@@ -1971,6 +2030,7 @@ function jump() {
         player.isJumping = true;
         player.onGround = false;
         gameState.isMoving = true;
+        playSound('jump');
 
         if (typeof createParticles === 'function') {
             createParticles(player.x, player.y, 'hint');
@@ -1981,6 +2041,7 @@ function jump() {
         // 키위의 능력: 공중에서 한 번 더 점프!
         player.airJumpsUsed = (player.airJumpsUsed || 0) + 1;
         player.velocityY = getJumpPower() * 0.85;
+        playSound('jump');
 
         if (typeof createParticles === 'function') {
             createParticles(player.x, player.y, 'hint');
@@ -2285,10 +2346,12 @@ function saveGameRecord() {
         units: [...gameState.selectedUnits],
         correctAnswers: gameStats.correctAnswers,
         totalQuestions: gameStats.totalQuestions,
-        accuracy: gameStats.totalQuestions > 0 ? 
+        accuracy: gameStats.totalQuestions > 0 ?
                   Math.round((gameStats.correctAnswers / gameStats.totalQuestions) * 100) : 0,
-        playTime: gameStats.startTime ? 
+        playTime: gameStats.startTime ?
                   Math.round((Date.now() - gameStats.startTime) / 1000) : 0,
+        maxCombo: gameStats.maxCombo,
+        wrongWords: gameStats.wrongWords.map(w => ({ english: w.english, korean: w.korean })),
         date: new Date().toLocaleString('ko-KR')
     };
     
@@ -2331,8 +2394,21 @@ function gameOverWithRecord() {
     message += `최종 점수: ${record.score}점\n`;
     message += `스테이지: ${record.stage}\n`;
     message += `정답률: ${record.accuracy}% (${record.correctAnswers}/${record.totalQuestions})\n`;
-    message += `플레이 시간: ${Math.floor(record.playTime / 60)}분 ${record.playTime % 60}초\n\n`;
-    message += `다시 도전해보세요! 💕`;
+    message += `최고 콤보: ${record.maxCombo}연속 🔥\n`;
+    message += `플레이 시간: ${Math.floor(record.playTime / 60)}분 ${record.playTime % 60}초\n`;
+
+    // 오답 노트: 틀린 단어를 보여줘서 복습 유도
+    if (record.wrongWords && record.wrongWords.length > 0) {
+        message += `\n📝 오늘 틀린 단어 (복습해요!)\n`;
+        record.wrongWords.slice(0, 8).forEach(w => {
+            message += `  • ${w.english} = ${w.korean}\n`;
+        });
+        if (record.wrongWords.length > 8) {
+            message += `  ... 외 ${record.wrongWords.length - 8}개\n`;
+        }
+    }
+
+    message += `\n다시 도전해보세요! 💕`;
     
     gameState.running = false;
     alert(message);
@@ -2435,13 +2511,56 @@ if (!window.requestAnimationFrame) {
 }
 
 // iOS에서 오디오 활성화 (사운드 추가 시 필요)
+// ============ 사운드 시스템 (WebAudio 기반 8비트풍 효과음) ============
+let gameAudioCtx = null;
+
+function getAudioContext() {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    if (!gameAudioCtx) {
+        gameAudioCtx = new AudioCtx();
+    }
+    if (gameAudioCtx.state === 'suspended') {
+        gameAudioCtx.resume();
+    }
+    return gameAudioCtx;
+}
+
 function enableAudio() {
-    const audioContext = window.AudioContext || window.webkitAudioContext;
-    if (audioContext) {
-        const ctx = new audioContext();
-        if (ctx.state === 'suspended') {
-            ctx.resume();
-        }
+    getAudioContext();
+}
+
+// 짧은 8비트풍 효과음 재생 (사운드 파일 없이 오실레이터로 합성)
+function playSound(type) {
+    try {
+        const ctx = getAudioContext();
+        if (!ctx || ctx.state !== 'running') return;
+
+        // [주파수(Hz), 시작시간(초), 길이(초)] 목록
+        const sounds = {
+            jump:    { wave: 'square',   notes: [[330, 0, 0.06], [440, 0.06, 0.08]], volume: 0.06 },
+            correct: { wave: 'square',   notes: [[523, 0, 0.09], [659, 0.09, 0.09], [784, 0.18, 0.14]], volume: 0.07 },
+            wrong:   { wave: 'sawtooth', notes: [[220, 0, 0.12], [165, 0.12, 0.2]], volume: 0.06 },
+            defeat:  { wave: 'square',   notes: [[523, 0, 0.08], [659, 0.08, 0.08], [784, 0.16, 0.08], [1047, 0.24, 0.2]], volume: 0.07 }
+        };
+        const sound = sounds[type];
+        if (!sound) return;
+
+        const now = ctx.currentTime;
+        sound.notes.forEach(([freq, start, duration]) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = sound.wave;
+            osc.frequency.setValueAtTime(freq, now + start);
+            gain.gain.setValueAtTime(sound.volume, now + start);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + start + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + start);
+            osc.stop(now + start + duration + 0.02);
+        });
+    } catch (e) {
+        // 사운드 실패는 게임 진행에 영향 없음
     }
 }
 

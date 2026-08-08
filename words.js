@@ -588,8 +588,13 @@ class WordManager {
     // 4지선다 문제 생성
     generateMultipleChoice(selectedUnits) {
         const correctWord = this.getRandomWord(selectedUnits);
+        return this.generateMultipleChoiceFor(correctWord, selectedUnits);
+    }
+
+    // 지정한 단어로 4지선다 문제 생성 (오답 노트 복습 출제용)
+    generateMultipleChoiceFor(correctWord, selectedUnits) {
         if (!correctWord) return null;
-        
+
         const wrongAnswers = this.getWrongAnswers(correctWord, selectedUnits);
         
         // 정답과 오답을 섞어서 선택지 생성

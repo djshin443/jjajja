@@ -766,6 +766,22 @@ function showEnding() {
             ">
                 <span class="ending-emoji">🎉</span> 와! 정말 대단해요! 모든 스테이지를 클리어했어요! <span class="ending-emoji">🎉</span>
             </div>
+            ${(typeof gameStats !== 'undefined' && gameStats.wrongWords && gameStats.wrongWords.length > 0) ? `
+            <div style="
+                margin-top: 40px;
+                padding: 20px 30px;
+                background: rgba(255, 255, 255, 0.12);
+                border-radius: 16px;
+                border: 2px solid rgba(255, 215, 0, 0.5);
+                text-align: left;
+                display: inline-block;
+            ">
+                <div style="font-size: 20px; color: #FFD700; margin-bottom: 12px;">📝 오늘 틀린 단어 - 한 번 더 읽어봐요!</div>
+                ${gameStats.wrongWords.slice(0, 10).map(w =>
+                    `<div style="font-size: 16px; color: #FFFFFF; margin: 4px 0;">• <b>${w.english}</b> = ${w.korean}</div>`
+                ).join('')}
+                ${gameStats.wrongWords.length > 10 ? `<div style="font-size: 14px; color: #E0E0E0;">... 외 ${gameStats.wrongWords.length - 10}개</div>` : ''}
+            </div>` : ''}
             
             <div style="
                 margin-top: 30px;
