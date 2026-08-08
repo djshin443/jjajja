@@ -178,7 +178,11 @@ function showBossMessage(messageType, onComplete) {
     // 대화 시스템 초기화
     currentDialogue = dialogues;
     currentDialogueIndex = 0;
-    
+
+    // 자동재생에서도 완료 콜백이 실행되도록 전역에 보관
+    // (기존에는 null로만 남아 자동재생으로 대화를 끝내면 전투/엔딩이 멈추는 버그가 있었음)
+    window.currentDialogueComplete = onComplete || null;
+
     // 대화 박스 생성
     createDialogueBox(onComplete);
     
@@ -511,14 +515,16 @@ function endDialogue(onComplete) {
     
     // 캔버스 참조 정리
     characterFaceCanvas = null;
-    
+
     // UI 복원
     document.getElementById('ui').style.display = 'block';
     document.getElementById('controls').style.display = 'flex';
-    
-    // 완료 콜백 실행
-    if (onComplete) {
-        onComplete();
+
+    // 완료 콜백 실행 (자동재생 경로에서는 전역에 보관된 콜백 사용)
+    const callback = onComplete || window.currentDialogueComplete;
+    window.currentDialogueComplete = null;
+    if (callback) {
+        callback();
     }
 }
 
@@ -836,8 +842,9 @@ function initGame() {
     gameState.questionActive = false;
     gameState.isMoving = true;
     gameState.cameraX = 0;
-	gameState.bossSpawned = false; 
+	gameState.bossSpawned = false;
 	gameState.bossDialogueActive = false;
+	gameState.endingTriggered = false;
 	
     document.getElementById('questionPanel').style.display = 'none';
     document.getElementById('ui').style.display = 'block';
@@ -1008,9 +1015,9 @@ function update() {
         updateParticleSystem();
     }
 
-    // 화면 밖 적들 제거
-    enemies = enemies.filter(enemy => 
-        enemy.alive && (enemy.x > gameState.cameraX - 500)
+    // 화면 밖 적들 제거 (보스는 지나쳐도 제거하지 않음 - 보스전 우회 방지)
+    enemies = enemies.filter(enemy =>
+        enemy.alive && (enemy.isBoss || enemy.x > gameState.cameraX - 500)
     );
     
     // 화면 밖 장애물들 제거
@@ -1070,15 +1077,49 @@ function update() {
 		console.log('🐉 보스 등장! 엔딩 직전 최종 보스전!');
 	}
 
-    // 스테이지 진행 체크 - 거리 기준 개선 
+    // 스테이지 진행 체크 - 거리 기준 개선
     const stageDistance = gameState.stage * 3000; // 2000 대신 3000으로 변경
 	if (gameState.distance > stageDistance) {
 		if (gameState.stage >= 20) {
-			showEnding();
+			// 대화/전투 중에는 엔딩 판정을 하지 않음
+			if (gameState.questionActive || gameState.bossDialogueActive) {
+				return;
+			}
+			// 보스가 살아있으면 엔딩 대신 보스전을 강제 (점프로 지나쳐도 우회 불가)
+			const liveBoss = enemies.find(e => e.isBoss && e.alive);
+			if (liveBoss) {
+				if (liveBoss.x < player.worldX - 100) {
+					// 보스를 지나쳤다면 플레이어 앞으로 재배치
+					liveBoss.x = player.worldX + 600;
+					liveBoss.patrolStart = liveBoss.x;
+					liveBoss.isAggro = true;
+				}
+				return;
+			}
+			// 보스가 스폰됐고 처치된 경우에만 엔딩 (defeat 대화 콜백이 우선이지만 안전망)
+			if (gameState.bossSpawned) {
+				triggerEnding();
+			}
 			return;
 		}
 		nextStage();
 	}
+}
+
+// 엔딩 진입 단일 창구: 클리어 기록을 저장한 뒤 엔딩 표시 (중복 실행 방지)
+function triggerEnding() {
+    if (gameState.endingTriggered) return;
+    gameState.endingTriggered = true;
+
+    // 클리어 기록 저장 (기존에는 엔딩 경로에서 기록이 저장되지 않는 버그가 있었음)
+    saveGameRecord();
+
+    if (typeof showEnding === 'function') {
+        showEnding();
+    } else {
+        alert('🎉 축하합니다! 모든 스테이지를 클리어했어요! 🎉');
+        showMenu();
+    }
 }
 
 // 플레이어 물리 업데이트
@@ -1544,16 +1585,33 @@ function render() {
 function generateEnglishQuestion() {
     if (!wordManager || gameState.selectedUnits.length === 0) {
         console.error('WordManager가 초기화되지 않았거나 선택된 Unit이 없습니다.');
+        gameState.currentQuestion = null;
+        endBattleGracefully();
         return;
     }
-    
+
+    // 일반전/보스전 모두 사용자가 선택한 모든 Unit에서 출제
     gameState.currentQuestion = wordManager.generateMultipleChoice(gameState.selectedUnits);
-    
-    // 보스전의 경우 선택된 모든 Unit에서 문제 출제
-    if (gameState.currentEnemy && gameState.currentEnemy.type === 'boss') {
-        // 보스전에서는 사용자가 선택한 모든 Unit 사용 (별도 필터링 없음)
-        gameState.currentQuestion = wordManager.generateMultipleChoice(gameState.selectedUnits);
+
+    // 문제 생성 실패 시(단어 부족 등) 전투를 안전하게 종료해 소프트락 방지
+    if (!gameState.currentQuestion) {
+        console.error('문제를 생성하지 못했습니다. 전투를 종료합니다.');
+        endBattleGracefully();
     }
+}
+
+// 문제를 만들 수 없을 때 전투 상태를 안전하게 해제
+function endBattleGracefully() {
+    // 같은 적과 즉시 재충돌해 무한 반복되지 않도록 해당 적 제거
+    if (gameState.currentEnemy) {
+        const index = enemies.indexOf(gameState.currentEnemy);
+        if (index !== -1) enemies.splice(index, 1);
+    }
+    gameState.questionActive = false;
+    gameState.currentEnemy = null;
+    gameState.isMoving = true;
+    const panel = document.getElementById('questionPanel');
+    if (panel) panel.style.display = 'none';
 }
 
 // 문제 패널 업데이트
@@ -1631,13 +1689,8 @@ function selectChoice(choiceIndex) {
                     gameState.questionActive = false;
                     
                     showBossMessage('defeat', function() {
-                        // 엔딩으로 이동
-                        if (typeof showEnding === 'function') {
-                            showEnding();
-                        } else {
-                            alert('🎉 축하합니다! 모든 스테이지를 클리어했어요! 🎉');
-                            showMenu();
-                        }
+                        // 엔딩으로 이동 (기록 저장 포함)
+                        triggerEnding();
                     });
                     return;
                 }
@@ -1836,7 +1889,7 @@ function gameOver() {
 // 다음 스테이지
 function nextStage() {
     if (gameState.stage >= 20) {
-        showEnding();
+        triggerEnding();
         return;
     }
     
@@ -2217,22 +2270,8 @@ function gameOverWithRecord() {
     showMenu();
 }
 
-// 엔딩 시 기록 저장
-function showEndingWithRecord() {
-    const record = saveGameRecord();
-    
-    let message = `🎊 축하해요! 🎊\n`;
-    message += `모든 스테이지를 클리어했어요!\n\n`;
-    message += `🏆 최종 결과 🏆\n`;
-    message += `최종 점수: ${record.score}점\n`;
-    message += `정답률: ${record.accuracy}% (${record.correctAnswers}/${record.totalQuestions})\n`;
-    message += `플레이 시간: ${Math.floor(record.playTime / 60)}분 ${record.playTime % 60}초\n\n`;
-    message += `정말 대단해요! 💖`;
-    
-    gameState.running = false;
-    alert(message);
-    showMenu();
-}
+// (구) showEndingWithRecord는 어디서도 호출되지 않던 죽은 함수였음
+// → 엔딩 기록 저장은 triggerEnding()에서 일원화 처리
 
 // 기존 gameOver 함수 교체
 window.gameOver = gameOverWithRecord;

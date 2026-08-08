@@ -557,25 +557,32 @@ class WordManager {
     // 틀린 답 3개 생성 (정답과 다른 단어들에서)
     getWrongAnswers(correctWord, selectedUnits, count = 3) {
         const allWords = this.getWordsFromSelection(selectedUnits);
-        const wrongAnswers = [];
-        
-        // 정답과 다른 단어들만 필터링
-        const otherWords = allWords.filter(word => 
-            word.english !== correctWord.english
+
+        // 정답과 영어 단어가 다르고, 한국어 뜻도 다른 단어들만 필터링
+        // (예: time/hour 둘 다 "시간" → 선택지 중복과 정답 인덱스 오류 방지)
+        const otherWords = allWords.filter(word =>
+            word.english !== correctWord.english &&
+            word.korean !== correctWord.korean
         );
-        
-        // 랜덤하게 3개 선택
-        while (wrongAnswers.length < count && wrongAnswers.length < otherWords.length) {
-            const randomIndex = Math.floor(Math.random() * otherWords.length);
-            const word = otherWords[randomIndex];
-            
-            // 이미 선택된 답이 아닌 경우에만 추가
-            if (!wrongAnswers.some(w => w.korean === word.korean)) {
-                wrongAnswers.push(word);
+
+        // 한국어 뜻 기준으로 중복 제거한 후보 목록을 만들고 섞어서 앞에서 count개 선택
+        // (기존 while 루프는 고유한 뜻이 count개 미만일 때 무한 루프에 빠지는 결함이 있었음)
+        const uniqueByKorean = [];
+        const seenKorean = new Set();
+        otherWords.forEach(word => {
+            if (!seenKorean.has(word.korean)) {
+                seenKorean.add(word.korean);
+                uniqueByKorean.push(word);
             }
+        });
+
+        // Fisher-Yates 셔플
+        for (let i = uniqueByKorean.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [uniqueByKorean[i], uniqueByKorean[j]] = [uniqueByKorean[j], uniqueByKorean[i]];
         }
-        
-        return wrongAnswers;
+
+        return uniqueByKorean.slice(0, count);
     }
 
     // 4지선다 문제 생성
