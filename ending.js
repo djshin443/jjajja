@@ -26,6 +26,118 @@ function drawEndingPixelSprite(ctx, sprite, colorMap, x, y, scale = 4) {
     ctx.restore();
 }
 
+// ── 엔딩 도트화 & 무이모지 렌더링 도우미 ─────────────────────
+const ENDING_PIXEL = 3;   // 배경 도트 블록 크기
+
+function getEndingPixelCtx(canvas) {
+    const w = Math.max(1, Math.ceil(canvas.width / ENDING_PIXEL));
+    const h = Math.max(1, Math.ceil(canvas.height / ENDING_PIXEL));
+    if (!canvas._pixCanvas || canvas._pixCanvas.width !== w || canvas._pixCanvas.height !== h) {
+        canvas._pixCanvas = document.createElement('canvas');
+        canvas._pixCanvas.width = w;
+        canvas._pixCanvas.height = h;
+    }
+    return canvas._pixCanvas.getContext('2d');
+}
+
+function blitEndingPixel(ctx, canvas) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(canvas._pixCanvas, 0, 0, canvas.width, canvas.height);
+}
+
+// 도트 텍스트 (opening.js의 createPixelTextCanvas 재사용 + 캐시)
+const _endingTextCache = new Map();
+function drawEndingBakedText(ctx, text, cx, cy, opts = {}) {
+    if (typeof createPixelTextCanvas !== 'function') return;
+    const key = text + '|' + (opts.fontPx || 14) + '|' + (opts.color || '');
+    let c = _endingTextCache.get(key);
+    if (!c) {
+        c = createPixelTextCanvas(text, Object.assign({ scale: 1 }, opts));
+        _endingTextCache.set(key, c);
+    }
+    const s = opts.dispScale || 2;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(c, cx - (c.width * s) / 2, cy - (c.height * s) / 2, c.width * s, c.height * s);
+}
+
+// 이모지 제거 유틸 (스토리 텍스트용)
+function stripEmoji(s) {
+    return String(s)
+        .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}\u{2049}\u{203C}]/gu, '')
+        .replace(/ {2,}/g, ' ')
+        .trim();
+}
+
+// 픽셀 음표 (이모지 대신 콩나물 모양을 직접 그림)
+function drawPixelNote(c, x, y, size, color, rotation = 0) {
+    c.save();
+    c.translate(x, y);
+    c.rotate(rotation);
+    const u = Math.max(2, size / 5);
+    c.fillStyle = color;
+    c.fillRect(-u * 1.5, u, u * 2, u * 1.5);           // 머리
+    c.fillRect(u * 0.5, -u * 2.5, u * 0.7, u * 5);     // 줄기
+    c.fillRect(u * 0.5, -u * 2.5, u * 1.8, u * 0.8);   // 깃발
+    c.restore();
+}
+
+// 픽셀 랜드마크 (이모지 대신 세계 명소를 도트로)
+function drawPixelLandmark(c, type, cx, baseY, h) {
+    c.save();
+    c.translate(cx, baseY);
+    switch (type) {
+        case 'tower':                                   // 철탑
+            c.fillStyle = '#C46A2B';
+            c.fillRect(-6, -h, 12, h * 0.2);
+            c.fillRect(-8, -h * 0.8, 16, h * 0.62);
+            c.fillRect(-15, -h * 0.8, 30, h * 0.1);
+            c.fillRect(-24, -h * 0.45, 48, h * 0.1);
+            c.fillStyle = '#A34F16';
+            c.fillRect(-32, -h * 0.14, 20, h * 0.14);
+            c.fillRect(12, -h * 0.14, 20, h * 0.14);
+            c.fillStyle = '#FFD700';
+            c.fillRect(-3, -h - 12, 6, 12);
+            break;
+        case 'castle':                                  // 성
+            c.fillStyle = '#8B7355';
+            c.fillRect(-42, -h * 0.6, 84, h * 0.6);
+            c.fillStyle = '#A0826D';
+            c.fillRect(-54, -h * 0.85, 20, h * 0.85);
+            c.fillRect(34, -h * 0.85, 20, h * 0.85);
+            c.fillStyle = '#B0413E';
+            c.fillRect(-58, -h, 28, h * 0.17);
+            c.fillRect(30, -h, 28, h * 0.17);
+            c.fillStyle = '#654321';
+            c.fillRect(-12, -h * 0.34, 24, h * 0.34);
+            c.fillStyle = '#FFD700';
+            c.fillRect(-2, -h * 1.12, 4, h * 0.14);
+            break;
+        case 'bridge':                                  // 다리
+            c.fillStyle = '#C0392B';
+            c.fillRect(-72, -h * 0.34, 144, 10);
+            c.fillRect(-48, -h, 12, h);
+            c.fillRect(36, -h, 12, h);
+            c.strokeStyle = '#E74C3C';
+            c.lineWidth = 5;
+            c.beginPath();
+            c.moveTo(-72, -h * 0.3);
+            c.quadraticCurveTo(0, -h * 1.15, 72, -h * 0.3);
+            c.stroke();
+            break;
+        default:                                        // 석상
+            c.fillStyle = '#7F8C8D';
+            c.fillRect(-18, -h, 36, h);
+            c.fillStyle = '#95A5A6';
+            c.fillRect(-18, -h, 10, h);
+            c.fillStyle = '#566573';
+            c.fillRect(-13, -h * 0.7, 10, 6);
+            c.fillRect(4, -h * 0.7, 10, 6);
+            c.fillRect(-7, -h * 0.38, 14, 8);
+            break;
+    }
+    c.restore();
+}
+
 // 고급 파티클 시스템 클래스 (엔딩 전용)
 class EndingParticleSystem {
     constructor(canvas, ctx) {
@@ -317,7 +429,7 @@ function showEnding() {
         font-family: 'DungGeunMo', 'Jua', sans-serif;
         user-select: none;
     `;
-    buttonToggler.innerHTML = '🎮';
+    buttonToggler.innerHTML = 'GO';
     buttonToggler.title = '게임 옵션 열기';
     
     // 숨김/표시 가능한 버튼 영역 (처음엔 숨김)
@@ -671,9 +783,9 @@ function showEnding() {
                 animation: glowText 3s ease-in-out infinite;
                 margin-bottom: 40px;
                 letter-spacing: 2px;
-            ">${story.title}</h1>
+            ">${stripEmoji(story.title)}</h1>
             <div style="font-size: 28px; color: #FF69B4;">
-                <span class="ending-emoji">🎭</span> 재미있는 이야기가 시작돼요! <span class="ending-emoji">🎭</span>
+                재미있는 이야기가 시작돼요!
             </div>
         </div>
     `;
@@ -682,8 +794,8 @@ function showEnding() {
     story.scenes.forEach((scene, index) => {
         storyHTML += `
             <div class="story-scene">
-                <div class="scene-emoji">${scene.emoji}</div>
-                <p class="scene-text">${scene.text}</p>
+                <canvas class="scene-pixel-art" width="96" height="96" style="image-rendering: pixelated;"></canvas>
+                <p class="scene-text">${stripEmoji(scene.text)}</p>
             </div>
         `;
     });
@@ -723,25 +835,25 @@ function showEnding() {
                 margin-bottom: 40px;
                 text-shadow: 0 0 20px #FFD700;
                 animation: glowText 2s ease-in-out infinite;
-            "><span class="ending-emoji">🏆</span> 최종 성적표 <span class="ending-emoji">🏆</span></h2>
+            ">최종 성적표</h2>
             
             <div class="score-grid">
                 <div class="score-item">
-                    <div class="score-label">최종 점수 <span class="wiggle-emoji">💎</span></div>
+                    <div class="score-label">최종 점수</div>
                     <div class="score-value" style="color: #FFD700;">
                         ${finalScore.toLocaleString()}점
                     </div>
                 </div>
                 
                 <div class="score-item">
-                    <div class="score-label">정답률 <span class="wiggle-emoji">🎯</span></div>
+                    <div class="score-label">정답률</div>
                     <div class="score-value" style="color: #FF69B4;">
                         ${accuracy}%
                     </div>
                 </div>
                 
                 <div class="score-item">
-                    <div class="score-label">플레이 시간 <span class="wiggle-emoji">⏰</span></div>
+                    <div class="score-label">플레이 시간</div>
                     <div class="score-value" style="color: #00D9FF;">
                         ${Math.floor(playTime / 60)}분 ${playTime % 60}초
                     </div>
@@ -751,9 +863,9 @@ function showEnding() {
                     background: linear-gradient(135deg, ${gradeColor}40, ${gradeColor}20);
                     border: 3px solid ${gradeColor};
                 ">
-                    <div class="score-label">등급 <span class="wiggle-emoji">⭐</span></div>
+                    <div class="score-label">등급</div>
                     <div class="score-value" style="color: ${gradeColor};">
-                        ${gradeEmoji} ${grade}
+                        ${grade}
                     </div>
                 </div>
             </div>
@@ -764,7 +876,7 @@ function showEnding() {
                 color: #FFFFFF;
                 text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
             ">
-                <span class="ending-emoji">🎉</span> 와! 정말 대단해요! 모든 스테이지를 클리어했어요! <span class="ending-emoji">🎉</span>
+                와! 정말 대단해요! 모든 스테이지를 클리어했어요!
             </div>
             ${(typeof gameStats !== 'undefined' && gameStats.wrongWords && gameStats.wrongWords.length > 0) ? `
             <div style="
@@ -776,7 +888,7 @@ function showEnding() {
                 text-align: left;
                 display: inline-block;
             ">
-                <div style="font-size: 20px; color: #FFD700; margin-bottom: 12px;">📝 오늘 틀린 단어 - 한 번 더 읽어봐요!</div>
+                <div style="font-size: 20px; color: #FFD700; margin-bottom: 12px;">오늘 틀린 단어 - 한 번 더 읽어봐요!</div>
                 ${gameStats.wrongWords.slice(0, 10).map(w =>
                     `<div style="font-size: 16px; color: #FFFFFF; margin: 4px 0;">• <b>${w.english}</b> = ${w.korean}</div>`
                 ).join('')}
@@ -789,7 +901,7 @@ function showEnding() {
                 color: #E0E0E0;
                 text-align: center;
             ">
-                우하단 🎮 버튼을 눌러서 게임 옵션을 확인하세요!
+                우하단 메뉴 버튼을 눌러서 게임 옵션을 확인하세요!
             </div>
         </div>
     `;
@@ -798,11 +910,28 @@ function showEnding() {
     storyHTML += `<div style="height: 300px;"></div>`;
     
     storyContent.innerHTML = storyHTML;
+
+    // 씬 일러스트: 이모지 대신 캐릭터 도트 스프라이트를 그린다
+    const sceneData = getCharacterPixelData(selectedCharacter) || getCharacterPixelData('jiyul');
+    const scenePoses = ['idle', 'walking1', 'jump', 'walking3', 'walking2', 'walking4'];
+    storyContent.querySelectorAll('.scene-pixel-art').forEach((cv, idx) => {
+        if (!sceneData) return;
+        const pose = sceneData[scenePoses[idx % scenePoses.length]] || sceneData.idle;
+        const c2 = cv.getContext('2d');
+        c2.imageSmoothingEnabled = false;
+        const fit = Math.min(cv.width / pose[0].length, cv.height / pose.length);
+        const offX = (cv.width - pose[0].length * fit) / 2;
+        const offY = (cv.height - pose.length * fit) / 2;
+        c2.save();
+        c2.translate(offX, offY);
+        drawEndingPixelSprite(c2, pose, sceneData.colorMap, 0, 0, fit);
+        c2.restore();
+    });
     
     // 버튼들 생성
     const retryButton = document.createElement('button');
     retryButton.className = 'ending-button';
-    retryButton.innerHTML = '🔄 다시하기';
+    retryButton.innerHTML = '다시하기';
     retryButton.onclick = () => {
         hideEndingButtons();
         setTimeout(() => {
@@ -815,7 +944,7 @@ function showEnding() {
     
     const menuButton = document.createElement('button');
     menuButton.className = 'ending-button main';
-    menuButton.innerHTML = '🏠 메인으로';
+    menuButton.innerHTML = '메인으로';
     menuButton.onclick = () => {
         hideEndingButtons();
         setTimeout(() => {
@@ -845,7 +974,7 @@ function showEnding() {
     function showEndingButtons() {
         buttonsVisible = true;
         fixedButtonContainer.classList.add('button-show');
-        buttonToggler.innerHTML = '❌';
+        buttonToggler.innerHTML = '×';
         buttonToggler.title = '게임 옵션 닫기';
         buttonToggler.style.background = 'linear-gradient(135deg, #FF6B6B, #FF8E8E)';
     }
@@ -853,7 +982,7 @@ function showEnding() {
     function hideEndingButtons() {
         buttonsVisible = false;
         fixedButtonContainer.classList.remove('button-show');
-        buttonToggler.innerHTML = '🎮';
+        buttonToggler.innerHTML = 'GO';
         buttonToggler.title = '게임 옵션 열기';
         buttonToggler.style.background = 'linear-gradient(135deg, #FF69B4, #FF1493)';
     }
@@ -915,18 +1044,14 @@ function showEnding() {
 // 지율이 엔딩 애니메이션 (캐릭터 픽셀 데이터 사용)
 function animateJiyulEndingScene(ctx, canvas) {
     let frame = 0;
-    const landmarks = ['🗼', '🗽', '🏰', '🗿', '🎆', '🌉', '🕌'];
+    const landmarkTypes = ['tower', 'castle', 'bridge', 'moai'];
     let currentLandmark = 0;
     const stars = [];
     const floatingWords = ['HELLO', 'WORLD', 'AMAZING', 'WONDERFUL'];
     let wordIndex = 0;
-    
-    // 지율이 캐릭터 데이터 가져오기
     const jiyulData = getCharacterPixelData('jiyul');
     let currentAnimation = 'idle';
-    let animationFrame = 0;
-    
-    // 별 초기화
+
     for (let i = 0; i < 60; i++) {
         stars.push({
             x: Math.random() * canvas.width,
@@ -936,176 +1061,121 @@ function animateJiyulEndingScene(ctx, canvas) {
             speed: Math.random() * 0.03 + 0.01
         });
     }
-    
+
     function draw() {
-        // 우주 배경
-        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        // ── 저해상 도트 패스: 밤하늘·별·비행기·랜드마크 ──
+        const p = getEndingPixelCtx(canvas);
+        p.save();
+        p.setTransform(1 / ENDING_PIXEL, 0, 0, 1 / ENDING_PIXEL, 0, 0);
+        const gradient = p.createLinearGradient(0, 0, 0, canvas.height);
         gradient.addColorStop(0, '#000428');
         gradient.addColorStop(0.3, '#004E92');
         gradient.addColorStop(0.6, '#1A237E');
         gradient.addColorStop(1, '#E91E63');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // 반짝이는 별들
+        p.fillStyle = gradient;
+        p.fillRect(0, 0, canvas.width, canvas.height);
+
         stars.forEach(star => {
             const brightness = (Math.sin(star.twinkle + frame * star.speed) + 1) / 2;
-            ctx.fillStyle = `rgba(255, 255, 255, ${brightness})`;
-            ctx.beginPath();
-            ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 별 주변에 작은 반짝임
-            if (brightness > 0.8) {
-                ctx.fillStyle = `rgba(255, 215, 0, ${brightness * 0.5})`;
-                ctx.beginPath();
-                ctx.arc(star.x, star.y, star.size * 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
+            p.fillStyle = `rgba(255, 255, 255, ${brightness})`;
+            p.fillRect(star.x, star.y, star.size * 2, star.size * 2);
         });
-        
-        // 지율이 캐릭터 그리기
+
+        // 세계 랜드마크 (도트 그림)
+        const landmarkY = canvas.height - 30 + Math.sin(frame * 0.06) * 8;
+        drawPixelLandmark(p, landmarkTypes[currentLandmark], canvas.width / 2, landmarkY, 130);
+
+        // 2D 스프라이트 비행기
+        drawFlyingAirplaneWithJiyul(p, canvas, frame);
+        p.restore();
+        blitEndingPixel(ctx, canvas);
+
+        // ── 원본 해상도: 지율 스프라이트·마법 링·도트 텍스트 ──
         if (jiyulData) {
             const centerX = canvas.width / 2 - 32;
             const centerY = canvas.height / 2 - 32 + Math.sin(frame * 0.05) * 20;
-            
-            // 점프 애니메이션 전환
-            if (frame % 180 < 60) {
-                currentAnimation = 'jump';
-            } else if (frame % 180 < 120) {
-                currentAnimation = 'walking1';
-            } else {
-                currentAnimation = 'idle';
-            }
-            
+            if (frame % 180 < 60) currentAnimation = 'jump';
+            else if (frame % 180 < 120) currentAnimation = 'walking1';
+            else currentAnimation = 'idle';
             drawEndingPixelSprite(ctx, jiyulData[currentAnimation], jiyulData.colorMap, centerX, centerY, 64 / jiyulData.idle[0].length);
-            
-            // 지율이 주변 마법 효과
+
             const magicRadius = 80 + Math.sin(frame * 0.04) * 20;
             for (let i = 0; i < 8; i++) {
                 const angle = (Math.PI * 2 / 8) * i + frame * 0.02;
-                const x = centerX + 32 + Math.cos(angle) * magicRadius;
-                const y = centerY + 32 + Math.sin(angle) * magicRadius;
-                
                 ctx.save();
                 ctx.globalAlpha = 0.8;
                 ctx.fillStyle = `hsl(${(frame + i * 45) % 360}, 80%, 60%)`;
-                ctx.beginPath();
-                ctx.arc(x, y, 6, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillRect(centerX + 32 + Math.cos(angle) * magicRadius - 4,
+                             centerY + 32 + Math.sin(angle) * magicRadius - 4, 8, 8);
                 ctx.restore();
             }
         }
-        
-        // 비행기와 함께 여행
-        drawFlyingAirplaneWithJiyul(ctx, canvas, frame);
-        
-        // 세계 랜드마크 회전
-        if (frame % 120 === 0) {
-            currentLandmark = (currentLandmark + 1) % landmarks.length;
+
+        if (frame % 120 === 0 && frame > 0) {
+            currentLandmark = (currentLandmark + 1) % landmarkTypes.length;
             wordIndex = (wordIndex + 1) % floatingWords.length;
-            
             if (endingParticleSystem) {
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height - 100;
-                endingParticleSystem.create(centerX, centerY, 'star', 8);
-                endingParticleSystem.create(centerX, centerY, 'magic', 5);
+                endingParticleSystem.create(canvas.width / 2, canvas.height - 100, 'star', 8);
+                endingParticleSystem.create(canvas.width / 2, canvas.height - 100, 'magic', 5);
             }
         }
-        
-        // 랜드마크 표시
-        ctx.save();
-        ctx.font = 'bold 72px DungGeunMo, Arial';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#FFD700';
-        ctx.shadowColor = '#FFD700';
-        ctx.shadowBlur = 30;
-        
-        const landmarkY = canvas.height - 80 + Math.sin(frame * 0.06) * 15;
-        ctx.fillText(landmarks[currentLandmark], canvas.width / 2, landmarkY);
-        ctx.restore();
-        
-        // 영어 단어 떠다니기
-        ctx.save();
-        ctx.font = 'bold 32px DungGeunMo, Arial';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#FF69B4';
-        ctx.shadowColor = '#FF69B4';
-        ctx.shadowBlur = 15;
-        
-        const wordY = 100 + Math.sin(frame * 0.08) * 20;
-        ctx.fillText(floatingWords[wordIndex], canvas.width / 2, wordY);
-        ctx.restore();
-        
-        // 파티클 시스템 업데이트
+
+        // 떠다니는 영어 단어 (도트 텍스트)
+        drawEndingBakedText(ctx, floatingWords[wordIndex],
+            canvas.width / 2, 100 + Math.sin(frame * 0.08) * 20,
+            { fontPx: 16, color: '#FF69B4', outline: '#FFFFFF', shadow: 'rgba(0,0,0,0.3)', dispScale: 3 });
+
         if (endingParticleSystem) {
-            // 자동으로 파티클 생성
             if (frame % 30 === 0) {
-                endingParticleSystem.create(
-                    Math.random() * canvas.width,
-                    canvas.height,
-                    'confetti',
-                    3
-                );
+                endingParticleSystem.create(Math.random() * canvas.width, Math.random() * canvas.height * 0.5, 'star', 2);
             }
-            
             endingParticleSystem.update();
             endingParticleSystem.render();
         }
-        
-        // 땅
-        const groundGradient = ctx.createLinearGradient(0, canvas.height - 60, 0, canvas.height);
-        groundGradient.addColorStop(0, '#2E7D32');
-        groundGradient.addColorStop(1, '#1B5E20');
-        ctx.fillStyle = groundGradient;
-        ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
-        
+
         frame++;
         requestAnimationFrame(draw);
     }
-    
+
     draw();
 }
 
 // 키위 엔딩 애니메이션 (캐릭터 픽셀 데이터 사용)
 function animateKiwiEndingScene(ctx, canvas) {
     let frame = 0;
-    const friends = [];
     const musicNotes = [];
-    
-    // 키위 캐릭터 데이터 가져오기
+    const friends = [];
     const kiwiData = getCharacterPixelData('kiwi');
     let currentAnimation = 'idle';
-    let animationFrame = 0;
-    
-    // 친구들과 음표 초기화
-    for (let i = 0; i < 8; i++) {
-        friends.push({
-            x: (canvas.width / 8) * i + canvas.width / 16,
-            y: canvas.height - 100 - Math.random() * 60,
-            color: ['#FF6B9D', '#4ECDC4', '#FFD93D', '#6C5CE7', '#A8E6CF', '#FFB347', '#98FB98', '#DDA0DD'][i % 8],
-            jumpPhase: Math.random() * Math.PI * 2,
-            jumpSpeed: Math.random() * 0.08 + 0.04,
-            size: Math.random() * 15 + 20
-        });
-    }
-    
-    for (let i = 0; i < 20; i++) {
+
+    for (let i = 0; i < 10; i++) {
         musicNotes.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            size: Math.random() * 25 + 15,
-            speed: Math.random() * 3 + 2,
+            size: Math.random() * 18 + 14,
+            speed: Math.random() * 1.5 + 0.5,
             rotation: Math.random() * Math.PI * 2,
-            rotationSpeed: Math.random() * 0.08 - 0.04,
-            color: `hsl(${Math.random() * 360}, 80%, 70%)`,
-            note: ['♪', '♫', '♬', '♩', '♭', '♯'][Math.floor(Math.random() * 6)]
+            rotationSpeed: (Math.random() - 0.5) * 0.05,
+            color: `hsl(${Math.random() * 360}, 90%, 70%)`
         });
     }
-    
+    for (let i = 0; i < 5; i++) {
+        friends.push({
+            x: (canvas.width / 6) * (i + 1),
+            y: canvas.height - 80,
+            size: 16 + Math.random() * 10,
+            color: `hsl(${i * 70}, 85%, 65%)`,
+            jumpPhase: Math.random() * Math.PI * 2,
+            jumpSpeed: Math.random() * 0.08 + 0.04
+        });
+    }
+
     function draw() {
-        // 파티 배경
-        const bgGradient = ctx.createRadialGradient(
+        // ── 저해상 도트 패스: 파티 배경·디스코볼·음표·친구들 ──
+        const p = getEndingPixelCtx(canvas);
+        p.save();
+        p.setTransform(1 / ENDING_PIXEL, 0, 0, 1 / ENDING_PIXEL, 0, 0);
+        const bgGradient = p.createRadialGradient(
             canvas.width / 2, canvas.height / 2, 0,
             canvas.width / 2, canvas.height / 2, canvas.width
         );
@@ -1113,150 +1183,93 @@ function animateKiwiEndingScene(ctx, canvas) {
         bgGradient.addColorStop(0.3, '#8338EC');
         bgGradient.addColorStop(0.6, '#3A86FF');
         bgGradient.addColorStop(1, '#06FFB4');
-        ctx.fillStyle = bgGradient;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // 디스코볼 효과
-        const discoX = canvas.width / 2;
-        const discoY = 80;
-        ctx.save();
-        ctx.fillStyle = '#C0C0C0'; // 은색 (기존 '#SILVER'는 무효한 색상값)
-        ctx.beginPath();
-        ctx.arc(discoX, discoY, 30, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // 반짝이는 조각들
+        p.fillStyle = bgGradient;
+        p.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 디스코볼
+        const discoX = canvas.width / 2, discoY = 80;
+        p.fillStyle = '#C0C0C0';
+        p.fillRect(discoX - 2, 0, 4, 30);
+        p.beginPath();
+        p.arc(discoX, discoY, 30, 0, Math.PI * 2);
+        p.fill();
         for (let i = 0; i < 12; i++) {
             const angle = (Math.PI * 2 / 12) * i + frame * 0.05;
-            const x = discoX + Math.cos(angle) * 25;
-            const y = discoY + Math.sin(angle) * 25;
             const brightness = (Math.sin(frame * 0.1 + i) + 1) / 2;
-            
-            ctx.fillStyle = `hsla(${(frame + i * 30) % 360}, 100%, 80%, ${brightness})`;
-            ctx.fillRect(x - 3, y - 3, 6, 6);
+            p.fillStyle = `hsla(${(frame + i * 30) % 360}, 100%, 80%, ${brightness})`;
+            p.fillRect(discoX + Math.cos(angle) * 25 - 3, discoY + Math.sin(angle) * 25 - 3, 6, 6);
         }
-        ctx.restore();
-        
-        // 음표 애니메이션
+
+        // 픽셀 음표 (이모지 대신 직접 그림)
         musicNotes.forEach(note => {
             note.y -= note.speed;
             note.rotation += note.rotationSpeed;
-            
             if (note.y < -note.size) {
                 note.y = canvas.height + note.size;
                 note.x = Math.random() * canvas.width;
             }
-            
-            ctx.save();
-            ctx.translate(note.x, note.y);
-            ctx.rotate(note.rotation);
-            ctx.font = `bold ${note.size}px DungGeunMo, Arial`;
-            ctx.fillStyle = note.color;
-            ctx.shadowColor = note.color;
-            ctx.shadowBlur = 15;
-            ctx.textAlign = 'center';
-            ctx.fillText(note.note, 0, 0);
-            ctx.restore();
+            drawPixelNote(p, note.x, note.y, note.size, note.color, note.rotation);
         });
-        
-        // 춤추는 키위
+
+        // 춤추는 친구들 (동글이)
+        friends.forEach((friend, i) => {
+            const jumpHeight = Math.abs(Math.sin(frame * friend.jumpSpeed + friend.jumpPhase)) * 60;
+            const wiggle = Math.sin(frame * 0.12 + i) * 10;
+            const fx = friend.x + wiggle, fy = friend.y - jumpHeight;
+            p.fillStyle = friend.color;
+            p.beginPath();
+            p.arc(fx, fy, friend.size, 0, Math.PI * 2);
+            p.fill();
+            p.fillStyle = '#FFFFFF';
+            p.fillRect(fx - friend.size / 3 - 3, fy - friend.size / 3 - 3, 7, 7);
+            p.fillRect(fx + friend.size / 3 - 3, fy - friend.size / 3 - 3, 7, 7);
+            p.fillStyle = '#000000';
+            p.fillRect(fx - friend.size / 3 - 1, fy - friend.size / 3 - 1, 4, 4);
+            p.fillRect(fx + friend.size / 3 - 1, fy - friend.size / 3 - 1, 4, 4);
+        });
+        p.restore();
+        blitEndingPixel(ctx, canvas);
+
+        // ── 원본 해상도: 춤추는 키위 + 댄스 링 ──
         if (kiwiData) {
             const centerX = canvas.width / 2 - 32;
             const centerY = canvas.height - 150 + Math.abs(Math.sin(frame * 0.15)) * -50;
-            
-            // 춤 애니메이션 전환
-            if (frame % 40 < 20) {
-                currentAnimation = 'walking1';
-            } else {
-                currentAnimation = 'walking2';
-            }
-            
-            // 키위 회전 효과
+            currentAnimation = (frame % 40 < 20) ? 'walking1' : 'walking3';
+
             ctx.save();
             ctx.translate(centerX + 32, centerY + 32);
             ctx.rotate(Math.sin(frame * 0.1) * 0.3);
             ctx.translate(-32, -32);
-            
             drawEndingPixelSprite(ctx, kiwiData[currentAnimation], kiwiData.colorMap, 0, 0, 64 / kiwiData.idle[0].length);
             ctx.restore();
-            
-            // 키위 주변 댄스 링
+
             const ringRadius = 100 + Math.sin(frame * 0.08) * 30;
             for (let i = 0; i < 16; i++) {
                 const angle = (Math.PI * 2 / 16) * i + frame * 0.15;
-                const x = centerX + 32 + Math.cos(angle) * ringRadius;
-                const y = centerY + 32 + Math.sin(angle) * (ringRadius * 0.5);
-                
                 ctx.save();
                 ctx.globalAlpha = 0.8;
                 ctx.fillStyle = `hsl(${(frame * 2 + i * 22.5) % 360}, 90%, 65%)`;
-                ctx.beginPath();
-                ctx.arc(x, y, 8, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillRect(centerX + 32 + Math.cos(angle) * ringRadius - 5,
+                             centerY + 32 + Math.sin(angle) * (ringRadius * 0.5) - 5, 10, 10);
                 ctx.restore();
             }
         }
-        
-        // 춤추는 친구들
-        friends.forEach((friend, i) => {
-            const jumpHeight = Math.abs(Math.sin(frame * friend.jumpSpeed + friend.jumpPhase)) * 60;
-            const wiggle = Math.sin(frame * 0.12 + i) * 10;
-            
-            ctx.save();
-            ctx.translate(friend.x + wiggle, friend.y - jumpHeight);
-            
-            // 친구들 몸체
-            ctx.fillStyle = friend.color;
-            ctx.shadowColor = friend.color;
-            ctx.shadowBlur = 20;
-            ctx.beginPath();
-            ctx.arc(0, 0, friend.size, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 친구들 눈
-            ctx.fillStyle = '#FFFFFF';
-            ctx.beginPath();
-            ctx.arc(-friend.size/3, -friend.size/3, friend.size/4, 0, Math.PI * 2);
-            ctx.arc(friend.size/3, -friend.size/3, friend.size/4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = '#000000';
-            ctx.beginPath();
-            ctx.arc(-friend.size/3, -friend.size/3, friend.size/6, 0, Math.PI * 2);
-            ctx.arc(friend.size/3, -friend.size/3, friend.size/6, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.restore();
-        });
-        
-        // 파티클 시스템
+
         if (endingParticleSystem) {
             if (frame % 15 === 0) {
-                endingParticleSystem.create(
-                    Math.random() * canvas.width,
-                    Math.random() * canvas.height,
-                    'confetti',
-                    4
-                );
+                endingParticleSystem.create(Math.random() * canvas.width, Math.random() * canvas.height, 'confetti', 4);
             }
-            
             if (frame % 8 === 0) {
-                endingParticleSystem.create(
-                    canvas.width / 2,
-                    canvas.height / 2,
-                    'magic',
-                    2
-                );
+                endingParticleSystem.create(canvas.width / 2, canvas.height / 2, 'magic', 2);
             }
-            
             endingParticleSystem.update();
             endingParticleSystem.render();
         }
-        
+
         frame++;
         requestAnimationFrame(draw);
     }
-    
+
     draw();
 }
 
@@ -1265,13 +1278,9 @@ function animateWhitehouseEndingScene(ctx, canvas) {
     let frame = 0;
     const alphabetKnights = [];
     const fireworks = [];
-    const magicCircles = [];
-    
-    // 화이트하우스 캐릭터 데이터 가져오기
     const whitehouseData = getCharacterPixelData('whitehouse');
     let currentAnimation = 'idle';
-    
-    // 알파벳 기사단 초기화
+
     for (let i = 0; i < 26; i++) {
         alphabetKnights.push({
             letter: String.fromCharCode(65 + i),
@@ -1282,96 +1291,39 @@ function animateWhitehouseEndingScene(ctx, canvas) {
             size: 20 + Math.random() * 10
         });
     }
-    
+
     function draw() {
-        // 왕국 배경
-        const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        // ── 저해상 도트 패스: 하늘·구름·성·불꽃놀이 ──
+        const p = getEndingPixelCtx(canvas);
+        p.save();
+        p.setTransform(1 / ENDING_PIXEL, 0, 0, 1 / ENDING_PIXEL, 0, 0);
+        const skyGradient = p.createLinearGradient(0, 0, 0, canvas.height);
         skyGradient.addColorStop(0, '#1A237E');
         skyGradient.addColorStop(0.3, '#3949AB');
         skyGradient.addColorStop(0.6, '#7E57C2');
         skyGradient.addColorStop(0.8, '#AB47BC');
         skyGradient.addColorStop(1, '#4CAF50');
-        ctx.fillStyle = skyGradient;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+        p.fillStyle = skyGradient;
+        p.fillRect(0, 0, canvas.width, canvas.height);
+
         // 마법 구름들
         for (let i = 0; i < 5; i++) {
             const cloudX = (canvas.width / 5) * i + Math.sin(frame * 0.01 + i) * 30;
             const cloudY = 60 + Math.sin(frame * 0.02 + i) * 20;
-            
-            ctx.save();
-            ctx.globalAlpha = 0.7;
-            ctx.fillStyle = '#E8EAF6';
-            ctx.beginPath();
-            ctx.arc(cloudX, cloudY, 40, 0, Math.PI * 2);
-            ctx.arc(cloudX + 30, cloudY, 50, 0, Math.PI * 2);
-            ctx.arc(cloudX - 30, cloudY, 45, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
+            p.save();
+            p.globalAlpha = 0.7;
+            p.fillStyle = '#E8EAF6';
+            p.beginPath();
+            p.arc(cloudX, cloudY, 40, 0, Math.PI * 2);
+            p.arc(cloudX + 30, cloudY, 50, 0, Math.PI * 2);
+            p.arc(cloudX - 30, cloudY, 45, 0, Math.PI * 2);
+            p.fill();
+            p.restore();
         }
-        
+
         // 영어 성
-        drawEnglishCastle(ctx, canvas, frame);
-        
-        // 왕 화이트하우스
-        if (whitehouseData) {
-            const centerX = canvas.width / 2 - 32;
-            const centerY = canvas.height - 280 + Math.sin(frame * 0.06) * 8;
-            
-            // 왕관 효과 추가
-            ctx.save();
-            ctx.translate(centerX + 32, centerY + 32);
-            ctx.scale(1.2, 1.2);
-            ctx.translate(-32, -32);
-            
-            drawEndingPixelSprite(ctx, whitehouseData[currentAnimation], whitehouseData.colorMap, 0, 0, 80 / whitehouseData.idle[0].length);
-            
-            // 왕의 오라
-            const auraRadius = 120 + Math.sin(frame * 0.05) * 20;
-            ctx.restore();
-            
-            ctx.save();
-            ctx.globalAlpha = 0.3;
-            ctx.strokeStyle = '#FFD700';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.arc(centerX + 32, centerY + 32, auraRadius, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-        }
-        
-        // 알파벳 기사단 행진
-        alphabetKnights.forEach((knight, i) => {
-            const marchOffset = Math.sin(frame * 0.08 + knight.marchPhase) * 15;
-            const jumpHeight = Math.abs(Math.sin(frame * 0.15 + i * 0.3)) * 25;
-            
-            ctx.save();
-            ctx.translate(knight.x + marchOffset, knight.y - jumpHeight);
-            
-            // 기사 방패
-            ctx.fillStyle = knight.color;
-            ctx.shadowColor = knight.color;
-            ctx.shadowBlur = 15;
-            ctx.fillRect(-knight.size, -knight.size/2, knight.size * 2, knight.size * 1.5);
-            
-            // 알파벳
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = `bold ${knight.size}px DungGeunMo, Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.shadowColor = '#000000';
-            ctx.shadowBlur = 6;
-            ctx.fillText(knight.letter, 0, knight.size/4);
-            
-            // 기사 검
-            ctx.fillStyle = '#C0C0C0';
-            ctx.fillRect(-2, -knight.size * 1.5, 4, knight.size);
-            ctx.fillStyle = '#FFD700';
-            ctx.fillRect(-6, -knight.size * 1.5, 12, 8);
-            
-            ctx.restore();
-        });
-        
+        drawEnglishCastle(p, canvas, frame);
+
         // 불꽃놀이
         if (frame % 80 === 0) {
             fireworks.push({
@@ -1383,95 +1335,102 @@ function animateWhitehouseEndingScene(ctx, canvas) {
                 particles: []
             });
         }
-        
-        // 불꽃놀이 렌더링
         for (let i = fireworks.length - 1; i >= 0; i--) {
             const fw = fireworks[i];
-            
             if (!fw.exploded) {
                 fw.y -= 8;
-                
-                ctx.strokeStyle = fw.color;
-                ctx.lineWidth = 4;
-                ctx.shadowColor = fw.color;
-                ctx.shadowBlur = 10;
-                ctx.beginPath();
-                ctx.moveTo(fw.x, fw.y);
-                ctx.lineTo(fw.x, fw.y + 30);
-                ctx.stroke();
-                ctx.shadowBlur = 0;
-                
+                p.fillStyle = fw.color;
+                p.fillRect(fw.x - 2, fw.y, 4, 30);
                 if (fw.y <= fw.targetY) {
                     fw.exploded = true;
-                    
                     for (let j = 0; j < 40; j++) {
                         const angle = (Math.PI * 2 / 40) * j;
                         const velocity = Math.random() * 6 + 3;
                         fw.particles.push({
-                            x: fw.x,
-                            y: fw.y,
+                            x: fw.x, y: fw.y,
                             vx: Math.cos(angle) * velocity,
                             vy: Math.sin(angle) * velocity,
                             life: 80
                         });
                     }
-                    
                     if (endingParticleSystem) {
                         endingParticleSystem.create(fw.x, fw.y, 'star', 15);
                         endingParticleSystem.create(fw.x, fw.y, 'magic', 10);
                     }
                 }
             } else {
-                fw.particles = fw.particles.filter(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.vy += 0.15;
-                    p.vx *= 0.98;
-                    p.life--;
-                    
-                    const alpha = p.life / 80;
-                    ctx.globalAlpha = alpha;
-                    ctx.fillStyle = fw.color;
-                    ctx.shadowColor = fw.color;
-                    ctx.shadowBlur = 8;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.globalAlpha = 1;
-                    ctx.shadowBlur = 0;
-                    
-                    return p.life > 0;
+                fw.particles = fw.particles.filter(pt => {
+                    pt.x += pt.vx;
+                    pt.y += pt.vy;
+                    pt.vy += 0.15;
+                    pt.vx *= 0.98;
+                    pt.life--;
+                    p.globalAlpha = pt.life / 80;
+                    p.fillStyle = fw.color;
+                    p.fillRect(pt.x - 3, pt.y - 3, 6, 6);
+                    p.globalAlpha = 1;
+                    return pt.life > 0;
                 });
-                
-                if (fw.particles.length === 0) {
-                    fireworks.splice(i, 1);
-                }
+                if (fw.particles.length === 0) fireworks.splice(i, 1);
             }
         }
-        
-        // 파티클 시스템
+        p.restore();
+        blitEndingPixel(ctx, canvas);
+
+        // ── 원본 해상도: 왕 화이트하우스 + 알파벳 기사단 ──
+        if (whitehouseData) {
+            const centerX = canvas.width / 2 - 32;
+            const centerY = canvas.height - 280 + Math.sin(frame * 0.06) * 8;
+            ctx.save();
+            ctx.translate(centerX + 32, centerY + 32);
+            ctx.scale(1.2, 1.2);
+            ctx.translate(-32, -32);
+            drawEndingPixelSprite(ctx, whitehouseData[currentAnimation], whitehouseData.colorMap, 0, 0, 80 / whitehouseData.idle[0].length);
+            ctx.restore();
+
+            const auraRadius = 120 + Math.sin(frame * 0.05) * 20;
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(centerX + 32, centerY + 32, auraRadius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // 알파벳 기사단 행진 (방패 + 도트 글자 + 검)
+        alphabetKnights.forEach((knight, i) => {
+            const marchOffset = Math.sin(frame * 0.08 + knight.marchPhase) * 15;
+            const jumpHeight = Math.abs(Math.sin(frame * 0.15 + i * 0.3)) * 25;
+            ctx.save();
+            ctx.translate(knight.x + marchOffset, knight.y - jumpHeight);
+            ctx.fillStyle = knight.color;
+            ctx.fillRect(-knight.size, -knight.size / 2, knight.size * 2, knight.size * 1.5);
+            ctx.fillStyle = '#C0C0C0';
+            ctx.fillRect(-2, -knight.size * 1.5, 4, knight.size);
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(-6, -knight.size * 1.5, 12, 8);
+            drawEndingBakedText(ctx, knight.letter, 0, knight.size / 4,
+                { fontPx: 12, color: '#FFFFFF', outline: 'rgba(0,0,0,0.6)', shadow: 'rgba(0,0,0,0)', dispScale: 2 });
+            ctx.restore();
+        });
+
         if (endingParticleSystem) {
             if (frame % 20 === 0) {
-                endingParticleSystem.create(
-                    Math.random() * canvas.width,
-                    0,
-                    'confetti',
-                    3
-                );
+                endingParticleSystem.create(Math.random() * canvas.width, 0, 'confetti', 3);
             }
-            
             endingParticleSystem.update();
             endingParticleSystem.render();
         }
-        
+
         frame++;
         requestAnimationFrame(draw);
     }
-    
+
     draw();
 }
 
-// 보조 함수들 (개선된 버전)
 function drawFlyingAirplaneWithJiyul(ctx, canvas, frame) {
     const planeX = canvas.width / 2 + Math.sin(frame * 0.015) * 150;
     const planeY = 140 + Math.sin(frame * 0.04) * 40;
@@ -1596,30 +1555,49 @@ function createEndingParticles() {
         overflow: hidden;
     `;
     
-    const particleTypes = ['⭐', '💖', '✨', '🎊', '🎉', '💫', '🌟', '🦄', '🌈', '💎'];
-    
+    // 이모지 대신 픽셀 도형 파티클 (별/하트/다이아/반짝)
+    const particlePatterns = [
+        ['..1..', '.111.', '11111', '.111.', '1.1.1'],   // 별
+        ['.1.1.', '11111', '11111', '.111.', '..1..'],   // 하트
+        ['..1..', '.111.', '11111', '.111.', '..1..'],   // 다이아
+        ['..1..', '..1..', '11111', '..1..', '..1..'],   // 반짝
+    ];
+    function makePixelParticle(pattern, color, px) {
+        const c = document.createElement('canvas');
+        c.width = pattern[0].length * px;
+        c.height = pattern.length * px;
+        const cc = c.getContext('2d');
+        cc.fillStyle = color;
+        pattern.forEach((row, ry) => {
+            [...row].forEach((ch, rx) => {
+                if (ch === '1') cc.fillRect(rx * px, ry * px, px, px);
+            });
+        });
+        c.style.imageRendering = 'pixelated';
+        return c;
+    }
+
     for (let i = 0; i < 60; i++) {
-        const particle = document.createElement('div');
-        const type = particleTypes[Math.floor(Math.random() * particleTypes.length)];
-        const size = Math.random() * 25 + 15;
+        const pattern = particlePatterns[Math.floor(Math.random() * particlePatterns.length)];
+        const color = `hsl(${Math.random() * 360}, 90%, 70%)`;
+        const px = Math.floor(Math.random() * 3) + 3;
         const startX = Math.random() * 100;
         const duration = Math.random() * 5 + 4;
         const delay = Math.random() * 8;
-        
-        particle.textContent = type;
+
+        const particle = document.createElement('div');
+        particle.appendChild(makePixelParticle(pattern, color, px));
         particle.style.cssText = `
             position: absolute;
-            font-size: ${size}px;
             left: ${startX}%;
             top: -60px;
             animation: 
                 particleFall ${duration}s linear ${delay}s infinite,
                 particleRotate ${duration * 2}s linear ${delay}s infinite,
                 particleScale ${duration}s ease-in-out ${delay}s infinite;
-            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
             z-index: 10001;
         `;
-        
         particleContainer.appendChild(particle);
     }
     
@@ -1724,7 +1702,7 @@ function createCelebrationEffects() {
         pointer-events: none;
         animation: celebrationBounce 3s ease-out forwards;
     `;
-    celebrationText.textContent = '🎉 축하합니다! 🎉';
+    celebrationText.textContent = '축하합니다!';
     
     const celebrationStyle = document.createElement('style');
     celebrationStyle.textContent = `
