@@ -369,16 +369,22 @@ function showTitleScreen() {
     `;
 
     function renderTitleTexts() {
+        // 아이폰 가로 등 낮은 화면에서는 축소해 한 화면에 들어오게
+        const isLowLandscape = window.innerHeight <= 520 && window.innerWidth > window.innerHeight;
+        const bigScale = (isMobilePortrait || isLowLandscape) ? 2 : 3;
         titleWrap.innerHTML = '';
         titleWrap.appendChild(createPixelTextCanvas('🚀 지율이의 잉글리쉬 어드벤쳐 🚀', {
-            fontPx: 20, scale: isMobilePortrait ? 2 : 3,
+            fontPx: 20, scale: bigScale,
             color: '#FF69B4', outline: '#FFFFFF', shadow: '#FFD700'
         }));
         subtitleWrap.innerHTML = '';
         subtitleWrap.appendChild(createPixelTextCanvas('👽 ABC 대마왕의 지구 침공! 👾', {
-            fontPx: 14, scale: isMobilePortrait ? 2 : 3,
+            fontPx: 14, scale: isLowLandscape ? 2 : (isMobilePortrait ? 2 : 3),
             color: '#FFD700', outline: '#8B008B', shadow: 'rgba(0,0,0,0.3)'
         }));
+        if (isLowLandscape) {
+            subtitleWrap.style.margin = '6px 0 8px 0';
+        }
     }
     renderTitleTexts();
     // 도트 폰트 로드가 끝나면 다시 그려 확실히 픽셀 글꼴로 표시
@@ -397,9 +403,9 @@ function showTitleScreen() {
         'min(5vw, 20px)' : 
         (isMobile ? '1.5em' : '2em');
     
-    const buttonPadding = isMobilePortrait ? 
-        '15px 25px' : 
-        '20px 40px';
+    const isLowLandscape = window.innerHeight <= 520 && window.innerWidth > window.innerHeight;
+    const buttonPadding = isLowLandscape ? '10px 24px' :
+        (isMobilePortrait ? '15px 25px' : '20px 40px');
     
     startButton.style.cssText = `
         background: linear-gradient(135deg, #FF69B4, #FFB6C1);
@@ -414,7 +420,7 @@ function showTitleScreen() {
         text-shadow: 3px 3px 0 rgba(0,0,0,0.35);
         transition: all 0.15s ease;
         animation: buttonGlow 2s ease-in-out infinite;
-        margin-top: ${isMobilePortrait ? '20px' : '30px'};
+        margin-top: ${isLowLandscape ? '10px' : (isMobilePortrait ? '20px' : '30px')};
         box-shadow: 0 8px 0 #C4457F, 0 8px 0 4px rgba(0,0,0,0.2), inset -4px -4px 0 rgba(0,0,0,0.15);
         image-rendering: pixelated;
         white-space: nowrap;
@@ -537,7 +543,7 @@ function showTitleScreen() {
     // 작은 도움말 텍스트 (도트 캔버스)
     const helpText = document.createElement('div');
     helpText.style.cssText = `
-        margin-top: ${isMobilePortrait ? '15px' : '30px'};
+        margin-top: ${isLowLandscape ? '8px' : (isMobilePortrait ? '15px' : '30px')};
         animation: float 3s ease-in-out infinite;
         text-align: center;
     `;
