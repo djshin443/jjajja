@@ -719,6 +719,39 @@
             }
         }
 
+        /* 아이폰 등 낮은 가로 화면: 한눈에 들어오는 컴팩트 레이아웃 */
+        @media screen and (orientation: landscape) and (max-height: 520px) {
+            .menu-container {
+                padding: 12px 18px;
+                max-height: 96vh;
+                border-radius: 16px;
+            }
+            .menu-header { margin-bottom: 8px; }
+            #menuTitle { margin-bottom: 4px; }
+            #menuTitle canvas { width: auto !important; max-height: 34px; }
+            #menuSubtitle { padding: 4px 12px; }
+            #menuSubtitle canvas { width: auto !important; max-height: 22px; }
+            .menu-content { gap: 12px; }
+            .menu-card { padding: 10px 12px; }
+            .card-title { margin-bottom: 6px; }
+            .card-title canvas { width: auto !important; max-height: 24px; }
+            .character-grid { gap: 10px; }
+            .character-btn { width: 112px; padding: 8px 4px; gap: 4px; }
+            .character-btn .character-pixel { width: 44px; height: 44px; }
+            .character-btn > canvas:not(.character-pixel) { width: auto !important; max-height: 20px; }
+            .character-display { padding: 8px; gap: 6px; }
+            #selectedCharacterPixel { width: 52px; height: 52px; }
+            .character-greeting canvas { width: auto !important; max-height: 48px; }
+            .unit-btn { padding: 8px 10px; min-width: 76px; }
+            .unit-btn canvas { width: auto !important; max-height: 18px; }
+            .vehicle-btn { padding: 6px 10px; }
+            .vehicle-btn .vehicle-pixel { width: 28px; height: 28px; }
+            .vehicle-btn span canvas { width: auto !important; max-height: 18px; }
+            #vehicleOptions { margin-top: 8px !important; }
+            .start-btn, .back-btn { padding: 10px 16px; }
+            .start-btn canvas, .back-btn canvas { width: auto !important; max-height: 22px; }
+        }
+
         /* 가로 모드 최적화 */
         @media screen and (orientation: landscape) {
             .menu-container {
@@ -736,6 +769,11 @@
             }
 
             #characterSelectMenu .menu-card:first-child {
+                grid-column: 1 / -1;
+            }
+
+            /* 유닛 선택 메뉴는 카드가 반쪽에 갇히지 않게 전체 폭 사용 */
+            #unitSelectMenu .menu-card {
                 grid-column: 1 / -1;
             }
 

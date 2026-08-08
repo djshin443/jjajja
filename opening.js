@@ -1054,6 +1054,20 @@ class OpeningSequence {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.drawImage(this._pixCanvas, 0, 0, this.canvas.width, this.canvas.height);
 
+        // 캐릭터·씬·코믹 효과는 원본 해상도로 선명하게 (흔들림 적용)
+        if (this.canvas.width > this.canvas.height) {
+            this.ctx.save();
+            if (this.shakeAmount > 0.1) {
+                this.ctx.translate(
+                    (Math.random() - 0.5) * this.shakeAmount,
+                    (Math.random() - 0.5) * this.shakeAmount
+                );
+            }
+            this.drawScene();
+            this.drawComicEffects();
+            this.ctx.restore();
+        }
+
         // CRT 스캔라인 오버레이 (가독성을 위해 약하게, 패턴은 한 번만 생성)
         if (!this._scanCanvas || this._scanCanvas.width !== this.canvas.width || this._scanCanvas.height !== this.canvas.height) {
             this._scanCanvas = document.createElement('canvas');
@@ -1099,26 +1113,9 @@ class OpeningSequence {
             return;
         }
 
-        // 화면 흔들림 적용
-        this.ctx.save();
-        if (this.shakeAmount > 0.1) {
-            this.ctx.translate(
-                (Math.random() - 0.5) * this.shakeAmount,
-                (Math.random() - 0.5) * this.shakeAmount
-            );
-        }
-
-        // 배경 그리기
+        // 배경만 저해상 도트화 패스에서 그린다
+        // (캐릭터·씬·대화창·HUD는 선명하게 원본 해상도에서 → render() 참고)
         this.drawBackground();
-
-        // 씬 그리기
-        this.drawScene();
-
-        // 코믹 효과 그리기
-        this.drawComicEffects();
-
-        this.ctx.restore();
-        // 대화창·HUD·버튼은 가독성을 위해 저해상 패스 밖(원본 해상도)에서 그린다 → render() 참고
     }
 
     // 가로모드 권장 메시지
@@ -1696,7 +1693,7 @@ class OpeningSequence {
         this.ctx.save();
         
         const hintY = this.isLandscape ? 
-            this.canvas.height - 80 : 
+            this.canvas.height - 108 : 
             this.canvas.height - 180;
         
         // 오락실풍 깜빡임: PRESS START 스타일
