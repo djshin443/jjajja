@@ -1567,7 +1567,7 @@ function render() {
 
                 // 지율이를 키위(게코) 등 위에 태우기
                 const jiyulData = pixelData.jiyul;
-                drawSpriteAnchored(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 8 * PIXEL_SCALE, player.width);
+                drawSpriteAnchored(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 5 * PIXEL_SCALE, player.width);
 
             } else if (gameState.selectedVehicle === 'whitehouse' && pixelData.whitehouse) {
                 // 화이트하우스 (발밑 = player.y)
