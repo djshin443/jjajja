@@ -612,7 +612,9 @@ let player = {
     velocityX: 0,
     isJumping: false,
     onGround: true,
-    runSpeed: 4
+    runSpeed: 4,
+    airJumpsUsed: 0,   // 더블 점프 사용 횟수 (키위 능력)
+    hurtTimer: 0       // 피격 깜빡임 타이머
 };
 
 // 게임 오브젝트들
@@ -873,7 +875,9 @@ function initGame() {
     player.velocityX = 0;
     player.onGround = true;
     player.isJumping = false;
-    
+    player.airJumpsUsed = 0;
+    player.hurtTimer = 0;
+
     // 게임 통계 초기화
     gameStats.startTime = Date.now();
     gameStats.correctAnswers = 0;
@@ -1153,7 +1157,8 @@ function updatePlayerPhysics() {
         player.velocityY = 0;
         player.onGround = true;
         player.isJumping = false;
-        
+        player.airJumpsUsed = 0;  // 착지 시 더블 점프 횟수 초기화 (키위 능력)
+
         if (player.velocityX > 2 && typeof createParticles === 'function') {
             createParticles(player.x, player.y, 'hint');
         }
@@ -1459,19 +1464,35 @@ function render() {
 		if (!enemy.alive) return;
 		const screenX = enemy.x - gameState.cameraX;
 		if (screenX > -100 && screenX < canvas.width + 100) {
+			// 걷기 바운스: idle 1프레임뿐인 몬스터에게 통통 튀는 움직임 부여
+			let drawY = enemy.y;
+			if (enemy.type === 'boss') {
+				// 보스는 천천히 숨쉬는 듯한 부유 연출
+				drawY += Math.sin(Date.now() * 0.004) * PIXEL_SCALE;
+			} else if (enemy.animFrame === 1) {
+				drawY -= PIXEL_SCALE;  // 걷기 2프레임 중 하나에서 살짝 점프
+			}
+
 			// 보스 렌더링
 			if (enemy.type === 'boss') {
 				// alphabetMonsters 객체에서 보스 데이터 가져오기
 				if (typeof alphabetMonsters !== 'undefined' && alphabetMonsters.boss) {
 					const data = alphabetMonsters.boss;
-					drawPixelSprite(data.idle, data.colorMap, screenX, enemy.y);
+					drawPixelSprite(data.idle, data.colorMap, screenX, drawY);
 				}
 			} else {
 				// 알파벳 몬스터 렌더링
 				if (typeof alphabetMonsters !== 'undefined' && alphabetMonsters[enemy.type]) {
 					const data = alphabetMonsters[enemy.type];
-					drawPixelSprite(data.idle, data.colorMap, screenX, enemy.y);
+					drawPixelSprite(data.idle, data.colorMap, screenX, drawY);
 				}
+			}
+
+			// 피격 플래시: 정답으로 타격 시 하얗게 번쩍
+			if (enemy.hitTimer > 0) {
+				enemy.hitTimer--;
+				ctx.fillStyle = `rgba(255, 255, 255, ${0.06 * enemy.hitTimer})`;
+				ctx.fillRect(screenX, drawY, enemy.width, enemy.height);
 			}
 			
 			// 보스 어그로 표시
@@ -1489,8 +1510,15 @@ function render() {
 		}
 	});
     
+    // 피격 깜빡임: 오답으로 데미지를 입으면 잠시 깜빡여 시각적 피드백 제공
+    let skipPlayerDraw = false;
+    if (player.hurtTimer > 0) {
+        player.hurtTimer--;
+        skipPlayerDraw = (player.hurtTimer % 6) < 3;
+    }
+
     // 플레이어 렌더링
-    if (typeof pixelData !== 'undefined' && pixelData[player.sprite]) {
+    if (!skipPlayerDraw && typeof pixelData !== 'undefined' && pixelData[player.sprite]) {
         // 지율이가 탈것을 타고 있는 경우
         if (player.sprite === 'jiyul' && gameState.selectedVehicle !== 'none') {
             // 먼저 탈것 그리기
@@ -1681,6 +1709,7 @@ function selectChoice(choiceIndex) {
         
         if (gameState.currentEnemy) {
             gameState.currentEnemy.hp -= 1;
+            gameState.currentEnemy.hitTimer = 12;  // 피격 플래시 연출
             const enemyScreenX = gameState.currentEnemy.x - gameState.cameraX;
             if (typeof createParticles === 'function') {
                 createParticles(enemyScreenX, gameState.currentEnemy.y, 'hit');
@@ -1737,14 +1766,21 @@ function selectChoice(choiceIndex) {
 			}
         }
     } else {
-        // 오답
-        player.hp -= 15;
+        // 오답 - 화이트하우스와 함께라면 튼튼한 텐트가 데미지를 줄여줌 (15 → 10)
+        const damage = hasWhitehousePower() ? 10 : 15;
+        player.hp -= damage;
+        player.hurtTimer = 30;  // 피격 깜빡임 연출
+        gameState.shakeTimer = 12;  // 화면 흔들림
+
         if (typeof createParticles === 'function') {
             createParticles(player.x, player.y, 'hurt');
         }
         const correctAnswer = gameState.currentQuestion.choices[gameState.currentQuestion.correctIndex];
         if (typeof showFloatingText === 'function') {
             showFloatingText(player.x, player.y - 30, `틀렸어요! 정답: ${correctAnswer}`, '#FF0000');
+            if (hasWhitehousePower()) {
+                showFloatingText(player.x, player.y - 55, '🏕️ 화이트하우스가 지켜줬어요!', '#87CEEB', 13);
+            }
         }
         
         if (player.hp <= 0) {
@@ -1912,23 +1948,46 @@ function nextStage() {
 }
 
 // 점프 함수
+// 키위와 함께라면(키위 캐릭터 또는 키위 탑승) 더블 점프 가능
+function hasKiwiPower() {
+    return gameState.selectedCharacter === 'kiwi' || gameState.selectedVehicle === 'kiwi';
+}
+
+// 화이트하우스와 함께라면(화이트하우스 캐릭터 또는 탑승) 오답 데미지 감소
+function hasWhitehousePower() {
+    return gameState.selectedCharacter === 'whitehouse' || gameState.selectedVehicle === 'whitehouse';
+}
+
 function jump() {
-    if (player.onGround && !gameState.questionActive && !gameState.bossDialogueActive) {
+    if (gameState.questionActive || gameState.bossDialogueActive) return;
+
+    if (player.onGround) {
         const jumpPower = getJumpPower();
         player.velocityY = jumpPower;
-        
+
         const forwardSpeed = isMobileDevice() ? JUMP_FORWARD_SPEED * 1.2 : JUMP_FORWARD_SPEED * 1.5;
         player.velocityX = forwardSpeed;
-        
+
         player.isJumping = true;
         player.onGround = false;
         gameState.isMoving = true;
-        
+
         if (typeof createParticles === 'function') {
             createParticles(player.x, player.y, 'hint');
         }
         // (점프당 +1점은 제자리 점프 연타로 점수를 무한 획득하는 파밍 수단이라 제거)
         updateUI();
+    } else if (hasKiwiPower() && (player.airJumpsUsed || 0) < 1) {
+        // 키위의 능력: 공중에서 한 번 더 점프!
+        player.airJumpsUsed = (player.airJumpsUsed || 0) + 1;
+        player.velocityY = getJumpPower() * 0.85;
+
+        if (typeof createParticles === 'function') {
+            createParticles(player.x, player.y, 'hint');
+        }
+        if (typeof showFloatingText === 'function') {
+            showFloatingText(player.x, player.y - 40, '🥝 더블 점프!', '#FF8C00');
+        }
     }
 }
 
