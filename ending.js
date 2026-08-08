@@ -978,7 +978,7 @@ function animateJiyulEndingScene(ctx, canvas) {
                 currentAnimation = 'idle';
             }
             
-            drawEndingPixelSprite(ctx, jiyulData[currentAnimation], jiyulData.colorMap, centerX, centerY, 4);
+            drawEndingPixelSprite(ctx, jiyulData[currentAnimation], jiyulData.colorMap, centerX, centerY, 64 / jiyulData.idle[0].length);
             
             // 지율이 주변 마법 효과
             const magicRadius = 80 + Math.sin(frame * 0.04) * 20;
@@ -1177,7 +1177,7 @@ function animateKiwiEndingScene(ctx, canvas) {
             ctx.rotate(Math.sin(frame * 0.1) * 0.3);
             ctx.translate(-32, -32);
             
-            drawEndingPixelSprite(ctx, kiwiData[currentAnimation], kiwiData.colorMap, 0, 0, 4);
+            drawEndingPixelSprite(ctx, kiwiData[currentAnimation], kiwiData.colorMap, 0, 0, 64 / kiwiData.idle[0].length);
             ctx.restore();
             
             // 키위 주변 댄스 링
@@ -1324,7 +1324,7 @@ function animateWhitehouseEndingScene(ctx, canvas) {
             ctx.scale(1.2, 1.2);
             ctx.translate(-32, -32);
             
-            drawEndingPixelSprite(ctx, whitehouseData[currentAnimation], whitehouseData.colorMap, 0, 0, 5);
+            drawEndingPixelSprite(ctx, whitehouseData[currentAnimation], whitehouseData.colorMap, 0, 0, 80 / whitehouseData.idle[0].length);
             
             // 왕의 오라
             const auraRadius = 120 + Math.sin(frame * 0.05) * 20;

@@ -139,8 +139,8 @@ function drawCharacterFace(character, canvasElement) {
         return;
     }
     
-    // 픽셀 스프라이트 그리기 (8배 확대)
-    const scale = 8;
+    // 픽셀 스프라이트 그리기 (스프라이트 크기에 맞춰 자동 배율)
+    const scale = Math.max(1, Math.floor(120 / Math.max(spriteData[0].length, spriteData.length)));
     const offsetX = (128 - spriteData[0].length * scale) / 2;
     const offsetY = (128 - spriteData.length * scale) / 2;
     
@@ -1403,8 +1403,8 @@ function checkBoxCollision(box1, box2) {
 // 애니메이션 업데이트
 function updateAnimations() {
     player.animTimer++;
-    if (player.animTimer >= 15) {
-        player.animFrame = (player.animFrame + 1) % 3;
+    if (player.animTimer >= 10) {
+        player.animFrame = (player.animFrame + 1) % 4;
         player.animTimer = 0;
     }
     
@@ -1470,27 +1470,27 @@ function render() {
 		if (!enemy.alive) return;
 		const screenX = enemy.x - gameState.cameraX;
 		if (screenX > -100 && screenX < canvas.width + 100) {
-			// 걷기 바운스: idle 1프레임뿐인 몬스터에게 통통 튀는 움직임 부여
 			let drawY = enemy.y;
 			if (enemy.type === 'boss') {
 				// 보스는 천천히 숨쉬는 듯한 부유 연출
 				drawY += Math.sin(Date.now() * 0.004) * PIXEL_SCALE;
-			} else if (enemy.animFrame === 1) {
-				drawY -= PIXEL_SCALE;  // 걷기 2프레임 중 하나에서 살짝 점프
 			}
 
-			// 보스 렌더링
+			// 보스 렌더링 (48x48, 몬스터보다 1.5배 크게)
 			if (enemy.type === 'boss') {
-				// alphabetMonsters 객체에서 보스 데이터 가져오기
 				if (typeof alphabetMonsters !== 'undefined' && alphabetMonsters.boss) {
 					const data = alphabetMonsters.boss;
-					drawPixelSprite(data.idle, data.colorMap, screenX, drawY);
+					// 숨쉬기 2프레임 전환
+					const frame = (Math.floor(Date.now() / 400) % 2 === 0 || !data.idle2) ? data.idle : data.idle2;
+					const bossW = 24 * PIXEL_SCALE;
+					drawSpriteAnchored(frame, data.colorMap, screenX - 4 * PIXEL_SCALE, drawY + enemy.height, bossW);
 				}
 			} else {
-				// 알파벳 몬스터 렌더링
+				// 알파벳 몬스터 렌더링 (32x32, 걷기 스쿼시 2프레임)
 				if (typeof alphabetMonsters !== 'undefined' && alphabetMonsters[enemy.type]) {
 					const data = alphabetMonsters[enemy.type];
-					drawPixelSprite(data.idle, data.colorMap, screenX, drawY);
+					const frame = (enemy.animFrame === 1 && data.walk) ? data.walk : data.idle;
+					drawSpriteAnchored(frame, data.colorMap, screenX, drawY + enemy.height, enemy.width);
 				}
 			}
 
@@ -1525,84 +1525,35 @@ function render() {
 
     // 플레이어 렌더링
     if (!skipPlayerDraw && typeof pixelData !== 'undefined' && pixelData[player.sprite]) {
+        const moving = gameState.isMoving && !gameState.questionActive;
+
         // 지율이가 탈것을 타고 있는 경우
         if (player.sprite === 'jiyul' && gameState.selectedVehicle !== 'none') {
-            // 먼저 탈것 그리기
             if (gameState.selectedVehicle === 'kiwi' && pixelData.kiwi) {
+                // 키위 (발밑 = player.y)
                 const kiwiData = pixelData.kiwi;
-                let kiwiSprite;
-                
-                if (player.isJumping) {
-                    kiwiSprite = kiwiData.jump || kiwiData.idle;
-                } else if (gameState.isMoving && !gameState.questionActive) {
-                    if (kiwiData.walking1 && kiwiData.walking2) {
-                        kiwiSprite = player.animFrame === 1 ? kiwiData.walking1 : 
-                                    player.animFrame === 2 ? kiwiData.walking2 : kiwiData.idle;
-                    } else {
-                        kiwiSprite = kiwiData.idle;
-                    }
-                } else {
-                    kiwiSprite = kiwiData.idle;
-                }
-                
-                // 키위 위치 조정 (화면 중앙에 맞게)
-                const kiwiOffsetY = PIXEL_SCALE * 2; // 더 적절한 오프셋
-                drawPixelSprite(kiwiSprite, kiwiData.colorMap, player.x, player.y - player.height + kiwiOffsetY);
-                
-                // 지율이를 키위 위에 그리기
+                const kiwiSprite = pickSpriteFrame(kiwiData, player.isJumping, moving, player.animFrame);
+                drawSpriteAnchored(kiwiSprite, kiwiData.colorMap, player.x, player.y, player.width);
+
+                // 지율이를 키위 등 위에 태우기
                 const jiyulData = pixelData.jiyul;
-                const jiyulOffsetY = -PIXEL_SCALE * 4; // 키위 위 적절한 위치
-                drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height + jiyulOffsetY);
-                
+                drawSpriteAnchored(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 9 * PIXEL_SCALE, player.width);
+
             } else if (gameState.selectedVehicle === 'whitehouse' && pixelData.whitehouse) {
+                // 화이트하우스 (발밑 = player.y)
                 const whData = pixelData.whitehouse;
-                let whSprite;
-                
-                if (player.isJumping) {
-                    whSprite = whData.jump || whData.idle;
-                } else if (gameState.isMoving && !gameState.questionActive) {
-                    if (whData.walking1 && whData.walking2) {
-                        whSprite = player.animFrame === 1 ? whData.walking1 : 
-                                   player.animFrame === 2 ? whData.walking2 : whData.idle;
-                    } else {
-                        whSprite = whData.idle;
-                    }
-                } else {
-                    whSprite = whData.idle;
-                }
-                
-                // 화이트하우스 위치 조정
-                drawPixelSprite(whSprite, whData.colorMap, player.x, player.y - player.height);
-                
-                // 지율이를 화이트하우스 위에 그리기
+                const whSprite = pickSpriteFrame(whData, player.isJumping, moving, player.animFrame);
+                drawSpriteAnchored(whSprite, whData.colorMap, player.x, player.y, player.width);
+
+                // 지율이를 지붕 위에 세우기
                 const jiyulData = pixelData.jiyul;
-                const jiyulOffsetY = -PIXEL_SCALE * 8; // 화이트하우스 위 적절한 위치
-                drawPixelSprite(jiyulData.idle, jiyulData.colorMap, player.x, player.y - player.height + jiyulOffsetY);
+                drawSpriteAnchored(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 13 * PIXEL_SCALE, player.width);
             }
         } else {
-            // 일반적인 캐릭터 그리기 (기존 코드 유지)
+            // 일반적인 캐릭터 그리기
             const playerData = pixelData[player.sprite];
-            let sprite;
-            
-            if (player.isJumping) {
-                sprite = playerData.jump || playerData.idle;
-            } else if (gameState.isMoving && !gameState.questionActive) {
-                if (playerData.walking1 && playerData.walking2) {
-                    if (player.animFrame === 1) {
-                        sprite = playerData.walking1;
-                    } else if (player.animFrame === 2) {
-                        sprite = playerData.walking2;
-                    } else {
-                        sprite = playerData.idle;
-                    }
-                } else {
-                    sprite = playerData.idle;
-                }
-            } else {
-                sprite = playerData.idle;
-            }
-            
-            drawPixelSprite(sprite, playerData.colorMap, player.x, player.y - player.height);
+            const sprite = pickSpriteFrame(playerData, player.isJumping, moving, player.animFrame);
+            drawSpriteAnchored(sprite, playerData.colorMap, player.x, player.y, player.width);
         }
     }
     
@@ -2053,18 +2004,24 @@ function jump() {
 }
 
 // 픽셀 스프라이트 그리기 함수 (characters.js가 없을 경우를 대비)
-function drawPixelSprite(sprite, colorMap, x, y, scale = PIXEL_SCALE) {
-    if (!sprite || !colorMap) return;
-    
-    for (let row = 0; row < sprite.length; row++) {
-        for (let col = 0; col < sprite[row].length; col++) {
-            const pixel = sprite[row][col];
-            if (pixel !== 0 && colorMap[pixel]) {
-                ctx.fillStyle = colorMap[pixel];
-                ctx.fillRect(x + col * scale, y + row * scale, scale, scale);
-            }
-        }
+// drawPixelSprite는 characters.js의 캐싱 버전을 사용한다.
+
+// 걷기 4프레임(walking1~4)까지 지원하는 프레임 선택 헬퍼
+function pickSpriteFrame(data, isJumping, moving, animFrame) {
+    if (isJumping) return data.jump || data.idle;
+    if (moving) {
+        const frames = [data.walking1, data.walking2, data.walking3, data.walking4].filter(Boolean);
+        if (frames.length) return frames[animFrame % frames.length];
     }
+    return data.idle;
+}
+
+// 스프라이트 크기(16/32/48 그리드)에 관계없이 발밑(bottomY) 기준으로 그린다.
+// targetW: 화면에 표시할 가로 폭(px). 세로는 비율 유지.
+function drawSpriteAnchored(sprite, colorMap, x, bottomY, targetW) {
+    if (!sprite) return;
+    const s = targetW / sprite[0].length;
+    drawPixelSprite(sprite, colorMap, x, bottomY - sprite.length * s, s);
 }
 
 // 초기 캔버스 설정
