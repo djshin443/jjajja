@@ -13,6 +13,14 @@
     <link rel="icon" type="image/png" href="ico.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+        /* 도트(픽셀) 한글 폰트 - 둥근모꼴 */
+        @font-face {
+            font-family: 'DungGeunMo';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/DungGeunMo.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
 
         * {
             box-sizing: border-box;
@@ -23,7 +31,7 @@
 
         body {
             background: #000;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             overflow: hidden;
             touch-action: none;
             position: fixed;
@@ -72,7 +80,7 @@
             font-size: 12px;
             cursor: pointer;
             z-index: 1000;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             border-radius: 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
@@ -90,7 +98,7 @@
             border: 3px solid #FFF;
             padding: 12px 20px;
             display: none;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             border-radius: 20px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
@@ -110,7 +118,7 @@
             z-index: 50;
             width: 90vw;
             max-width: 500px;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             max-height: 90vh;
@@ -154,7 +162,7 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             transition: all 0.2s ease;
@@ -204,7 +212,7 @@
             cursor: pointer;
             touch-action: manipulation;
             flex: 1;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             border-radius: 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
@@ -270,7 +278,7 @@
             color: #9932CC;
             font-weight: 700;
             margin-bottom: 12px;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             letter-spacing: -0.5px;
             text-shadow: 2px 2px 0 #FFF, 3px 3px 10px rgba(153, 50, 204, 0.3);
         }
@@ -279,7 +287,7 @@
             font-size: clamp(14px, 3vw, 18px);
             color: #6B3AA0;
             font-weight: 400;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             background: rgba(255,255,255,0.8);
             padding: 10px 20px;
             border-radius: 15px;
@@ -305,7 +313,7 @@
             font-weight: 600;
             color: #9932CC;
             margin-bottom: 16px;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
         }
 
@@ -337,7 +345,7 @@
         }
 
         #selectedCharacterName {
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             font-size: 18px;
             font-weight: 600;
             color: #9932CC;
@@ -386,7 +394,7 @@
             align-items: center;
             gap: 8px;
             min-width: 120px;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             font-weight: 500;
             color: #9932CC;
             box-shadow: 0 4px 10px rgba(147, 112, 219, 0.2);
@@ -431,7 +439,7 @@
             padding: 12px 20px;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             font-weight: 500;
             color: #4169E1;
             font-size: 14px;
@@ -466,7 +474,7 @@
         }
 
         .selection-item {
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             color: #6B3AA0;
             margin-bottom: 8px;
             font-size: 14px;
@@ -491,7 +499,7 @@
             border-radius: 12px;
             padding: 16px 32px;
             color: white;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             font-size: 18px;
             font-weight: 600;
             cursor: pointer;
@@ -522,7 +530,7 @@
             border-radius: 12px;
             padding: 16px 32px;
             color: white;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
@@ -544,7 +552,7 @@
             border-radius: 15px;
             padding: 12px 20px;
             margin-top: 10px;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             color: #9932CC;
             font-size: 16px;
             text-align: center;
@@ -565,7 +573,7 @@
             flex-direction: column;
             align-items: center;
             gap: 5px;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             font-weight: 500;
             color: #9932CC;
             font-size: 14px;
@@ -769,7 +777,7 @@
                 color: white;
                 font-size: min(6vw, 28px);
                 z-index: 9999;
-                font-family: 'Jua', sans-serif;
+                font-family: 'DungGeunMo', 'Jua', sans-serif;
                 text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
                 text-align: center;
                 line-height: 1.5;
@@ -846,15 +854,15 @@
                         <h3 class="card-title">✨ 캐릭터 선택</h3>
                         <div id="characterGrid" class="character-grid">
                             <button class="character-btn selected" data-character="jiyul">
-                                <canvas class="character-pixel" width="48" height="48"></canvas>
+                                <canvas class="character-pixel" width="96" height="96"></canvas>
                                 <span>지율이</span>
                             </button>
                             <button class="character-btn" data-character="kiwi">
-                                <canvas class="character-pixel" width="48" height="48"></canvas>
+                                <canvas class="character-pixel" width="96" height="96"></canvas>
                                 <span>키위</span>
                             </button>
                             <button class="character-btn" data-character="whitehouse">
-                                <canvas class="character-pixel" width="48" height="48"></canvas>
+                                <canvas class="character-pixel" width="96" height="96"></canvas>
                                 <span>화이트하우스</span>
                             </button>
                         </div>
@@ -957,110 +965,35 @@
 
     <script>
         // 캐릭터 픽셀 데이터
-        const characterPixelData = {
-            jiyul: {
-                idle: [
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
-                    [0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],
-                    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
-                    [0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0],
-                    [0,1,2,5,4,2,2,2,2,5,4,2,2,1,0,0],
-                    [0,1,2,5,5,2,2,2,2,5,5,2,2,1,0,0],
-                    [0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0],
-                    [0,0,2,2,2,6,6,6,6,2,2,2,2,0,0,0],
-                    [0,0,0,3,3,3,3,3,3,3,3,0,0,0,0,0],
-                    [0,0,3,3,3,3,3,3,3,3,3,3,0,0,0,0],
-                    [0,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0],
-                    [0,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0],
-                    [0,0,3,3,3,0,0,0,0,3,3,3,0,0,0,0],
-                    [0,0,2,2,2,0,0,0,0,2,2,2,0,0,0,0],
-                    [0,0,7,7,7,0,0,0,0,7,7,7,0,0,0,0]
-                ],
-                colorMap: {
-                    0: null,
-                    1: "#2C1810",
-                    2: "#FFE0BD",
-                    3: "#9370DB",  // 핑크에서 보라색으로 변경
-                    4: "#FFFFFF",
-                    5: "#4169E1",
-                    6: "#9932CC",  // 딥핑크에서 다크오키드로 변경
-                    7: "#8B4513"
-                }
-            },
-            kiwi: {
-                idle: [
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0],
-                    [0,0,0,0,0,0,1,2,2,2,2,1,0,0,0,0],
-                    [0,1,1,1,1,1,2,2,2,4,2,2,1,0,0,0],
-                    [1,2,2,2,2,2,2,2,2,4,2,2,2,1,1,0],
-                    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1],
-                    [0,1,2,2,2,2,2,2,2,2,1,1,1,1,1,1],
-                    [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
-                    [0,0,8,8,0,0,0,0,8,8,0,0,0,0,0,0],
-                    [0,0,8,8,0,0,0,0,8,8,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-                ],
-                colorMap: {
-                    0: null,
-                    1: "#CC5500",
-                    2: "#FF8C00",
-                    4: "#000000",
-                    8: "#8B4513"
-                }
-            },
-            whitehouse: {
-                idle: [
-                    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
-                    [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
-                    [0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],
-                    [0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],
-                    [0,0,1,2,2,2,2,2,2,2,2,2,2,1,0,0],
-                    [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
-                    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-                    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1],
-                    [1,3,4,4,3,3,5,5,5,3,3,4,4,3,3,1],
-                    [1,3,4,6,3,3,5,7,5,3,3,4,6,3,3,1],
-                    [1,3,4,4,3,3,5,5,5,3,3,4,4,3,3,1],
-                    [1,3,3,3,3,3,3,5,3,3,3,3,3,3,3,1],
-                    [1,3,3,3,3,3,3,5,3,3,3,3,3,3,3,1],
-                    [1,3,3,3,3,3,3,5,3,3,3,3,3,3,3,1],
-                    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1],
-                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-                ],
-                colorMap: {
-                    0: null,
-                    1: "#808080",
-                    2: "#F5F5F5",
-                    3: "#FFFFFF",
-                    4: "#87CEEB",
-                    5: "#8B4513",
-                    6: "#4169E1",
-                    7: "#FFD700"
-                }
-            }
-        };
+        // 캐릭터 픽셀 데이터 - characters.js의 HD 스프라이트를 그대로 사용
+        // (characters.js가 이 스크립트보다 나중에 로드되므로 지연 참조)
+        Object.defineProperty(window, 'characterPixelData', {
+            get() { return (typeof pixelData !== 'undefined') ? pixelData : {}; }
+        });
 
         // 픽셀 스프라이트 그리기 함수
-        function drawCharacterPixelSprite(ctx, sprite, colorMap, scale = 3) {
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.imageSmoothingEnabled = false;
-            
-            for (let row = 0; row < sprite.length; row++) {
-                for (let col = 0; col < sprite[row].length; col++) {
+        function drawCharacterPixelSprite(ctx, sprite, colorMap) {
+            // 스프라이트를 원본 해상도로 구운 뒤 캔버스에 맞춰 확대 (크기 무관 대응)
+            const W = sprite[0].length, H = sprite.length;
+            const off = document.createElement('canvas');
+            off.width = W; off.height = H;
+            const octx = off.getContext('2d');
+            for (let row = 0; row < H; row++) {
+                for (let col = 0; col < W; col++) {
                     const pixel = sprite[row][col];
                     if (pixel !== 0 && colorMap[pixel]) {
-                        ctx.fillStyle = colorMap[pixel];
-                        ctx.fillRect(col * scale, row * scale, scale, scale);
+                        octx.fillStyle = colorMap[pixel];
+                        octx.fillRect(col, row, 1, 1);
                     }
                 }
             }
+            const fit = Math.min(ctx.canvas.width / W, ctx.canvas.height / H);
+            const dw = Math.round(W * fit), dh = Math.round(H * fit);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(off, Math.floor((ctx.canvas.width - dw) / 2),
+                          Math.floor((ctx.canvas.height - dh) / 2), dw, dh);
         }
 
         // 캐릭터 픽셀 아트 그리기

@@ -211,7 +211,7 @@ function createDialogueBox(onComplete) {
         background: linear-gradient(135deg, #F8F4FF, #E6E6FA);
         border: 4px solid #9370DB;
         border-radius: 20px;
-        font-family: 'Jua', sans-serif;
+        font-family: 'DungGeunMo', 'Jua', sans-serif;
         z-index: 1000;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         display: flex;
@@ -315,7 +315,7 @@ function createDialogueBox(onComplete) {
         font-size: 14px;
         font-weight: bold;
         cursor: pointer;
-        font-family: 'Jua', sans-serif;
+        font-family: 'DungGeunMo', 'Jua', sans-serif;
         border-radius: 10px;
         box-shadow: 0 3px 10px rgba(0,0,0,0.2);
         transition: all 0.2s;
@@ -340,7 +340,7 @@ function createDialogueBox(onComplete) {
         font-size: 14px;
         font-weight: bold;
         cursor: pointer;
-        font-family: 'Jua', sans-serif;
+        font-family: 'DungGeunMo', 'Jua', sans-serif;
         border-radius: 10px;
         box-shadow: 0 3px 10px rgba(0,0,0,0.2);
         transition: all 0.2s;
@@ -358,7 +358,7 @@ function createDialogueBox(onComplete) {
         font-size: 16px;
         font-weight: bold;
         cursor: pointer;
-        font-family: 'Jua', sans-serif;
+        font-family: 'DungGeunMo', 'Jua', sans-serif;
         border-radius: 15px;
         box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         transition: all 0.2s;
@@ -795,7 +795,7 @@ function showIOSFullscreenGuide() {
         border-radius: 20px;
         font-size: 16px;
         z-index: 10000;
-        font-family: 'Jua', sans-serif;
+        font-family: 'DungGeunMo', 'Jua', sans-serif;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         box-shadow: 0 5px 20px rgba(0,0,0,0.5);
         text-align: center;
@@ -819,7 +819,7 @@ function showIOSFullscreenGuide() {
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             border-radius: 25px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
@@ -1565,7 +1565,7 @@ function render() {
     // 게임 상태 메시지
     if (!gameState.isMoving && !gameState.questionActive) {
         ctx.fillStyle = 'rgba(255, 255, 0, 0.8)';
-        ctx.font = 'bold 18px Jua';
+        ctx.font = 'bold 18px DungGeunMo, Jua';
         ctx.textAlign = 'center';
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;

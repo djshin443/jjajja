@@ -75,7 +75,7 @@ function showTitleScreen() {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        font-family: 'Jua', sans-serif;
+        font-family: 'DungGeunMo', 'Jua', sans-serif;
         overflow: hidden;
         animation: backgroundShimmer 3s ease-in-out infinite alternate;
         padding: 0;
@@ -294,9 +294,8 @@ function showTitleScreen() {
         font-size: ${titleFontSize};
         color: #FF69B4;
         text-shadow:
-            2px 2px 0px #FFD700,
-            3px 3px 0px rgba(255,105,180,0.5),
-            4px 4px 10px rgba(0,0,0,0.3);
+            3px 3px 0px #FFD700,
+            6px 6px 0px rgba(0,0,0,0.25);
         margin: 0;
         font-weight: bold;
         text-align: center;
@@ -316,9 +315,8 @@ function showTitleScreen() {
     subtitle.style.cssText = `
         font-size: ${subtitleFontSize};
         color: #FFD700;
-        text-shadow: 2px 2px 0px #FF69B4,
-                     3px 3px 0px rgba(255,215,0,0.5),
-                     4px 4px 8px rgba(0,0,0,0.3);
+        text-shadow: 3px 3px 0px #FF69B4,
+                     6px 6px 0px rgba(0,0,0,0.25);
         margin: ${isMobilePortrait ? '10px 0 15px 0' : '20px 0 25px 0'};
         font-weight: bold;
         animation: float 2.5s ease-in-out infinite;
@@ -345,15 +343,16 @@ function showTitleScreen() {
         color: white;
         font-size: ${buttonFontSize};
         font-weight: bold;
-        font-family: 'Jua', sans-serif;
+        font-family: 'DungGeunMo', 'Jua', sans-serif;
         padding: ${buttonPadding};
-        border-radius: 50px;
+        border-radius: 0;
         cursor: pointer;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        transition: all 0.3s ease;
+        text-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+        transition: all 0.15s ease;
         animation: buttonGlow 2s ease-in-out infinite;
         margin-top: ${isMobilePortrait ? '20px' : '30px'};
-        box-shadow: 0 10px 25px rgba(255, 105, 180, 0.4);
+        box-shadow: 0 8px 0 #C4457F, 0 8px 0 4px rgba(0,0,0,0.2), inset -4px -4px 0 rgba(0,0,0,0.15);
+        image-rendering: pixelated;
         white-space: nowrap;
     `;
     
@@ -528,7 +527,7 @@ function showTitleScreen() {
     const rotateText = document.createElement('div');
     rotateText.innerHTML = '💜 화면을 가로로 돌려주세요! 💜';
     rotateText.style.cssText = `
-        font-family: 'Jua', sans-serif;
+        font-family: 'DungGeunMo', 'Jua', sans-serif;
         font-size: min(6vw, 28px);
         color: #FFFFFF;
         text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
@@ -542,7 +541,7 @@ function showTitleScreen() {
     const rotateSubtext = document.createElement('div');
     rotateSubtext.innerHTML = '최적의 게임 경험을 위해';
     rotateSubtext.style.cssText = `
-        font-family: 'Jua', sans-serif;
+        font-family: 'DungGeunMo', 'Jua', sans-serif;
         font-size: min(4vw, 18px);
         color: #FFD700;
         text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
@@ -777,10 +776,12 @@ class OpeningSequence {
     
     // 픽셀 스프라이트 그리기
     drawPixelSprite(sprite, colorMap, x, y, scale = 3, rotation = 0) {
+        // HD 스프라이트(32/40 그리드)도 기존 16 그리드 기준 크기로 표시되도록 정규화
+        scale = scale * 16 / sprite[0].length;
         this.ctx.save();
-        this.ctx.translate(x + 8 * scale, y + 8 * scale);
+        this.ctx.translate(x + 8 * scale * sprite[0].length / 16, y + 8 * scale * sprite[0].length / 16);
         this.ctx.rotate(rotation);
-        this.ctx.translate(-8 * scale, -8 * scale);
+        this.ctx.translate(-8 * scale * sprite[0].length / 16, -8 * scale * sprite[0].length / 16);
         
         for (let row = 0; row < sprite.length; row++) {
             for (let col = 0; col < sprite[row].length; col++) {
@@ -961,8 +962,34 @@ class OpeningSequence {
         });
     }
     
-    // 렌더링
+    // 렌더링 (도트화: 저해상 오프스크린에 그린 뒤 nearest-neighbor 확대)
     render() {
+        const F = 3;  // 픽셀 블록 크기
+        const w = Math.max(1, Math.ceil(this.canvas.width / F));
+        const h = Math.max(1, Math.ceil(this.canvas.height / F));
+        if (!this._pixCanvas || this._pixCanvas.width !== w || this._pixCanvas.height !== h) {
+            this._pixCanvas = document.createElement('canvas');
+            this._pixCanvas.width = w;
+            this._pixCanvas.height = h;
+            this._pixCtx = this._pixCanvas.getContext('2d');
+        }
+        const realCtx = this.ctx;
+        this.ctx = this._pixCtx;
+        this.ctx.save();
+        this.ctx.setTransform(1 / F, 0, 0, 1 / F, 0, 0);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        try {
+            this._renderScene();
+        } finally {
+            this.ctx.restore();
+            this.ctx = realCtx;
+        }
+        this.ctx.imageSmoothingEnabled = false;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.drawImage(this._pixCanvas, 0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    _renderScene() {
         // 실시간으로 세로모드 확인 (매 프레임마다)
         const currentIsLandscape = this.canvas.width > this.canvas.height;
 
@@ -1026,7 +1053,7 @@ class OpeningSequence {
 
         // 메시지 텍스트
         this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.font = 'bold 28px "Jua", sans-serif';
+        this.ctx.font = 'bold 28px "DungGeunMo", "Jua", sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         this.ctx.shadowColor = 'rgba(0,0,0,0.5)';
@@ -1035,7 +1062,7 @@ class OpeningSequence {
         this.ctx.shadowBlur = 0;
 
         // 작은 안내 텍스트
-        this.ctx.font = '18px "Jua", sans-serif';
+        this.ctx.font = '18px "DungGeunMo", "Jua", sans-serif';
         this.ctx.fillStyle = '#FFD700';
         this.ctx.shadowColor = 'rgba(0,0,0,0.5)';
         this.ctx.shadowBlur = 4;
@@ -1438,7 +1465,7 @@ class OpeningSequence {
             
             // 텍스트 그리기
             this.ctx.fillStyle = '#000000';
-            this.ctx.font = `bold ${fontSize} Jua, sans-serif`;
+            this.ctx.font = `bold ${fontSize} DungGeunMo, Jua, sans-serif`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
             

@@ -232,7 +232,7 @@ function showEnding() {
         background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460, #533483, #e94560);
         z-index: 10000;
         display: flex;
-        font-family: 'Jua', sans-serif;
+        font-family: 'DungGeunMo', 'Jua', sans-serif;
         overflow: hidden;
         animation: endingFadeIn 2s ease-in;
     `;
@@ -314,7 +314,7 @@ function showEnding() {
         font-weight: bold;
         transition: all 0.3s ease;
         animation: gentlePulse 4s ease-in-out infinite;
-        font-family: 'Jua', sans-serif;
+        font-family: 'DungGeunMo', 'Jua', sans-serif;
         user-select: none;
     `;
     buttonToggler.innerHTML = '🎮';
@@ -474,7 +474,7 @@ function showEnding() {
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            font-family: 'Jua', sans-serif;
+            font-family: 'DungGeunMo', 'Jua', sans-serif;
             border-radius: 25px;
             box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
             transition: all 0.3s ease;
@@ -1015,7 +1015,7 @@ function animateJiyulEndingScene(ctx, canvas) {
         
         // 랜드마크 표시
         ctx.save();
-        ctx.font = 'bold 72px Arial';
+        ctx.font = 'bold 72px DungGeunMo, Arial';
         ctx.textAlign = 'center';
         ctx.fillStyle = '#FFD700';
         ctx.shadowColor = '#FFD700';
@@ -1027,7 +1027,7 @@ function animateJiyulEndingScene(ctx, canvas) {
         
         // 영어 단어 떠다니기
         ctx.save();
-        ctx.font = 'bold 32px Arial';
+        ctx.font = 'bold 32px DungGeunMo, Arial';
         ctx.textAlign = 'center';
         ctx.fillStyle = '#FF69B4';
         ctx.shadowColor = '#FF69B4';
@@ -1150,7 +1150,7 @@ function animateKiwiEndingScene(ctx, canvas) {
             ctx.save();
             ctx.translate(note.x, note.y);
             ctx.rotate(note.rotation);
-            ctx.font = `bold ${note.size}px Arial`;
+            ctx.font = `bold ${note.size}px DungGeunMo, Arial`;
             ctx.fillStyle = note.color;
             ctx.shadowColor = note.color;
             ctx.shadowBlur = 15;
@@ -1356,7 +1356,7 @@ function animateWhitehouseEndingScene(ctx, canvas) {
             
             // 알파벳
             ctx.fillStyle = '#FFFFFF';
-            ctx.font = `bold ${knight.size}px Arial`;
+            ctx.font = `bold ${knight.size}px DungGeunMo, Arial`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.shadowColor = '#000000';
@@ -1718,7 +1718,7 @@ function createCelebrationEffects() {
         transform: translate(-50%, -50%);
         font-size: 48px;
         color: #FFD700;
-        font-family: 'Jua', sans-serif;
+        font-family: 'DungGeunMo', 'Jua', sans-serif;
         text-shadow: 0 0 30px #FFD700;
         z-index: 10004;
         pointer-events: none;

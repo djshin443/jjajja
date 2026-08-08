@@ -84,7 +84,7 @@ function updateTextParticles(ctx) {
             ctx.save();
             ctx.globalAlpha = particle.alpha;
             ctx.fillStyle = particle.color;
-            ctx.font = `bold ${particle.size}px Jua`;
+            ctx.font = `bold ${particle.size}px DungGeunMo, Jua`;
             ctx.textAlign = 'center';
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 1;
