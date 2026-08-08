@@ -1,7 +1,34 @@
 // 배경 그리기 시스템 - background.js
+// 배경은 저해상도 오프스크린 캔버스에 그린 뒤 확대(도트화)해서 표시한다.
+// 이 파일의 모든 드로잉은 전역 ctx가 아니라 bctx(배경 전용 컨텍스트)를 사용한다.
 
-// 메인 배경 그리기 함수 (화려한 버전)
+const BG_PIXEL = 4;          // 픽셀 블록 크기 (클수록 도트가 굵어짐)
+let _bgCanvas = null;
+let bctx = null;
+
+function _ensureBgCanvas() {
+    const w = Math.max(1, Math.ceil(canvas.width / BG_PIXEL));
+    const h = Math.max(1, Math.ceil(canvas.height / BG_PIXEL));
+    if (!_bgCanvas || _bgCanvas.width !== w || _bgCanvas.height !== h) {
+        _bgCanvas = document.createElement('canvas');
+        _bgCanvas.width = w;
+        _bgCanvas.height = h;
+        bctx = _bgCanvas.getContext('2d');
+    }
+}
+
+// 메인 배경 그리기 함수 (도트화 버전)
 function drawBackground() {
+    _ensureBgCanvas();
+    bctx.save();
+    bctx.scale(1 / BG_PIXEL, 1 / BG_PIXEL);
+    _drawBackgroundScene();
+    bctx.restore();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(_bgCanvas, 0, 0, canvas.width, canvas.height);
+}
+
+function _drawBackgroundScene() {
     // 시간에 따른 하늘 색상 변화 (낮/노을/밤 느낌)
     const timePhase = (gameState.distance / 1000) % 3;
     let skyColors;
@@ -17,12 +44,12 @@ function drawBackground() {
         skyColors = ['#2F1B69', '#4B0082', '#6A0DAD'];
     }
     
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    const gradient = bctx.createLinearGradient(0, 0, 0, canvas.height);
     gradient.addColorStop(0, skyColors[0]);
     gradient.addColorStop(0.7, skyColors[1]);
     gradient.addColorStop(1, skyColors[2]);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    bctx.fillStyle = gradient;
+    bctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // 별과 달 (밤 시간대)
     if (timePhase >= 2) {
@@ -57,7 +84,7 @@ function drawBackground() {
 
 // 별들 그리기
 function drawStars() {
-    ctx.fillStyle = '#FFFF99';
+    bctx.fillStyle = '#FFFF99';
     for (let i = 0; i < 50; i++) {
         const x = (i * 137 + gameState.distance * 0.1) % canvas.width;
         const y = (i * 71) % (canvas.height * 0.6);
@@ -65,13 +92,13 @@ function drawStars() {
         
         // 반짝이는 효과
         const twinkle = Math.sin(gameState.distance * 0.05 + i) * 0.5 + 0.5;
-        ctx.globalAlpha = twinkle;
+        bctx.globalAlpha = twinkle;
         
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
+        bctx.beginPath();
+        bctx.arc(x, y, size, 0, Math.PI * 2);
+        bctx.fill();
     }
-    ctx.globalAlpha = 1;
+    bctx.globalAlpha = 1;
 }
 
 // 달 그리기
@@ -80,25 +107,25 @@ function drawMoon() {
     const moonY = 60;
     
     // 달 뒤 후광
-    const moonGlow = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 80);
+    const moonGlow = bctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 80);
     moonGlow.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
     moonGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = moonGlow;
-    ctx.fillRect(moonX - 80, moonY - 80, 160, 160);
+    bctx.fillStyle = moonGlow;
+    bctx.fillRect(moonX - 80, moonY - 80, 160, 160);
     
     // 달 본체
-    ctx.fillStyle = '#F5F5DC';
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, 35, 0, Math.PI * 2);
-    ctx.fill();
+    bctx.fillStyle = '#F5F5DC';
+    bctx.beginPath();
+    bctx.arc(moonX, moonY, 35, 0, Math.PI * 2);
+    bctx.fill();
     
     // 달 크레이터
-    ctx.fillStyle = '#E6E6FA';
-    ctx.beginPath();
-    ctx.arc(moonX - 10, moonY - 5, 8, 0, Math.PI * 2);
-    ctx.arc(moonX + 8, moonY + 10, 5, 0, Math.PI * 2);
-    ctx.arc(moonX - 5, moonY + 15, 4, 0, Math.PI * 2);
-    ctx.fill();
+    bctx.fillStyle = '#E6E6FA';
+    bctx.beginPath();
+    bctx.arc(moonX - 10, moonY - 5, 8, 0, Math.PI * 2);
+    bctx.arc(moonX + 8, moonY + 10, 5, 0, Math.PI * 2);
+    bctx.arc(moonX - 5, moonY + 15, 4, 0, Math.PI * 2);
+    bctx.fill();
 }
 
 // 태양 그리기 (시간대별)
@@ -113,28 +140,28 @@ function drawSun(timePhase) {
     }
     
     // 태양 후광
-    const sunGlow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 100);
+    const sunGlow = bctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 100);
     sunGlow.addColorStop(0, sunColor + '80');
     sunGlow.addColorStop(1, sunColor + '00');
-    ctx.fillStyle = sunGlow;
-    ctx.fillRect(sunX - 100, sunY - 100, 200, 200);
+    bctx.fillStyle = sunGlow;
+    bctx.fillRect(sunX - 100, sunY - 100, 200, 200);
     
     // 태양 본체
-    ctx.fillStyle = sunColor;
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, 40, 0, Math.PI * 2);
-    ctx.fill();
+    bctx.fillStyle = sunColor;
+    bctx.beginPath();
+    bctx.arc(sunX, sunY, 40, 0, Math.PI * 2);
+    bctx.fill();
     
     // 태양 광선
-    ctx.strokeStyle = sunColor;
-    ctx.lineWidth = 4;
+    bctx.strokeStyle = sunColor;
+    bctx.lineWidth = 4;
     for (let i = 0; i < 12; i++) {
         const angle = (i * Math.PI * 2) / 12 + gameState.distance * 0.01;
         const length = 50 + Math.sin(gameState.distance * 0.1 + i) * 10;
-        ctx.beginPath();
-        ctx.moveTo(sunX + Math.cos(angle) * 50, sunY + Math.sin(angle) * 50);
-        ctx.lineTo(sunX + Math.cos(angle) * length, sunY + Math.sin(angle) * length);
-        ctx.stroke();
+        bctx.beginPath();
+        bctx.moveTo(sunX + Math.cos(angle) * 50, sunY + Math.sin(angle) * 50);
+        bctx.lineTo(sunX + Math.cos(angle) * length, sunY + Math.sin(angle) * length);
+        bctx.stroke();
     }
 }
 
@@ -160,7 +187,7 @@ function drawClouds() {
 function drawDetailedCloud(x, y, size, opacity) {
     if (x < -200 || x > canvas.width + 200) return;
     
-    ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+    bctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
     
     // 구름의 여러 원들로 자연스러운 모양 만들기
     const circles = [
@@ -171,19 +198,19 @@ function drawDetailedCloud(x, y, size, opacity) {
         {offsetX: 60 * size, offsetY: -10 * size, radius: 18 * size}
     ];
     
-    ctx.beginPath();
+    bctx.beginPath();
     circles.forEach(circle => {
-        ctx.arc(x + circle.offsetX, y + circle.offsetY, circle.radius, 0, Math.PI * 2);
+        bctx.arc(x + circle.offsetX, y + circle.offsetY, circle.radius, 0, Math.PI * 2);
     });
-    ctx.fill();
+    bctx.fill();
     
     // 구름 그림자
-    ctx.fillStyle = `rgba(200, 200, 200, ${opacity * 0.3})`;
-    ctx.beginPath();
+    bctx.fillStyle = `rgba(200, 200, 200, ${opacity * 0.3})`;
+    bctx.beginPath();
     circles.forEach(circle => {
-        ctx.arc(x + circle.offsetX + 5, y + circle.offsetY + 5, circle.radius * 0.9, 0, Math.PI * 2);
+        bctx.arc(x + circle.offsetX + 5, y + circle.offsetY + 5, circle.radius * 0.9, 0, Math.PI * 2);
     });
-    ctx.fill();
+    bctx.fill();
 }
 
 // 무지개 그리기
@@ -195,22 +222,22 @@ function drawRainbow() {
         '#0000FF', '#4B0082', '#9400D3'
     ];
     
-    ctx.globalAlpha = 0.6;
+    bctx.globalAlpha = 0.6;
     rainbowColors.forEach((color, index) => {
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 200 - index * 12, Math.PI, 0);
-        ctx.stroke();
+        bctx.strokeStyle = color;
+        bctx.lineWidth = 8;
+        bctx.beginPath();
+        bctx.arc(centerX, centerY, 200 - index * 12, Math.PI, 0);
+        bctx.stroke();
     });
-    ctx.globalAlpha = 1;
+    bctx.globalAlpha = 1;
 }
 
 // 산맥 레이어들 그리기
 function drawMountainLayers() {
     // 가장 먼 산맥들 (보라색 계열)
     const farOffset = (gameState.backgroundOffset * 0.1) % (canvas.width + 600);
-    ctx.fillStyle = '#9370DB';
+    bctx.fillStyle = '#9370DB';
     for (let i = 0; i < 3; i++) {
         const xPos = i * (canvas.width + 600) - farOffset;
         drawMountainRange(xPos, GROUND_Y - 180, 8, 150);
@@ -218,7 +245,7 @@ function drawMountainLayers() {
     
     // 중간 산맥들 (파란색 계열)
     const midOffset = (gameState.backgroundOffset * 0.2) % (canvas.width + 500);
-    ctx.fillStyle = '#4682B4';
+    bctx.fillStyle = '#4682B4';
     for (let i = 0; i < 3; i++) {
         const xPos = i * (canvas.width + 500) - midOffset;
         drawMountainRange(xPos, GROUND_Y - 130, 6, 120);
@@ -226,7 +253,7 @@ function drawMountainLayers() {
     
     // 가까운 산맥들 (초록색 계열)
     const nearOffset = (gameState.backgroundOffset * 0.3) % (canvas.width + 400);
-    ctx.fillStyle = '#228B22';
+    bctx.fillStyle = '#228B22';
     for (let i = 0; i < 3; i++) {
         const xPos = i * (canvas.width + 400) - nearOffset;
         drawMountainRange(xPos, GROUND_Y - 80, 5, 100);
@@ -235,18 +262,18 @@ function drawMountainLayers() {
 
 // 산맥 그리기
 function drawMountainRange(startX, baseY, count, maxHeight) {
-    ctx.beginPath();
-    ctx.moveTo(startX, baseY);
+    bctx.beginPath();
+    bctx.moveTo(startX, baseY);
     
     for (let i = 0; i <= count; i++) {
         const x = startX + (i * (canvas.width + 200)) / count;
         const height = maxHeight * (0.5 + Math.sin(i * 0.7) * 0.5);
-        ctx.lineTo(x, baseY - height);
+        bctx.lineTo(x, baseY - height);
     }
     
-    ctx.lineTo(startX + canvas.width + 200, baseY);
-    ctx.closePath();
-    ctx.fill();
+    bctx.lineTo(startX + canvas.width + 200, baseY);
+    bctx.closePath();
+    bctx.fill();
 }
 
 // 식물들 그리기
@@ -274,28 +301,28 @@ function drawTree(x, y, type, size) {
     const trunkWidth = 12 * size;
     
     // 나무 기둥
-    ctx.fillStyle = '#8B4513';
-    ctx.fillRect(x - trunkWidth/2, y - trunkHeight, trunkWidth, trunkHeight);
+    bctx.fillStyle = '#8B4513';
+    bctx.fillRect(x - trunkWidth/2, y - trunkHeight, trunkWidth, trunkHeight);
     
     // 나무 잎사귀
-    ctx.fillStyle = '#228B22';
+    bctx.fillStyle = '#228B22';
     if (type === 'pine') {
         // 소나무 모양
         for (let i = 0; i < 3; i++) {
             const leafY = y - trunkHeight + i * 15 * size;
             const leafSize = (35 - i * 5) * size;
-            ctx.beginPath();
-            ctx.moveTo(x, leafY - leafSize);
-            ctx.lineTo(x - leafSize/2, leafY);
-            ctx.lineTo(x + leafSize/2, leafY);
-            ctx.closePath();
-            ctx.fill();
+            bctx.beginPath();
+            bctx.moveTo(x, leafY - leafSize);
+            bctx.lineTo(x - leafSize/2, leafY);
+            bctx.lineTo(x + leafSize/2, leafY);
+            bctx.closePath();
+            bctx.fill();
         }
     } else {
         // 둥근 나무
-        ctx.beginPath();
-        ctx.arc(x, y - trunkHeight, 35 * size, 0, Math.PI * 2);
-        ctx.fill();
+        bctx.beginPath();
+        bctx.arc(x, y - trunkHeight, 35 * size, 0, Math.PI * 2);
+        bctx.fill();
     }
 }
 
@@ -304,21 +331,21 @@ function drawFlowerField() {
     const flowerOffset = (gameState.backgroundOffset * 0.7) % (canvas.width + 300);
     
     // 잔디
-    ctx.fillStyle = '#228B22';
+    bctx.fillStyle = '#228B22';
     for (let i = 0; i < 50; i++) {
         const x = (i * 30 - flowerOffset) % (canvas.width + 100);
         if (x > -50 && x < canvas.width + 50) {
-            ctx.strokeStyle = '#228B22';
-            ctx.lineWidth = 2;
+            bctx.strokeStyle = '#228B22';
+            bctx.lineWidth = 2;
             for (let j = 0; j < 3; j++) {
                 // 시드 기반 결정적 랜덤 (기존 Math.random()은 매 프레임 잔디가 떨리는 문제)
                 const seed = i * 7 + j * 13;
                 const tipX = ((seed * 31) % 5) - 2;      // -2 ~ 2
                 const tipY = 3 + ((seed * 17) % 6);      // 3 ~ 8
-                ctx.beginPath();
-                ctx.moveTo(x + j * 3, GROUND_Y + 5);
-                ctx.lineTo(x + j * 3 + tipX, GROUND_Y - tipY);
-                ctx.stroke();
+                bctx.beginPath();
+                bctx.moveTo(x + j * 3, GROUND_Y + 5);
+                bctx.lineTo(x + j * 3 + tipX, GROUND_Y - tipY);
+                bctx.stroke();
             }
         }
     }
@@ -336,18 +363,18 @@ function drawFlowerField() {
         const x = flower.x - flowerOffset;
         if (x > -50 && x < canvas.width + 50) {
             // 꽃 줄기
-            ctx.strokeStyle = '#228B22';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(x, GROUND_Y + 10);
-            ctx.lineTo(x, GROUND_Y - 15);
-            ctx.stroke();
+            bctx.strokeStyle = '#228B22';
+            bctx.lineWidth = 3;
+            bctx.beginPath();
+            bctx.moveTo(x, GROUND_Y + 10);
+            bctx.lineTo(x, GROUND_Y - 15);
+            bctx.stroke();
             
             // 꽃잎
-            ctx.fillStyle = flower.color;
-            ctx.beginPath();
-            ctx.arc(x, GROUND_Y - 15, 8, 0, Math.PI * 2);
-            ctx.fill();
+            bctx.fillStyle = flower.color;
+            bctx.beginPath();
+            bctx.arc(x, GROUND_Y - 15, 8, 0, Math.PI * 2);
+            bctx.fill();
         }
     });
 }
@@ -366,13 +393,13 @@ function drawFlyingElements() {
         const x = bird.x - birdOffset;
         if (x > -50 && x < canvas.width + 50) {
             const wingFlap = Math.sin(gameState.distance * 0.2) * 5;
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(x - 15, bird.y + wingFlap);
-            ctx.lineTo(x, bird.y - 8);
-            ctx.lineTo(x + 15, bird.y + wingFlap);
-            ctx.stroke();
+            bctx.strokeStyle = '#000';
+            bctx.lineWidth = 2;
+            bctx.beginPath();
+            bctx.moveTo(x - 15, bird.y + wingFlap);
+            bctx.lineTo(x, bird.y - 8);
+            bctx.lineTo(x + 15, bird.y + wingFlap);
+            bctx.stroke();
         }
     });
 }
@@ -388,17 +415,17 @@ function drawMagicalParticles() {
             const colors = ['#FFD700', '#FF69B4', '#87CEEB', '#98FB98', '#DDA0DD'];
             const color = colors[i % colors.length];
             
-            ctx.fillStyle = color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
-            ctx.beginPath();
-            ctx.arc(x, y, 3 + Math.sin(gameState.distance * 0.08 + i) * 2, 0, Math.PI * 2);
-            ctx.fill();
+            bctx.fillStyle = color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+            bctx.beginPath();
+            bctx.arc(x, y, 3 + Math.sin(gameState.distance * 0.08 + i) * 2, 0, Math.PI * 2);
+            bctx.fill();
             
             // 반짝이는 효과 (입자별 위상 기반 - 기존 Math.random()은 무작위로 깜빡였음)
             if (Math.sin(gameState.distance * 0.1 + i * 2.4) > 0.9) {
-                ctx.fillStyle = '#FFFFFF';
-                ctx.beginPath();
-                ctx.arc(x, y, 1, 0, Math.PI * 2);
-                ctx.fill();
+                bctx.fillStyle = '#FFFFFF';
+                bctx.beginPath();
+                bctx.arc(x, y, 1, 0, Math.PI * 2);
+                bctx.fill();
             }
         }
     }
@@ -408,19 +435,19 @@ function drawMagicalParticles() {
 function drawSimpleClouds() {
     const cloudOffset = (gameState.backgroundOffset * 0.3) % (canvas.width + 200);
     
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    bctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     for (let i = 0; i < 5; i++) {
         const x = (i * 200) - cloudOffset;
         const y = 50 + Math.sin(i) * 20;
         
         if (x > -100 && x < canvas.width + 100) {
             // 구름 모양
-            ctx.beginPath();
-            ctx.arc(x, y, 25, 0, Math.PI * 2);
-            ctx.arc(x + 25, y, 35, 0, Math.PI * 2);
-            ctx.arc(x + 50, y, 25, 0, Math.PI * 2);
-            ctx.arc(x + 25, y - 15, 20, 0, Math.PI * 2);
-            ctx.fill();
+            bctx.beginPath();
+            bctx.arc(x, y, 25, 0, Math.PI * 2);
+            bctx.arc(x + 25, y, 35, 0, Math.PI * 2);
+            bctx.arc(x + 50, y, 25, 0, Math.PI * 2);
+            bctx.arc(x + 25, y - 15, 20, 0, Math.PI * 2);
+            bctx.fill();
         }
     }
 }
