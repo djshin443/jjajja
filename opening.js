@@ -13,21 +13,42 @@ function createPixelTextCanvas(text, opts = {}) {
     const font = `${fontPx}px 'DungGeunMo', 'Jua', sans-serif`;
     let cx = c.getContext('2d');
     cx.font = font;
-    c.width = Math.ceil(cx.measureText(text).width) + fontPx;
-    c.height = Math.ceil(fontPx * 1.7);
+
+    // 자동 줄바꿈: wrapPx(캔버스 픽셀 기준)보다 길면 공백 단위로 나눔
+    let lines = [text];
+    if (opts.wrapPx && cx.measureText(text).width > opts.wrapPx) {
+        lines = [];
+        let line = '';
+        for (const word of text.split(' ')) {
+            const test = line ? line + ' ' + word : word;
+            if (cx.measureText(test).width > opts.wrapPx && line) {
+                lines.push(line);
+                line = word;
+            } else {
+                line = test;
+            }
+        }
+        if (line) lines.push(line);
+    }
+    const lineH = Math.ceil(fontPx * 1.4);
+    c.width = Math.ceil(Math.max(...lines.map(l => cx.measureText(l).width))) + fontPx;
+    c.height = lineH * lines.length + Math.ceil(fontPx * 0.4);
     cx = c.getContext('2d');   // 크기 변경 후 컨텍스트 상태 초기화됨
     cx.font = font;
     cx.textAlign = 'center';
     cx.textBaseline = 'middle';
-    const x = c.width / 2, y = Math.floor(c.height / 2);
-    cx.fillStyle = shadow;                       // 계단형 그림자
-    cx.fillText(text, x + 2, y + 2);
-    cx.fillStyle = outline;                      // 8방향 외곽선
-    for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]]) {
-        cx.fillText(text, x + dx, y + dy);
-    }
-    cx.fillStyle = color;
-    cx.fillText(text, x, y);
+    const x = c.width / 2;
+    lines.forEach((ln, i) => {
+        const y = Math.floor(lineH * (i + 0.5)) + Math.floor(fontPx * 0.2);
+        cx.fillStyle = shadow;                   // 계단형 그림자
+        cx.fillText(ln, x + 2, y + 2);
+        cx.fillStyle = outline;                  // 8방향 외곽선
+        for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]]) {
+            cx.fillText(ln, x + dx, y + dy);
+        }
+        cx.fillStyle = color;
+        cx.fillText(ln, x, y);
+    });
     c.style.width = (c.width * scale) + 'px';
     c.style.height = 'auto';
     c.style.maxWidth = '92vw';
@@ -35,6 +56,25 @@ function createPixelTextCanvas(text, opts = {}) {
     c.style.display = 'block';
     c.style.margin = '0 auto';
     return c;
+}
+
+// 엘리먼트의 내용을 도트 텍스트 캔버스로 교체하는 공용 헬퍼
+function setPixelText(el, text, opts = {}) {
+    if (!el) return;
+    if (typeof createPixelTextCanvas !== 'function') {
+        el.textContent = text;
+        return;
+    }
+    el.innerHTML = '';
+    const c = createPixelTextCanvas(text, opts);
+    c.style.pointerEvents = 'none';
+    c.style.maxWidth = '100%';
+    if (opts.inline) {
+        c.style.display = 'inline-block';
+        c.style.verticalAlign = 'middle';
+        c.style.margin = '0';
+    }
+    el.appendChild(c);
 }
 
 function showTitleScreen() {

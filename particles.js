@@ -67,7 +67,14 @@ function showFloatingText(x, y, text, color, size = 16) {
         alpha: 1.0,
         size: size
     };
-    
+    // 도트화: 생성 시점에 저해상 캔버스로 구워두고 렌더링은 drawImage로
+    if (typeof createPixelTextCanvas === 'function') {
+        textParticle.baked = createPixelTextCanvas(text, {
+            fontPx: Math.max(9, Math.round(size * 0.6)), scale: 2,
+            color: color, outline: 'rgba(0,0,0,0.7)', shadow: 'rgba(0,0,0,0)'
+        });
+    }
+
     window.textParticles.push(textParticle);
 }
 
@@ -83,17 +90,21 @@ function updateTextParticles(ctx) {
         if (particle.life > 0) {
             ctx.save();
             ctx.globalAlpha = particle.alpha;
-            ctx.fillStyle = particle.color;
-            ctx.font = `bold ${particle.size}px DungGeunMo, Jua`;
-            ctx.textAlign = 'center';
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 1;
-            
-            // 텍스트 외곽선
-            ctx.strokeText(particle.text, particle.x, particle.y);
-            // 텍스트 본체
-            ctx.fillText(particle.text, particle.x, particle.y);
-            
+            if (particle.baked) {
+                // 구워둔 도트 텍스트를 2배 확대해 표시
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(particle.baked,
+                    particle.x - particle.baked.width, particle.y - particle.baked.height,
+                    particle.baked.width * 2, particle.baked.height * 2);
+            } else {
+                ctx.fillStyle = particle.color;
+                ctx.font = `bold ${particle.size}px DungGeunMo, Jua`;
+                ctx.textAlign = 'center';
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 1;
+                ctx.strokeText(particle.text, particle.x, particle.y);
+                ctx.fillText(particle.text, particle.x, particle.y);
+            }
             ctx.restore();
         }
         

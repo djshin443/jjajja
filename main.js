@@ -306,7 +306,7 @@ function createDialogueBox(onComplete) {
     
     // 스킵 버튼
     const skipButton = document.createElement('button');
-    skipButton.textContent = '스킵';
+    setPixelText(skipButton, '스킵', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
     skipButton.style.cssText = `
         background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
         border: 2px solid #FFF;
@@ -331,7 +331,7 @@ function createDialogueBox(onComplete) {
     // 자동재생 토글 버튼
     const autoButton = document.createElement('button');
     autoButton.id = 'autoButton';
-    autoButton.textContent = '자동';
+    setPixelText(autoButton, '자동', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
     autoButton.style.cssText = `
         background: linear-gradient(135deg, #4ECDC4, #7FDDDD);
         border: 2px solid #FFF;
@@ -349,7 +349,7 @@ function createDialogueBox(onComplete) {
     // 다음/완료 버튼
     const nextButton = document.createElement('button');
     nextButton.id = 'nextButton';
-    nextButton.textContent = '다음';
+    setPixelText(nextButton, '다음', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
     nextButton.style.cssText = `
         background: linear-gradient(135deg, #32CD32, #90EE90);
         border: 3px solid #FFF;
@@ -436,18 +436,18 @@ function showNextDialogue() {
     
     // 캐릭터 이름 업데이트
     const characterNameLabel = document.getElementById('characterNameLabel');
-    characterNameLabel.textContent = charInfo.name;
+    setPixelText(characterNameLabel, charInfo.name, { fontPx: 11, scale: 2, color: '#9932CC', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', inline: true });
     
     // 화자 이름과 대화 텍스트 업데이트
-    document.getElementById('speakerName').textContent = charInfo.name;
-    document.getElementById('dialogueText').textContent = dialogue.text;
+    setPixelText(document.getElementById('speakerName'), charInfo.name, { fontPx: 12, scale: 2, color: '#9932CC', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', inline: true });
+    setPixelText(document.getElementById('dialogueText'), dialogue.text, { fontPx: 12, scale: 2, color: '#4A2C6E', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', wrapPx: 220 });
     
     // 버튼 텍스트 업데이트
     const nextButton = document.getElementById('nextButton');
     if (currentDialogueIndex >= currentDialogue.length - 1) {
-        nextButton.textContent = '완료';
+        setPixelText(nextButton, '완료', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
     } else {
-        nextButton.textContent = '다음';
+        setPixelText(nextButton, '다음', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
     }
 }
 
@@ -477,7 +477,7 @@ function toggleAutoPlay() {
         // 자동재생 중지
         clearInterval(autoPlayInterval);
         autoPlayInterval = null;
-        autoButton.textContent = '자동';
+        setPixelText(autoButton, '자동', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
         autoButton.style.background = 'linear-gradient(135deg, #4ECDC4, #7FDDDD)';
     } else {
         // 자동재생 시작
@@ -488,7 +488,7 @@ function toggleAutoPlay() {
             }
         }, 2500); // 2.5초마다 자동 진행
         
-        autoButton.textContent = '정지';
+        setPixelText(autoButton, '정지', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
         autoButton.style.background = 'linear-gradient(135deg, #FF6B6B, #FF8E8E)';
     }
 }
@@ -730,7 +730,7 @@ function toggleFullscreen() {
         
         isFullscreenDesired = true;
         isUserExiting = false;
-        document.getElementById('fullscreenBtn').textContent = 'EXIT';
+        setPixelText(document.getElementById('fullscreenBtn'), 'EXIT', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
     } else {
         // 사용자가 명시적으로 전체화면 해제
         isUserExiting = true;
@@ -746,7 +746,7 @@ function toggleFullscreen() {
             document.msExitFullscreen();
         }
         
-        document.getElementById('fullscreenBtn').textContent = 'FULL';
+        setPixelText(document.getElementById('fullscreenBtn'), 'FULL', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
     }
 }
 
@@ -843,7 +843,7 @@ function checkIOSFullscreen() {
     if (isIOS && !isStandalone) {
         const fullscreenBtn = document.getElementById('fullscreenBtn');
         if (fullscreenBtn) {
-            fullscreenBtn.textContent = '🏠 추가';
+            setPixelText(fullscreenBtn, '🏠 추가', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
         }
     }
 }
@@ -1422,9 +1422,12 @@ function updateAnimations() {
 
 // UI 업데이트
 function updateUI() {
-    document.getElementById('score').textContent = gameState.score;
-    document.getElementById('stageText').textContent = gameState.stage;
-    document.getElementById('hp').textContent = Math.max(0, player.hp);
+    // 상단 UI 4칸을 도트 텍스트로 갱신 (이벤트 시점에만 호출되므로 부담 없음)
+    const o = { fontPx: 11, scale: 2, color: '#FFFFFF', outline: '#6B3AA0', shadow: 'rgba(0,0,0,0)', inline: true };
+    setPixelText(document.getElementById('uiUnit'), `📚 ${gameState.unitDisplay || '-'}`, o);
+    setPixelText(document.getElementById('uiStage'), `🏰 스테이지 ${gameState.stage}`, o);
+    setPixelText(document.getElementById('uiScore'), `⭐ ${gameState.score}점`, o);
+    setPixelText(document.getElementById('uiHp'), `💖 체력: ${Math.max(0, player.hp)}`, o);
 }
 
 // 렌더링
@@ -1562,15 +1565,19 @@ function render() {
         renderAllParticles(ctx);
     }
     
-    // 게임 상태 메시지
+    // 게임 상태 메시지 (도트 텍스트를 한 번만 구워 재사용)
     if (!gameState.isMoving && !gameState.questionActive) {
-        ctx.fillStyle = 'rgba(255, 255, 0, 0.8)';
-        ctx.font = 'bold 18px DungGeunMo, Jua';
-        ctx.textAlign = 'center';
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.strokeText('점프로 장애물을 뛰어넘으세요!', canvas.width / 2, 50);
-        ctx.fillText('점프로 장애물을 뛰어넘으세요!', canvas.width / 2, 50);
+        if (!window._guideBaked && typeof createPixelTextCanvas === 'function') {
+            window._guideBaked = createPixelTextCanvas('점프로 장애물을 뛰어넘으세요!', {
+                fontPx: 12, scale: 2, color: '#FFE94A', outline: '#000000', shadow: 'rgba(0,0,0,0)'
+            });
+        }
+        if (window._guideBaked) {
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(window._guideBaked,
+                (canvas.width - window._guideBaked.width * 2) / 2, 72,
+                window._guideBaked.width * 2, window._guideBaked.height * 2);
+        }
     }
     
     ctx.restore();
@@ -1632,9 +1639,17 @@ function updateQuestionPanel() {
         posHint = q.wordInfo.pos.split('').map(c => posNames[c] || c).join('·');
     }
     const badge = q.isReview ? '📝 복습! ' : '✨ ';
-    document.getElementById('questionText').innerHTML =
-        `${badge}${q.question}` +
-        (posHint ? `<div style="font-size:14px;color:#9370DB;margin-top:6px;">💡 품사 힌트: ${posHint}</div>` : '');
+    const qEl = document.getElementById('questionText');
+    qEl.innerHTML = '';
+    qEl.appendChild(createPixelTextCanvas(`${badge}${q.question}`, {
+        fontPx: 20, scale: 2, color: '#9932CC', outline: '#FFFFFF', shadow: 'rgba(0,0,0,0.15)'
+    }));
+    if (posHint) {
+        qEl.appendChild(createPixelTextCanvas(`💡 품사 힌트: ${posHint}`, {
+            fontPx: 10, scale: 2, color: '#9370DB', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)'
+        }));
+    }
+    qEl.querySelectorAll('canvas').forEach(c => { c.style.maxWidth = '100%'; });
     
     // 적 정보 표시
 	if (gameState.currentEnemy) {
@@ -1648,8 +1663,9 @@ function updateQuestionPanel() {
 			enemyName = '👹 몬스터';
 		}
 		
-		document.getElementById('enemyInfo').textContent = 
-			`${enemyName} 체력: ${gameState.currentEnemy.hp}/${gameState.currentEnemy.maxHp}`;
+		setPixelText(document.getElementById('enemyInfo'),
+			`${enemyName} 체력: ${gameState.currentEnemy.hp}/${gameState.currentEnemy.maxHp}`,
+			{ fontPx: 10, scale: 2, color: '#9370DB', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', inline: true });
 	}
     
     // 4지선다 버튼 생성
@@ -1666,7 +1682,10 @@ function updateChoiceButtons() {
     gameState.currentQuestion.choices.forEach((choice, index) => {
         const button = document.createElement('button');
         button.className = 'choice-btn';
-        button.textContent = `(${index + 1}) ${choice}`;
+        setPixelText(button, `(${index + 1}) ${choice}`, {
+            fontPx: 11, scale: 2, color: '#9932CC',
+            outline: 'rgba(255,255,255,0.85)', shadow: 'rgba(0,0,0,0)', wrapPx: 150
+        });
         button.setAttribute('data-choice', index);
         button.onclick = () => selectChoice(index);
         choicesContainer.appendChild(button);
@@ -1825,19 +1844,21 @@ function updateSelectedDisplay() {
     const selectedUnitsElement = document.getElementById('selectedUnits');
     const startButton = document.getElementById('startGameBtn');
     
+    let unitMsg;
     if (gameState.selectedUnits.length > 0) {
         const sortedUnits = gameState.selectedUnits.sort();
-        selectedUnitsElement.textContent = `💕 선택한 Unit: ${sortedUnits.join(', ')}`;
-    } else {
-        selectedUnitsElement.textContent = '💕 선택한 Unit: 없음';
-    }
-    
-    if (wordManager && gameState.selectedUnits.length > 0) {
-        const wordCount = wordManager.getWordCountFromSelection(gameState.selectedUnits);
-        if (wordCount > 0) {
-            selectedUnitsElement.textContent += ` (총 ${wordCount}개 단어)`;
+        unitMsg = `💕 선택한 Unit: ${sortedUnits.join(', ')}`;
+        if (wordManager) {
+            const wordCount = wordManager.getWordCountFromSelection(gameState.selectedUnits);
+            if (wordCount > 0) {
+                unitMsg += ` (총 ${wordCount}개 단어)`;
+            }
         }
+    } else {
+        unitMsg = '💕 선택한 Unit: 없음';
     }
+    setPixelText(selectedUnitsElement, unitMsg,
+        { fontPx: 10, scale: 2, color: '#9932CC', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', wrapPx: 260 });
     
     startButton.disabled = gameState.selectedUnits.length === 0;
 }
@@ -1854,7 +1875,8 @@ function startSelectedGame() {
     document.getElementById('ui').style.display = 'block';
     
     const displayText = gameState.selectedUnits.join(', ');
-    document.getElementById('unitText').textContent = displayText;
+    gameState.unitDisplay = displayText;
+    updateUI();
     
     // 게임 시작 시 전체화면 모드 자동 활성화 (사용자가 이미 해제하지 않은 경우)
     if (!isUserExiting && !document.fullscreenElement && 
@@ -1915,7 +1937,7 @@ function updateSelectedCharacterDisplay() {
             'kiwi': '키위',
             'whitehouse': '화이트하우스'
         };
-        selectedCharacterName.textContent = characterNames[gameState.selectedCharacter] || '지율이';
+        setPixelText(selectedCharacterName, characterNames[gameState.selectedCharacter] || '지율이', { fontPx: 11, scale: 2, color: '#9932CC', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', inline: true });
     }
 }
 
@@ -2050,11 +2072,11 @@ function handleFullscreenChange() {
     
     if (isCurrentlyFullscreen) {
         // 전체화면 진입 성공
-        document.getElementById('fullscreenBtn').textContent = 'EXIT';
+        setPixelText(document.getElementById('fullscreenBtn'), 'EXIT', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
         isUserExiting = false;
     } else {
         // 전체화면 해제됨
-        document.getElementById('fullscreenBtn').textContent = 'FULL';
+        setPixelText(document.getElementById('fullscreenBtn'), 'FULL', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
         
         // 사용자가 원하는 상태이고, 명시적으로 해제한 것이 아니라면 복구 시도
         if (isFullscreenDesired && !isUserExiting) {

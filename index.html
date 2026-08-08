@@ -939,11 +939,11 @@
         </div>
 
         <div id="ui">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>📚 <span id="unitText">-</span></div>
-                <div>🏰 스테이지 <span id="stageText">1</span></div>
-                <div>⭐ <span id="score">0</span>점</div>
-                <div>💖 체력: <span id="hp">100</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div id="uiUnit"></div>
+                <div id="uiStage"></div>
+                <div id="uiScore"></div>
+                <div id="uiHp"></div>
             </div>
         </div>
 
@@ -1028,10 +1028,39 @@
                 }));
             }
         }
+        // 정적 UI(버튼·카드 제목·유닛 버튼 등)를 도트 텍스트로 일괄 변환
+        function pixelateStaticUI() {
+            if (typeof createPixelTextCanvas !== 'function') return;
+            const targets = document.querySelectorAll(
+                '.card-title, .unit-btn, .character-btn > span, .vehicle-btn, ' +
+                '#nextToUnitBtn, #backToCharacterBtn, #startGameBtn, ' +
+                '#jumpBtn, #menuBtn, #helpBtn, #fullscreenBtn'
+            );
+            // 배경이 짙은 버튼은 흰 글자+어두운 외곽선을 강제
+            const lightText = { jumpBtn: 1, startGameBtn: 1, nextToUnitBtn: 1, fullscreenBtn: 1 };
+            targets.forEach(el => {
+                const text = (el.dataset.pixelSrc || el.textContent).trim();
+                if (!text) return;
+                el.dataset.pixelSrc = text;
+                const small = el.classList.contains('unit-btn') || el.tagName === 'SPAN';
+                const light = lightText[el.id];
+                setPixelText(el, text, {
+                    fontPx: small ? 10 : 12,
+                    scale: 2,
+                    color: light ? '#FFFFFF' : (getComputedStyle(el).color || '#6B3AA0'),
+                    outline: light ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.85)',
+                    shadow: 'rgba(0,0,0,0)'
+                });
+            });
+        }
         window.addEventListener('load', () => {
             pixelateMenuTitles();
+            pixelateStaticUI();
             if (document.fonts && document.fonts.ready) {
-                document.fonts.ready.then(pixelateMenuTitles);
+                document.fonts.ready.then(() => {
+                    pixelateMenuTitles();
+                    pixelateStaticUI();
+                });
             }
         });
 
@@ -1063,7 +1092,8 @@
             const greetingElement = document.getElementById('characterGreeting');
             if (greetingElement) {
                 if (characterGreetings[characterName]) {
-                    greetingElement.textContent = characterGreetings[characterName];
+                    setPixelText(greetingElement, characterGreetings[characterName],
+                        { fontPx: 10, scale: 2, color: '#6B3AA0', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', wrapPx: 280 });
                 } else {
                     greetingElement.textContent = '안녕하세요! 함께 영어 공부해볼까요? 💜';
                 }
