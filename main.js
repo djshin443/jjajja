@@ -1077,8 +1077,8 @@ function update() {
 			y: GROUND_Y - (16 * PIXEL_SCALE),
 			width: 16 * PIXEL_SCALE,
 			height: 16 * PIXEL_SCALE,
-			hp: 3,
-			maxHp: 3,
+			hp: 5,
+			maxHp: 5,
 			type: 'boss',
 			alive: true,
 			animFrame: 0,
@@ -1657,8 +1657,10 @@ function generateEnglishQuestion() {
         return;
     }
 
-    // 오답 노트 복습 출제: 평소 30%, 복습 스테이지(9+)에선 50% 확률
-    const reviewChance = gameState.stage > ALL_UNITS.length ? 0.5 : 0.3;
+    // 오답 노트 복습 출제: 평소 30%, 복습 스테이지(9+) 50%, 보스전은 70%로 총정리
+    const isBossBattle = !!(gameState.currentEnemy && gameState.currentEnemy.isBoss);
+    const reviewChance = isBossBattle ? 0.7
+        : (gameState.stage > ALL_UNITS.length ? 0.5 : 0.3);
     if (gameStats.wrongWords.length > 0 && Math.random() < reviewChance &&
         typeof wordManager.generateMultipleChoiceFor === 'function') {
         const reviewWord = gameStats.wrongWords[Math.floor(Math.random() * gameStats.wrongWords.length)];
@@ -1853,8 +1855,8 @@ function selectChoice(choiceIndex) {
                     showFloatingText(player.x, player.y - 50, '완료!', '#00FF00');
                 }
             } else {
-				// 보스전 중간대사 (체력이 2가 될 때)
-				if (gameState.currentEnemy.type === 'boss' && gameState.currentEnemy.hp === 2) {
+				// 보스전 중간대사 (체력이 절반이 될 때)
+				if (gameState.currentEnemy.type === 'boss' && gameState.currentEnemy.hp === 3) {
 					document.getElementById('questionPanel').style.display = 'none';
 					gameState.isMoving = false;
 					
@@ -2060,6 +2062,7 @@ function gameOver() {
 // 1~8 스테이지: Unit1~8을 순서대로 하나씩 (한 스테이지 = 한 유닛 집중 학습)
 // 9스테이지부터: 전 유닛 혼합 '복습 작전' (오답 노트 출제 확률 상향 + 몬스터 가속)
 const ALL_UNITS = ['Unit1', 'Unit2', 'Unit3', 'Unit4', 'Unit5', 'Unit6', 'Unit7', 'Unit8'];
+const BOSS_STAGE = 20; // 최종 보스 총정리전 스테이지
 
 function unitsForStage(stage) {
     if (stage <= ALL_UNITS.length) return [ALL_UNITS[stage - 1]];
@@ -2067,6 +2070,7 @@ function unitsForStage(stage) {
 }
 
 function stageUnitLabel(stage) {
+    if (stage >= BOSS_STAGE) return `보스 총정리전`;
     return stage <= ALL_UNITS.length ? `Unit ${stage}` : `복습 (전 유닛)`;
 }
 
@@ -2086,8 +2090,13 @@ function nextStage() {
     gameState.speed += 0.5;
     applyStageUnits();
     const label = stageUnitLabel(gameState.stage);
-    alert(`스테이지 ${gameState.stage - 1} 클리어!\n스테이지 ${gameState.stage} 시작 - ${label}` +
-        (gameState.stage === ALL_UNITS.length + 1 ? '\n지금까지 배운 단어가 모두 나와요. 더 빨라진 몬스터를 조심!' : ''));
+    let extra = '';
+    if (gameState.stage === ALL_UNITS.length + 1) {
+        extra = '\n지금까지 배운 단어가 모두 나와요. 더 빨라진 몬스터를 조심!';
+    } else if (gameState.stage === BOSS_STAGE) {
+        extra = '\n알파벳 대마왕이 기다리고 있어요!\n지금까지 배운 모든 단어로 마지막 결전을 준비하세요!';
+    }
+    alert(`스테이지 ${gameState.stage - 1} 클리어!\n스테이지 ${gameState.stage} 시작 - ${label}` + extra);
     
     generateMoreEnemies();
 }

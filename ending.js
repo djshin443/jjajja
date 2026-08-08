@@ -920,7 +920,14 @@ function showEnding() {
                         ${Math.floor(playTime / 60)}분 ${playTime % 60}초
                     </div>
                 </div>
-                
+
+                <div class="score-item">
+                    <div class="score-label">최고 콤보</div>
+                    <div class="score-value" style="color: #FF8C00;">
+                        ${(typeof gameStats !== 'undefined' && gameStats.maxCombo) ? gameStats.maxCombo : 0}연속
+                    </div>
+                </div>
+
                 <div class="score-item" style="
                     background: linear-gradient(135deg, ${gradeColor}40, ${gradeColor}20);
                     border: 3px solid ${gradeColor};
@@ -938,7 +945,7 @@ function showEnding() {
                 color: #FFFFFF;
                 text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
             ">
-                와! 정말 대단해요! 모든 스테이지를 클리어했어요!
+                와! 정말 대단해요! 알파벳 대마왕까지 물리치고 총정리전을 클리어했어요!
             </div>
             ${(typeof gameStats !== 'undefined' && gameStats.wrongWords && gameStats.wrongWords.length > 0) ? `
             <div style="
