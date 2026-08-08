@@ -10,19 +10,31 @@ function getCharacterPixelData(characterName) {
 }
 
 // 픽셀 스프라이트 그리기 함수 (엔딩에서 사용)
+// 스프라이트를 1픽셀=1px 오프스크린에 한 번만 굽고 이후엔 drawImage 한 번으로 그린다
+const _endingSpriteBakeCache = new WeakMap();
+
 function drawEndingPixelSprite(ctx, sprite, colorMap, x, y, scale = 4) {
-    ctx.save();
-    ctx.imageSmoothingEnabled = false;
-    
-    for (let row = 0; row < sprite.length; row++) {
-        for (let col = 0; col < sprite[row].length; col++) {
-            const pixel = sprite[row][col];
-            if (pixel !== 0 && colorMap[pixel]) {
-                ctx.fillStyle = colorMap[pixel];
-                ctx.fillRect(x + col * scale, y + row * scale, scale, scale);
+    if (!sprite || !colorMap) return;
+    let baked = _endingSpriteBakeCache.get(sprite);
+    if (!baked) {
+        baked = document.createElement('canvas');
+        baked.width = sprite[0].length;
+        baked.height = sprite.length;
+        const bctx2 = baked.getContext('2d');
+        for (let row = 0; row < sprite.length; row++) {
+            for (let col = 0; col < sprite[row].length; col++) {
+                const pixel = sprite[row][col];
+                if (pixel !== 0 && colorMap[pixel]) {
+                    bctx2.fillStyle = colorMap[pixel];
+                    bctx2.fillRect(col, row, 1, 1);
+                }
             }
         }
+        _endingSpriteBakeCache.set(sprite, baked);
     }
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(baked, x, y, baked.width * scale, baked.height * scale);
     ctx.restore();
 }
 
@@ -1180,7 +1192,10 @@ function animateJiyulEndingScene(ctx, canvas) {
         }
 
         frame++;
-        requestAnimationFrame(draw);
+        // 엔딩 화면이 닫히면 루프 종료 (rAF 누수 방지)
+        if (document.getElementById('endingScreen')) {
+            requestAnimationFrame(draw);
+        }
     }
 
     draw();
@@ -1313,7 +1328,10 @@ function animateKiwiEndingScene(ctx, canvas) {
         }
 
         frame++;
-        requestAnimationFrame(draw);
+        // 엔딩 화면이 닫히면 루프 종료 (rAF 누수 방지)
+        if (document.getElementById('endingScreen')) {
+            requestAnimationFrame(draw);
+        }
     }
 
     draw();
@@ -1471,7 +1489,10 @@ function animateWhitehouseEndingScene(ctx, canvas) {
         }
 
         frame++;
-        requestAnimationFrame(draw);
+        // 엔딩 화면이 닫히면 루프 종료 (rAF 누수 방지)
+        if (document.getElementById('endingScreen')) {
+            requestAnimationFrame(draw);
+        }
     }
 
     draw();
@@ -1496,7 +1517,8 @@ function drawFlyingAirplaneWithJiyul(ctx, canvas, frame) {
     // 2D 스프라이트 비행기
     drawEndingPixelSprite(ctx, ENDING_PLANE.sprite, ENDING_PLANE.colorMap, x, y, S);
 
-    // 프로펠러 날개 (2프레임 회전)
+    // 프로펠러 날개 (2프레임 회전) — 상태 누수 방지를 위해 save/restore
+    ctx.save();
     const hubX = x + 1 * S;
     const hubY = y + 10 * S;
     ctx.fillStyle = 'rgba(84, 110, 122, 0.9)';
@@ -1505,6 +1527,7 @@ function drawFlyingAirplaneWithJiyul(ctx, canvas, frame) {
     } else {
         ctx.fillRect(hubX - 2 * S, hubY - S, S * 5, S * 2);    // 가로 날
     }
+    ctx.restore();
 }
 
 function drawEnglishCastle(ctx, canvas, frame) {
