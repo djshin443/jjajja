@@ -178,14 +178,19 @@ function showTitleScreen() {
         const data = (typeof pixelData !== 'undefined') && pixelData[name];
         if (!data || !data[pose]) return null;
         const sp = data[pose];
-        const off = document.createElement('canvas');
-        off.width = sp[0].length; off.height = sp.length;
-        const o = off.getContext('2d');
-        for (let y = 0; y < sp.length; y++)
-            for (let x = 0; x < sp[0].length; x++) {
-                const v = sp[y][x];
-                if (v && data.colorMap[v]) { o.fillStyle = data.colorMap[v]; o.fillRect(x, y, 1, 1); }
-            }
+        let off;
+        if (typeof bakePixelSprite === 'function') {
+            off = bakePixelSprite(sp, data.colorMap, false);   // 슬러그 후처리 포함
+        } else {
+            off = document.createElement('canvas');
+            off.width = sp[0].length; off.height = sp.length;
+            const o = off.getContext('2d');
+            for (let y = 0; y < sp.length; y++)
+                for (let x = 0; x < sp[0].length; x++) {
+                    const v = sp[y][x];
+                    if (v && data.colorMap[v]) { o.fillStyle = data.colorMap[v]; o.fillRect(x, y, 1, 1); }
+                }
+        }
         bakeCache.set(key, off);
         return off;
     }

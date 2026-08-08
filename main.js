@@ -614,6 +614,8 @@ let player = {
     hp: 100,
     animFrame: 0,
     animTimer: 0,
+    smashTimer: 0,
+    facing: 1,
     sprite: 'jiyul',
     velocityY: 0,
     velocityX: 0,
@@ -1427,6 +1429,22 @@ function checkBoxCollision(box1, box2) {
            box1.y + box1.height > box2.y;
 }
 
+// 3색 도트 섬광 (흰 코어 → 노랑 → 주황) — 라켓 타격 이펙트
+function drawMuzzleFlash(x, y, s, flip) {
+    const d = flip ? -1 : 1;
+    const dots = [
+        [0, 0, '#FFFFFF'], [1, 0, '#FFFFFF'], [0, 1, '#FFFFFF'], [1, 1, '#FFFFFF'],
+        [-1, 0, '#FFD84A'], [2, 0, '#FFD84A'], [0, -1, '#FFD84A'], [1, -1, '#FFD84A'],
+        [0, 2, '#FFD84A'], [1, 2, '#FFD84A'],
+        [-2, 0, '#FF7A1A'], [3, 0, '#FF7A1A'], [0, -2, '#FF7A1A'],
+        [1, 3, '#FF7A1A'], [3, 1, '#FF7A1A'], [-1, -1, '#FF7A1A'], [2, 2, '#FF7A1A'],
+    ];
+    dots.forEach(([dx, dy, col]) => {
+        ctx.fillStyle = col;
+        ctx.fillRect(Math.round(x + dx * s * d), Math.round(y + dy * s), Math.ceil(s), Math.ceil(s));
+    });
+}
+
 // 애니메이션 업데이트
 function updateAnimations() {
     player.animTimer++;
@@ -1434,6 +1452,10 @@ function updateAnimations() {
         player.animFrame = (player.animFrame + 1) % 4;
         player.animTimer = 0;
     }
+    if (player.smashTimer > 0) player.smashTimer--;
+    // 이동 방향에 따라 좌우 반전
+    if (player.velocityX > 0.5) player.facing = 1;
+    else if (player.velocityX < -0.5) player.facing = -1;
     
     enemies.forEach(enemy => {
         if (enemy.alive) {
@@ -1567,7 +1589,7 @@ function render() {
 
                 // 지율이를 키위(게코) 등 위에 태우기
                 const jiyulData = pixelData.jiyul;
-                drawSpriteAnchored(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 5 * PIXEL_SCALE, player.width);
+                drawSpriteAnchored((player.smashTimer > 0 && jiyulData.smashing) ? jiyulData.smashing : jiyulData.idle, jiyulData.colorMap, player.x, player.y - 5 * PIXEL_SCALE, player.width);
 
             } else if (gameState.selectedVehicle === 'whitehouse' && pixelData.whitehouse) {
                 // 화이트하우스 (발밑 = player.y)
@@ -1577,13 +1599,28 @@ function render() {
 
                 // 지율이를 지붕 위에 세우기
                 const jiyulData = pixelData.jiyul;
-                drawSpriteAnchored(jiyulData.idle, jiyulData.colorMap, player.x, player.y - 13 * PIXEL_SCALE, player.width);
+                drawSpriteAnchored((player.smashTimer > 0 && jiyulData.smashing) ? jiyulData.smashing : jiyulData.idle, jiyulData.colorMap, player.x, player.y - 13 * PIXEL_SCALE, player.width);
             }
         } else {
             // 일반적인 캐릭터 그리기
             const playerData = pixelData[player.sprite];
-            const sprite = pickSpriteFrame(playerData, player.isJumping, moving, player.animFrame);
-            drawSpriteAnchored(sprite, playerData.colorMap, player.x, player.y, player.width);
+            let sprite = pickSpriteFrame(playerData, player.isJumping, moving, player.animFrame);
+            // 라켓 스매싱 (정답 시)
+            if (player.smashTimer > 0 && playerData.smashing) {
+                sprite = playerData.smashing;
+            }
+            const flip = player.facing === -1;
+            drawSpriteAnchored(sprite, playerData.colorMap, player.x, player.y, player.width, flip);
+
+            // 머즐 플래시: 스매싱 첫 8프레임 동안 라켓 앞에 3색 도트 섬광
+            if (player.smashTimer > 12 && playerData.flashAnchor) {
+                const s = player.width / sprite[0].length;
+                const ax = flip ? -playerData.flashAnchor.x * s + player.width : playerData.flashAnchor.x * s;
+                drawMuzzleFlash(
+                    player.x + ax,
+                    player.y - sprite.length * s + playerData.flashAnchor.y * s,
+                    s, flip);
+            }
         }
     }
     
@@ -1754,7 +1791,8 @@ function selectChoice(choiceIndex) {
     gameStats.totalQuestions++;
     
     if (choiceIndex === gameState.currentQuestion.correctIndex) {
-        // 정답! 콤보에 따라 보너스 점수 (기본 20 + 콤보당 5, 최대 +25)
+        // 정답! 지율이의 라켓 스매싱 발동
+        player.smashTimer = 20;
         gameStats.combo++;
         gameStats.maxCombo = Math.max(gameStats.maxCombo, gameStats.combo);
         const comboBonus = Math.min(gameStats.combo - 1, 5) * 5;
@@ -2090,6 +2128,11 @@ function jump() {
 function pickSpriteFrame(data, isJumping, moving, animFrame) {
     if (isJumping) return data.jump || data.idle;
     if (moving) {
+        // 지정된 걷기 사이클(예: 걷기1→대기→걷기2→대기)이 있으면 우선 사용
+        if (data.walkCycle) {
+            const name = data.walkCycle[animFrame % data.walkCycle.length];
+            if (data[name]) return data[name];
+        }
         const frames = [data.walking1, data.walking2, data.walking3, data.walking4].filter(Boolean);
         if (frames.length) return frames[animFrame % frames.length];
     }
@@ -2098,10 +2141,10 @@ function pickSpriteFrame(data, isJumping, moving, animFrame) {
 
 // 스프라이트 크기(16/32/48 그리드)에 관계없이 발밑(bottomY) 기준으로 그린다.
 // targetW: 화면에 표시할 가로 폭(px). 세로는 비율 유지.
-function drawSpriteAnchored(sprite, colorMap, x, bottomY, targetW) {
+function drawSpriteAnchored(sprite, colorMap, x, bottomY, targetW, flipH = false) {
     if (!sprite) return;
     const s = targetW / sprite[0].length;
-    drawPixelSprite(sprite, colorMap, x, bottomY - sprite.length * s, s);
+    drawPixelSprite(sprite, colorMap, x, bottomY - sprite.length * s, s, flipH);
 }
 
 // 초기 캔버스 설정

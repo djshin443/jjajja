@@ -17,24 +17,29 @@ function drawEndingPixelSprite(ctx, sprite, colorMap, x, y, scale = 4) {
     if (!sprite || !colorMap) return;
     let baked = _endingSpriteBakeCache.get(sprite);
     if (!baked) {
-        baked = document.createElement('canvas');
-        baked.width = sprite[0].length;
-        baked.height = sprite.length;
-        const bctx2 = baked.getContext('2d');
-        for (let row = 0; row < sprite.length; row++) {
-            for (let col = 0; col < sprite[row].length; col++) {
-                const pixel = sprite[row][col];
-                if (pixel !== 0 && colorMap[pixel]) {
-                    bctx2.fillStyle = colorMap[pixel];
-                    bctx2.fillRect(col, row, 1, 1);
+        if (typeof bakePixelSprite === 'function') {
+            baked = bakePixelSprite(sprite, colorMap, false);  // 슬러그 후처리 포함
+        } else {
+            baked = document.createElement('canvas');
+            baked.width = sprite[0].length;
+            baked.height = sprite.length;
+            const bctx2 = baked.getContext('2d');
+            for (let row = 0; row < sprite.length; row++) {
+                for (let col = 0; col < sprite[row].length; col++) {
+                    const pixel = sprite[row][col];
+                    if (pixel !== 0 && colorMap[pixel]) {
+                        bctx2.fillStyle = colorMap[pixel];
+                        bctx2.fillRect(col, row, 1, 1);
+                    }
                 }
             }
         }
         _endingSpriteBakeCache.set(sprite, baked);
     }
+    const padCells = (baked.width - sprite[0].length) / 2;
     ctx.save();
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(baked, x, y, baked.width * scale, baked.height * scale);
+    ctx.drawImage(baked, x - padCells * scale, y - padCells * scale, baked.width * scale, baked.height * scale);
     ctx.restore();
 }
 

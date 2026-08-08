@@ -1124,19 +1124,25 @@
         // 픽셀 스프라이트 그리기 함수
         function drawCharacterPixelSprite(ctx, sprite, colorMap) {
             // 스프라이트를 원본 해상도로 구운 뒤 캔버스에 맞춰 확대 (크기 무관 대응)
-            const W = sprite[0].length, H = sprite.length;
-            const off = document.createElement('canvas');
-            off.width = W; off.height = H;
-            const octx = off.getContext('2d');
-            for (let row = 0; row < H; row++) {
-                for (let col = 0; col < W; col++) {
-                    const pixel = sprite[row][col];
-                    if (pixel !== 0 && colorMap[pixel]) {
-                        octx.fillStyle = colorMap[pixel];
-                        octx.fillRect(col, row, 1, 1);
+            let off;
+            if (typeof bakePixelSprite === 'function') {
+                off = bakePixelSprite(sprite, colorMap, false);   // 슬러그 후처리 포함
+            } else {
+                const W0 = sprite[0].length, H0 = sprite.length;
+                off = document.createElement('canvas');
+                off.width = W0; off.height = H0;
+                const octx = off.getContext('2d');
+                for (let row = 0; row < H0; row++) {
+                    for (let col = 0; col < W0; col++) {
+                        const pixel = sprite[row][col];
+                        if (pixel !== 0 && colorMap[pixel]) {
+                            octx.fillStyle = colorMap[pixel];
+                            octx.fillRect(col, row, 1, 1);
+                        }
                     }
                 }
             }
+            const W = off.width, H = off.height;
             const fit = Math.min(ctx.canvas.width / W, ctx.canvas.height / H);
             const dw = Math.round(W * fit), dh = Math.round(H * fit);
             ctx.setTransform(1, 0, 0, 1, 0, 0);
