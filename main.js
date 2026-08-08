@@ -7,7 +7,11 @@ ctx.imageSmoothingEnabled = false;
 
 // 픽셀 스케일과 물리 상수
 let PIXEL_SCALE = 3;
-const GRAVITY = 0.8;
+const GRAVITY = 0.8;             // 상승 중 중력
+const FALL_GRAVITY = 1.35;       // 하강 중 중력 (빨리 떨어져야 경쾌한 아크가 됨)
+const APEX_GRAVITY = 0.42;       // 꼭짓점 부근 중력 (살짝 떠 있는 체공감)
+const MAX_FALL_SPEED = 15;       // 최대 낙하 속도
+const JUMP_BUFFER_FRAMES = 8;    // 착지 직전 점프 입력을 기억하는 프레임 수
 const JUMP_POWER = -18;
 const JUMP_FORWARD_SPEED = 6;
 let GROUND_Y = 240;
@@ -1140,10 +1144,27 @@ function triggerEnding() {
 // 플레이어 물리 업데이트
 function updatePlayerPhysics() {
     // 중력 적용 (공중에 있을 때만)
+    // 자연스러운 점프 아크: 꼭짓점 부근에선 살짝 머물고, 내려올 땐 빠르게
     if (!player.onGround) {
-        player.velocityY += GRAVITY;
+        let g;
+        if (Math.abs(player.velocityY) < 2.5) {
+            g = APEX_GRAVITY;            // 꼭짓점 체공감
+        } else if (player.velocityY > 0) {
+            g = FALL_GRAVITY;            // 하강 가속
+        } else {
+            g = GRAVITY;                 // 상승
+        }
+        player.velocityY += g;
+        if (player.velocityY > MAX_FALL_SPEED) {
+            player.velocityY = MAX_FALL_SPEED;
+        }
     }
-    
+
+    // 점프 입력 버퍼 감소
+    if (player.jumpBufferTimer > 0) {
+        player.jumpBufferTimer--;
+    }
+
     // Y축 위치 업데이트
     player.y += player.velocityY;
     
@@ -1164,6 +1185,12 @@ function updatePlayerPhysics() {
         player.onGround = true;
         player.isJumping = false;
         player.airJumpsUsed = 0;  // 착지 시 더블 점프 횟수 초기화 (키위 능력)
+
+        // 착지 직전에 눌러둔 점프 입력이 있으면 바로 이어서 점프 (버퍼링)
+        if (player.jumpBufferTimer > 0) {
+            player.jumpBufferTimer = 0;
+            jump();
+        }
 
         if (player.velocityX > 2 && typeof createParticles === 'function') {
             createParticles(player.x, player.y, 'hint');
@@ -2022,6 +2049,9 @@ function jump() {
         if (typeof showFloatingText === 'function') {
             showFloatingText(player.x, player.y - 40, '🥝 더블 점프!', '#FF8C00');
         }
+    } else {
+        // 공중에서 누른 점프는 잠시 기억해 뒀다가 착지 직후 실행 (입력 버퍼링)
+        player.jumpBufferTimer = JUMP_BUFFER_FRAMES;
     }
 }
 
