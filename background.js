@@ -1,453 +1,301 @@
-// 배경 그리기 시스템 - background.js
-// 배경은 저해상도 오프스크린 캔버스에 그린 뒤 확대(도트화)해서 표시한다.
-// 이 파일의 모든 드로잉은 전역 ctx가 아니라 bctx(배경 전용 컨텍스트)를 사용한다.
+// ═══════════════════════════════════════════════════════════════
+// 메탈슬러그풍 2D 도트 배경 시스템 - background.js
+// - 그라데이션 없음: 하늘은 픽셀 색 밴드 + 경계 체커 디더링
+// - 3중 패럴랙스: 원경 실루엣(0.25x) / 중경 소품(0.6x) / 근경 지면(1x)
+// - 소품은 전부 문자 그리드 + colorMap 데이터 (이미지 파일 없음)
+//   → drawPixelSprite(_slug)로 외곽선+림라이트+셰이드 자동 적용
+// - 별/자갈/소품 배치는 결정적 해시 (프레임마다 흔들리지 않음)
+// - 모든 좌표는 정수 스냅
+// ═══════════════════════════════════════════════════════════════
 
-const BG_PIXEL = 4;          // 픽셀 블록 크기 (클수록 도트가 굵어짐)
-let _bgCanvas = null;
-let bctx = null;
-
-function _ensureBgCanvas() {
-    const w = Math.max(1, Math.ceil(canvas.width / BG_PIXEL));
-    const h = Math.max(1, Math.ceil(canvas.height / BG_PIXEL));
-    if (!_bgCanvas || _bgCanvas.width !== w || _bgCanvas.height !== h) {
-        _bgCanvas = document.createElement('canvas');
-        _bgCanvas.width = w;
-        _bgCanvas.height = h;
-        bctx = _bgCanvas.getContext('2d');
-    }
+// ── 결정적 해시 (0~1) ──
+function bgHash(n) {
+    n = (n ^ 61) ^ (n >>> 16);
+    n = (n + (n << 3)) | 0;
+    n = n ^ (n >>> 4);
+    n = Math.imul(n, 0x27d4eb2d);
+    n = n ^ (n >>> 15);
+    return (n >>> 0) / 4294967295;
 }
 
-// 메인 배경 그리기 함수 (도트화 버전)
+// ── 소품 스프라이트 (문자 그리드 → 셀 그대로 colorMap 키) ──
+function bgSprite(rows) {
+    return rows.map(r => [...r].map(ch => (ch === '.' ? 0 : ch)));
+}
+
+const BG_PROPS = {
+    // 모래주머니 방벽
+    sandbag: {
+        sprite: bgSprite([
+            '....aaaa.aaaa...',
+            '...aaaaaaaaaaa..',
+            '..aAAaaaAAaaaa..',
+            '.aaaaaaaaaaaaaa.',
+            'aAAaaaAAaaaAAaa.',
+            'aaaaaaaaaaaaaaa.',
+            'aAAaaaAAaaaAAaa.',
+            'aaaaaaaaaaaaaaa.',
+        ]),
+        colorMap: { _slug: true, 'a': '#B09258', 'A': '#8A7040' },
+    },
+    // 보급 상자
+    crate: {
+        sprite: bgSprite([
+            'kkkkkkkkkkkk',
+            'kwwkwwwwkwwk',
+            'kwkwwwwwwkwk',
+            'kkwwwwwwwwkk',
+            'kwwwwkkwwwwk',
+            'kwwwkwwkwwwk',
+            'kkwwwwwwwwkk',
+            'kwkwwwwwwkwk',
+            'kwwkwwwwkwwk',
+            'kkkkkkkkkkkk',
+        ]),
+        colorMap: { _slug: true, 'w': '#A87C4F', 'k': '#6B4A2A' },
+    },
+    // 군용 텐트
+    tent: {
+        sprite: bgSprite([
+            '........tt........',
+            '.......tttt.......',
+            '......tttttt......',
+            '.....ttTTtttt.....',
+            '....ttTTTTtttt....',
+            '...ttTToooTTttt...',
+            '..tttTooooooTttt..',
+            '.ttttToooooooTttt.',
+            'tttttooooooooTtttt',
+        ]),
+        colorMap: { _slug: true, 't': '#5A7A4A', 'T': '#48633C', 'o': '#241C12' },
+    },
+    // 나무
+    tree: {
+        sprite: bgSprite([
+            '....gggggg....',
+            '..gggggggggg..',
+            '.gggGGggggggg.',
+            'ggGGggggGGgggg',
+            'ggggggGGgggggg',
+            '.ggGGggggggg..',
+            '..ggggggggg...',
+            '....kkkk......',
+            '....kkkk......',
+            '....kkkk......',
+            '...kkkkkk.....',
+        ]),
+        colorMap: { _slug: true, 'g': '#3E7A34', 'G': '#2E5C28', 'k': '#5C3A24' },
+    },
+    // 수풀
+    bush: {
+        sprite: bgSprite([
+            '..gggg.ggg..',
+            '.gggggggggg.',
+            'ggGGgggGGggg',
+            'gggggggggggg',
+        ]),
+        colorMap: { _slug: true, 'g': '#4A8A3C', 'G': '#376B2E' },
+    },
+    // 선인장
+    cactus: {
+        sprite: bgSprite([
+            '....cc....',
+            '....cc....',
+            'cc..cc..cc',
+            'cc..cc..cc',
+            'cccccc..cc',
+            '....cccccc',
+            '....cc....',
+            '....cc....',
+            '....cc....',
+            '....cc....',
+        ]),
+        colorMap: { _slug: true, 'c': '#4F8A4A' },
+    },
+};
+
+// ── 스테이지 테마 매핑 테이블 ──
+const BG_THEMES = [
+    {   // 1. 노을 전장
+        sky: ['#2A1845', '#4A2A60', '#7C3A6E', '#B0504E', '#DD7038', '#F09048'],
+        stars: true, starCol: '#FFD8A0',
+        far: '#2A1830', farWin: '#FFB84A',
+        props: ['tree', 'sandbag', 'bush'],
+        ground: { line: '#1A0F08', grass1: '#4A7A2E', grass2: '#5F9A3E',
+                  dirt1: '#5C3A24', dirt2: '#4E3120', gravel: '#3E2A1C', pebble: '#6B4A30' },
+    },
+    {   // 2. 맑은 낮
+        sky: ['#2E5FA3', '#3F74B8', '#5B90CC', '#7FACD9', '#A5C8E8', '#C8E0F2'],
+        stars: false,
+        far: '#4A6A88', farWin: '#D8E8F2',
+        props: ['tree', 'bush', 'crate'],
+        ground: { line: '#14200C', grass1: '#3E8E2F', grass2: '#5FB53E',
+                  dirt1: '#5C3A24', dirt2: '#4E3120', gravel: '#403020', pebble: '#78583A' },
+    },
+    {   // 3. 사막 작전
+        sky: ['#8A5A9A', '#B06A80', '#D08858', '#E8A848', '#F0C060', '#F8D888'],
+        stars: false,
+        far: '#6B4A32', farWin: '#3A2818',
+        props: ['cactus', 'sandbag', 'crate'],
+        ground: { line: '#3A2410', grass1: '#D8B060', grass2: '#E8C878',
+                  dirt1: '#B08048', dirt2: '#986C3C', gravel: '#7A5630', pebble: '#C89858' },
+    },
+    {   // 4. 야간 침투
+        sky: ['#0A0A1E', '#10142E', '#1A1E42', '#242A56', '#303A6E', '#3E4A82'],
+        stars: true, starCol: '#FFFFFF',
+        far: '#0C1020', farWin: '#FFE070',
+        props: ['tent', 'sandbag', 'crate'],
+        ground: { line: '#080C06', grass1: '#28481E', grass2: '#365E28',
+                  dirt1: '#38281A', dirt2: '#2E2014', gravel: '#241A10', pebble: '#4A3624' },
+    },
+];
+
+// ── 메인 배경 그리기 ──
 function drawBackground() {
-    _ensureBgCanvas();
-    bctx.save();
-    bctx.scale(1 / BG_PIXEL, 1 / BG_PIXEL);
-    _drawBackgroundScene();
-    bctx.restore();
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(_bgCanvas, 0, 0, canvas.width, canvas.height);
-}
+    const theme = BG_THEMES[(Math.max(1, gameState.stage) - 1) % BG_THEMES.length];
+    const U = Math.max(2, Math.round(PIXEL_SCALE));           // 도트 단위
+    const W = canvas.width;
+    const skyH = Math.round(GROUND_Y);
+    const cam = Math.round(gameState.cameraX || 0);
 
-function _drawBackgroundScene() {
-    // 시간에 따른 하늘 색상 변화 (낮/노을/밤 느낌)
-    const timePhase = (gameState.distance / 1000) % 3;
-    let skyColors;
-    
-    if (timePhase < 1) {
-        // 아침/낮 - 파란 하늘
-        skyColors = ['#87CEEB', '#98D8E8', '#B0E0E6'];
-    } else if (timePhase < 2) {
-        // 노을 - 오렌지/핑크 하늘
-        skyColors = ['#FF6B6B', '#FF8E8E', '#FFB6C1'];
-    } else {
-        // 밤 - 보라/남색 하늘
-        skyColors = ['#2F1B69', '#4B0082', '#6A0DAD'];
-    }
-    
-    const gradient = bctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, skyColors[0]);
-    gradient.addColorStop(0.7, skyColors[1]);
-    gradient.addColorStop(1, skyColors[2]);
-    bctx.fillStyle = gradient;
-    bctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // 별과 달 (밤 시간대)
-    if (timePhase >= 2) {
-        drawStars();
-        drawMoon();
-    } else {
-        // 태양과 구름 (낮/노을 시간대)
-        drawSun(timePhase);
-        drawClouds();
-    }
-    
-    // 무지개 (가끔 등장)
-    if (Math.sin(gameState.distance / 500) > 0.7) {
-        drawRainbow();
-    }
-    
-    // 원거리 산들 (다층 패럴랙스)
-    drawMountainLayers();
-    
-    // 나무들과 식물들
-    drawVegetation();
-    
-    // 꽃밭과 나비들
-    drawFlowerField();
-    
-    // 날아다니는 요소들
-    drawFlyingElements();
-    
-    // 마법같은 파티클들
-    drawMagicalParticles();
-}
-
-// 별들 그리기
-function drawStars() {
-    bctx.fillStyle = '#FFFF99';
-    for (let i = 0; i < 50; i++) {
-        const x = (i * 137 + gameState.distance * 0.1) % canvas.width;
-        const y = (i * 71) % (canvas.height * 0.6);
-        const size = 1 + (i % 3);
-        
-        // 반짝이는 효과
-        const twinkle = Math.sin(gameState.distance * 0.05 + i) * 0.5 + 0.5;
-        bctx.globalAlpha = twinkle;
-        
-        bctx.beginPath();
-        bctx.arc(x, y, size, 0, Math.PI * 2);
-        bctx.fill();
-    }
-    bctx.globalAlpha = 1;
-}
-
-// 달 그리기
-function drawMoon() {
-    const moonX = canvas.width - 120;
-    const moonY = 60;
-    
-    // 달 뒤 후광
-    const moonGlow = bctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 80);
-    moonGlow.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-    moonGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    bctx.fillStyle = moonGlow;
-    bctx.fillRect(moonX - 80, moonY - 80, 160, 160);
-    
-    // 달 본체
-    bctx.fillStyle = '#F5F5DC';
-    bctx.beginPath();
-    bctx.arc(moonX, moonY, 35, 0, Math.PI * 2);
-    bctx.fill();
-    
-    // 달 크레이터
-    bctx.fillStyle = '#E6E6FA';
-    bctx.beginPath();
-    bctx.arc(moonX - 10, moonY - 5, 8, 0, Math.PI * 2);
-    bctx.arc(moonX + 8, moonY + 10, 5, 0, Math.PI * 2);
-    bctx.arc(moonX - 5, moonY + 15, 4, 0, Math.PI * 2);
-    bctx.fill();
-}
-
-// 태양 그리기 (시간대별)
-function drawSun(timePhase) {
-    const sunX = canvas.width - 150;
-    const sunY = 80 + Math.sin(timePhase) * 30;
-    let sunColor = '#FFD700';
-    
-    if (timePhase >= 1) {
-        // 노을 시간 - 붉은 태양
-        sunColor = '#FF6347';
-    }
-    
-    // 태양 후광
-    const sunGlow = bctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 100);
-    sunGlow.addColorStop(0, sunColor + '80');
-    sunGlow.addColorStop(1, sunColor + '00');
-    bctx.fillStyle = sunGlow;
-    bctx.fillRect(sunX - 100, sunY - 100, 200, 200);
-    
-    // 태양 본체
-    bctx.fillStyle = sunColor;
-    bctx.beginPath();
-    bctx.arc(sunX, sunY, 40, 0, Math.PI * 2);
-    bctx.fill();
-    
-    // 태양 광선
-    bctx.strokeStyle = sunColor;
-    bctx.lineWidth = 4;
-    for (let i = 0; i < 12; i++) {
-        const angle = (i * Math.PI * 2) / 12 + gameState.distance * 0.01;
-        const length = 50 + Math.sin(gameState.distance * 0.1 + i) * 10;
-        bctx.beginPath();
-        bctx.moveTo(sunX + Math.cos(angle) * 50, sunY + Math.sin(angle) * 50);
-        bctx.lineTo(sunX + Math.cos(angle) * length, sunY + Math.sin(angle) * length);
-        bctx.stroke();
-    }
-}
-
-// 구름들 그리기
-function drawClouds() {
-    const cloudOffset = (gameState.backgroundOffset * 0.3) % (canvas.width + 400);
-    
-    // 다양한 크기와 모양의 구름들
-    const clouds = [
-        {x: 100, y: 60, size: 1.2, opacity: 0.9},
-        {x: 350, y: 40, size: 0.8, opacity: 0.7},
-        {x: 600, y: 80, size: 1.5, opacity: 0.8},
-        {x: 900, y: 50, size: 1.0, opacity: 0.9},
-        {x: 1200, y: 70, size: 1.3, opacity: 0.6}
-    ];
-    
-    clouds.forEach(cloud => {
-        drawDetailedCloud(cloud.x - cloudOffset, cloud.y, cloud.size, cloud.opacity);
-    });
-}
-
-// 상세한 구름 그리기
-function drawDetailedCloud(x, y, size, opacity) {
-    if (x < -200 || x > canvas.width + 200) return;
-    
-    bctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-    
-    // 구름의 여러 원들로 자연스러운 모양 만들기
-    const circles = [
-        {offsetX: 0, offsetY: 0, radius: 25 * size},
-        {offsetX: 20 * size, offsetY: -5 * size, radius: 35 * size},
-        {offsetX: 45 * size, offsetY: 0, radius: 25 * size},
-        {offsetX: 25 * size, offsetY: -20 * size, radius: 20 * size},
-        {offsetX: 60 * size, offsetY: -10 * size, radius: 18 * size}
-    ];
-    
-    bctx.beginPath();
-    circles.forEach(circle => {
-        bctx.arc(x + circle.offsetX, y + circle.offsetY, circle.radius, 0, Math.PI * 2);
-    });
-    bctx.fill();
-    
-    // 구름 그림자
-    bctx.fillStyle = `rgba(200, 200, 200, ${opacity * 0.3})`;
-    bctx.beginPath();
-    circles.forEach(circle => {
-        bctx.arc(x + circle.offsetX + 5, y + circle.offsetY + 5, circle.radius * 0.9, 0, Math.PI * 2);
-    });
-    bctx.fill();
-}
-
-// 무지개 그리기
-function drawRainbow() {
-    const centerX = canvas.width * 0.7;
-    const centerY = canvas.height;
-    const rainbowColors = [
-        '#FF0000', '#FF7F00', '#FFFF00', '#00FF00', 
-        '#0000FF', '#4B0082', '#9400D3'
-    ];
-    
-    bctx.globalAlpha = 0.6;
-    rainbowColors.forEach((color, index) => {
-        bctx.strokeStyle = color;
-        bctx.lineWidth = 8;
-        bctx.beginPath();
-        bctx.arc(centerX, centerY, 200 - index * 12, Math.PI, 0);
-        bctx.stroke();
-    });
-    bctx.globalAlpha = 1;
-}
-
-// 산맥 레이어들 그리기
-function drawMountainLayers() {
-    // 가장 먼 산맥들 (보라색 계열)
-    const farOffset = (gameState.backgroundOffset * 0.1) % (canvas.width + 600);
-    bctx.fillStyle = '#9370DB';
-    for (let i = 0; i < 3; i++) {
-        const xPos = i * (canvas.width + 600) - farOffset;
-        drawMountainRange(xPos, GROUND_Y - 180, 8, 150);
-    }
-    
-    // 중간 산맥들 (파란색 계열)
-    const midOffset = (gameState.backgroundOffset * 0.2) % (canvas.width + 500);
-    bctx.fillStyle = '#4682B4';
-    for (let i = 0; i < 3; i++) {
-        const xPos = i * (canvas.width + 500) - midOffset;
-        drawMountainRange(xPos, GROUND_Y - 130, 6, 120);
-    }
-    
-    // 가까운 산맥들 (초록색 계열)
-    const nearOffset = (gameState.backgroundOffset * 0.3) % (canvas.width + 400);
-    bctx.fillStyle = '#228B22';
-    for (let i = 0; i < 3; i++) {
-        const xPos = i * (canvas.width + 400) - nearOffset;
-        drawMountainRange(xPos, GROUND_Y - 80, 5, 100);
-    }
-}
-
-// 산맥 그리기
-function drawMountainRange(startX, baseY, count, maxHeight) {
-    bctx.beginPath();
-    bctx.moveTo(startX, baseY);
-    
-    for (let i = 0; i <= count; i++) {
-        const x = startX + (i * (canvas.width + 200)) / count;
-        const height = maxHeight * (0.5 + Math.sin(i * 0.7) * 0.5);
-        bctx.lineTo(x, baseY - height);
-    }
-    
-    bctx.lineTo(startX + canvas.width + 200, baseY);
-    bctx.closePath();
-    bctx.fill();
-}
-
-// 식물들 그리기
-function drawVegetation() {
-    const treeOffset = (gameState.backgroundOffset * 0.5) % (canvas.width + 400);
-    
-    const trees = [
-        {x: 120, type: 'pine', size: 1.0},
-        {x: 280, type: 'oak', size: 1.2},
-        {x: 450, type: 'pine', size: 0.8},
-        {x: 620, type: 'birch', size: 1.1},
-        {x: 800, type: 'oak', size: 1.3}
-    ];
-    
-    trees.forEach(tree => {
-        drawTree(tree.x - treeOffset, GROUND_Y, tree.type, tree.size);
-    });
-}
-
-// 나무 그리기
-function drawTree(x, y, type, size) {
-    if (x < -100 || x > canvas.width + 100) return;
-    
-    const trunkHeight = 60 * size;
-    const trunkWidth = 12 * size;
-    
-    // 나무 기둥
-    bctx.fillStyle = '#8B4513';
-    bctx.fillRect(x - trunkWidth/2, y - trunkHeight, trunkWidth, trunkHeight);
-    
-    // 나무 잎사귀
-    bctx.fillStyle = '#228B22';
-    if (type === 'pine') {
-        // 소나무 모양
-        for (let i = 0; i < 3; i++) {
-            const leafY = y - trunkHeight + i * 15 * size;
-            const leafSize = (35 - i * 5) * size;
-            bctx.beginPath();
-            bctx.moveTo(x, leafY - leafSize);
-            bctx.lineTo(x - leafSize/2, leafY);
-            bctx.lineTo(x + leafSize/2, leafY);
-            bctx.closePath();
-            bctx.fill();
-        }
-    } else {
-        // 둥근 나무
-        bctx.beginPath();
-        bctx.arc(x, y - trunkHeight, 35 * size, 0, Math.PI * 2);
-        bctx.fill();
-    }
-}
-
-// 꽃밭 그리기
-function drawFlowerField() {
-    const flowerOffset = (gameState.backgroundOffset * 0.7) % (canvas.width + 300);
-    
-    // 잔디
-    bctx.fillStyle = '#228B22';
-    for (let i = 0; i < 50; i++) {
-        const x = (i * 30 - flowerOffset) % (canvas.width + 100);
-        if (x > -50 && x < canvas.width + 50) {
-            bctx.strokeStyle = '#228B22';
-            bctx.lineWidth = 2;
-            for (let j = 0; j < 3; j++) {
-                // 시드 기반 결정적 랜덤 (기존 Math.random()은 매 프레임 잔디가 떨리는 문제)
-                const seed = i * 7 + j * 13;
-                const tipX = ((seed * 31) % 5) - 2;      // -2 ~ 2
-                const tipY = 3 + ((seed * 17) % 6);      // 3 ~ 8
-                bctx.beginPath();
-                bctx.moveTo(x + j * 3, GROUND_Y + 5);
-                bctx.lineTo(x + j * 3 + tipX, GROUND_Y - tipY);
-                bctx.stroke();
+    // ── 1) 하늘: 픽셀 색 밴드 + 경계 체커 디더링 ──
+    const n = theme.sky.length;
+    const bandH = Math.ceil(skyH / n / U) * U;
+    for (let i = 0; i < n; i++) {
+        const y0 = i * bandH;
+        ctx.fillStyle = theme.sky[i];
+        ctx.fillRect(0, y0, W, bandH);
+        if (i < n - 1) {
+            // 다음 밴드 색으로 체커 한 줄 (도트 그라데이션)
+            ctx.fillStyle = theme.sky[i + 1];
+            const dy = y0 + bandH - U;
+            for (let x = (i % 2) * U; x < W; x += U * 2) {
+                ctx.fillRect(x, dy, U, U);
             }
         }
     }
-    
-    // 꽃들
-    const flowers = [
-        {x: 80, color: '#FF69B4'},
-        {x: 180, color: '#FFB6C1'},
-        {x: 280, color: '#FF1493'},
-        {x: 380, color: '#FFC0CB'},
-        {x: 480, color: '#FFD700'}
-    ];
-    
-    flowers.forEach(flower => {
-        const x = flower.x - flowerOffset;
-        if (x > -50 && x < canvas.width + 50) {
-            // 꽃 줄기
-            bctx.strokeStyle = '#228B22';
-            bctx.lineWidth = 3;
-            bctx.beginPath();
-            bctx.moveTo(x, GROUND_Y + 10);
-            bctx.lineTo(x, GROUND_Y - 15);
-            bctx.stroke();
-            
-            // 꽃잎
-            bctx.fillStyle = flower.color;
-            bctx.beginPath();
-            bctx.arc(x, GROUND_Y - 15, 8, 0, Math.PI * 2);
-            bctx.fill();
+
+    // ── 2) 별 (결정적 해시 배치, 위쪽 3개 밴드) ──
+    if (theme.stars) {
+        ctx.fillStyle = theme.starCol;
+        for (let i = 0; i < 34; i++) {
+            const sx = Math.round(bgHash(i * 13 + 7) * W / U) * U;
+            const sy = Math.round(bgHash(i * 29 + 3) * bandH * 3 / U) * U;
+            // 깜빡임: 위치는 고정, 표시 여부만 시간에 따라
+            if ((Math.floor(Date.now() / 400) + i) % 5 !== 0) {
+                ctx.fillRect(sx, sy, U, U);
+            }
         }
-    });
+    }
+
+    // ── 3) 원경(0.25x): 폐허 빌딩 실루엣 ──
+    drawFarSkyline(theme, U, W, skyH, cam);
+
+    // ── 4) 중경(0.6x): 소품 스프라이트 ──
+    drawMidProps(theme, U, W, cam);
+
+    // ── 5) 근경: 지면 타일 ──
+    drawGroundTiles(theme, U, W, cam);
 }
 
-// 날아다니는 요소들
-function drawFlyingElements() {
-    // 새들
-    const birdOffset = (gameState.backgroundOffset * 0.6) % (canvas.width + 500);
-    const birds = [
-        {x: 150, y: 80},
-        {x: 400, y: 120},
-        {x: 650, y: 60}
-    ];
-    
-    birds.forEach(bird => {
-        const x = bird.x - birdOffset;
-        if (x > -50 && x < canvas.width + 50) {
-            const wingFlap = Math.sin(gameState.distance * 0.2) * 5;
-            bctx.strokeStyle = '#000';
-            bctx.lineWidth = 2;
-            bctx.beginPath();
-            bctx.moveTo(x - 15, bird.y + wingFlap);
-            bctx.lineTo(x, bird.y - 8);
-            bctx.lineTo(x + 15, bird.y + wingFlap);
-            bctx.stroke();
+// ── 원경: 폐허 빌딩 실루엣 (어두운 단색 + 창문 도트) ──
+function drawFarSkyline(theme, U, W, skyH, cam) {
+    const off = Math.round(cam * 0.25);
+    const segW = U * 34;
+    const first = Math.floor(off / segW) - 1;
+    const count = Math.ceil(W / segW) + 3;
+    for (let i = first; i < first + count; i++) {
+        const r = bgHash(i * 101 + 17);
+        if (r < 0.18) continue;                               // 빈 자리
+        const bw = Math.round((0.45 + bgHash(i * 53 + 5) * 0.4) * segW / U) * U;
+        const bh = Math.round((0.2 + r * 0.32) * skyH / U) * U;
+        const bx = i * segW - off + Math.round(bgHash(i * 71 + 9) * U * 6 / U) * U;
+        const by = skyH - bh;
+        ctx.fillStyle = theme.far;
+        ctx.fillRect(bx, by, bw, bh);
+        // 폐허 지붕: 위쪽 모서리를 계단형으로 깎기
+        const notch = 1 + Math.floor(bgHash(i * 31 + 2) * 3);
+        for (let k = 0; k < notch; k++) {
+            const nx = bx + Math.round(bgHash(i * 91 + k * 7) * (bw / U - 3)) * U;
+            ctx.fillStyle = theme.sky[Math.min(theme.sky.length - 1, Math.floor(by / (skyH / theme.sky.length)))];
+            ctx.fillRect(nx, by, U * (1 + Math.floor(bgHash(i * 3 + k) * 2)), U * (1 + Math.floor(bgHash(i * 17 + k) * 2)));
         }
-    });
-}
-
-// 마법같은 파티클들
-function drawMagicalParticles() {
-    for (let i = 0; i < 25; i++) {
-        const x = (i * 200 + gameState.distance * 0.4) % (canvas.width + 150);
-        const y = GROUND_Y - 100 + Math.sin(gameState.distance * 0.03 + i) * 50;
-        
-        if (x > -30 && x < canvas.width + 30) {
-            const alpha = (Math.sin(gameState.distance * 0.05 + i) + 1) * 0.3;
-            const colors = ['#FFD700', '#FF69B4', '#87CEEB', '#98FB98', '#DDA0DD'];
-            const color = colors[i % colors.length];
-            
-            bctx.fillStyle = color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
-            bctx.beginPath();
-            bctx.arc(x, y, 3 + Math.sin(gameState.distance * 0.08 + i) * 2, 0, Math.PI * 2);
-            bctx.fill();
-            
-            // 반짝이는 효과 (입자별 위상 기반 - 기존 Math.random()은 무작위로 깜빡였음)
-            if (Math.sin(gameState.distance * 0.1 + i * 2.4) > 0.9) {
-                bctx.fillStyle = '#FFFFFF';
-                bctx.beginPath();
-                bctx.arc(x, y, 1, 0, Math.PI * 2);
-                bctx.fill();
+        // 창문 도트 (해시로 드문드문)
+        ctx.fillStyle = theme.farWin;
+        for (let wy = by + U * 2; wy < skyH - U * 2; wy += U * 3) {
+            for (let wx = bx + U; wx < bx + bw - U; wx += U * 3) {
+                if (bgHash(wx * 7 + wy * 13 + i) < 0.16) {
+                    ctx.fillRect(wx, wy, U, U);
+                }
             }
         }
     }
 }
 
-// 간단한 구름 그리기 (백업용)
-function drawSimpleClouds() {
-    const cloudOffset = (gameState.backgroundOffset * 0.3) % (canvas.width + 200);
-    
-    bctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    for (let i = 0; i < 5; i++) {
-        const x = (i * 200) - cloudOffset;
-        const y = 50 + Math.sin(i) * 20;
-        
-        if (x > -100 && x < canvas.width + 100) {
-            // 구름 모양
-            bctx.beginPath();
-            bctx.arc(x, y, 25, 0, Math.PI * 2);
-            bctx.arc(x + 25, y, 35, 0, Math.PI * 2);
-            bctx.arc(x + 50, y, 25, 0, Math.PI * 2);
-            bctx.arc(x + 25, y - 15, 20, 0, Math.PI * 2);
-            bctx.fill();
+// ── 중경: 소품 스프라이트 (0.6x 패럴랙스, 지면 위에 배치) ──
+function drawMidProps(theme, U, W, cam) {
+    const off = Math.round(cam * 0.6);
+    const segW = U * 60;
+    const first = Math.floor(off / segW) - 1;
+    const count = Math.ceil(W / segW) + 3;
+    const scale = Math.max(2, Math.round(U * 0.75));
+    for (let i = first; i < first + count; i++) {
+        const r = bgHash(i * 47 + 11);
+        if (r < 0.3) continue;                                // 빈 자리
+        const prop = BG_PROPS[theme.props[Math.floor(bgHash(i * 19 + 4) * theme.props.length)]];
+        if (!prop) continue;
+        const x = Math.round(i * segW - off + bgHash(i * 67 + 8) * segW * 0.4);
+        const y = Math.round(GROUND_Y - prop.sprite.length * scale + U);  // 발이 경계선에 살짝 걸치게
+        drawPixelSprite(prop.sprite, prop.colorMap, x, y, scale);
+    }
+}
+
+// ── 근경: 지면 타일 (경계선 / 풀 / 흙 / 자갈) ──
+function drawGroundTiles(theme, U, W, cam) {
+    const g = theme.ground;
+    const top = Math.round(GROUND_Y);
+    const H = canvas.height;
+    const xo = -(((cam % U) + U) % U);                        // 정수 스냅 스크롤 오프셋
+
+    // 메탈슬러그식 어두운 경계선
+    ctx.fillStyle = g.line;
+    ctx.fillRect(0, top, W, U);
+
+    // 풀 층 (2톤: 밑색 + 해시 디더 술)
+    const grassH = U * 4;
+    ctx.fillStyle = g.grass1;
+    ctx.fillRect(0, top + U, W, grassH);
+    ctx.fillStyle = g.grass2;
+    for (let sx = xo; sx < W + U; sx += U) {
+        const t = Math.round((cam + sx) / U);
+        if (bgHash(t * 3 + 1) < 0.4) ctx.fillRect(sx, top + U, U, U);            // 윗줄 밝은 술
+        if (bgHash(t * 11 + 5) < 0.18) ctx.fillRect(sx, top + U * 2, U, U);      // 드문 하이라이트
+    }
+
+    // 흙 층 (체커 미세 톤)
+    const dirtTop = top + U + grassH;
+    const dirtH = U * 8;
+    ctx.fillStyle = g.dirt1;
+    ctx.fillRect(0, dirtTop, W, dirtH);
+    ctx.fillStyle = g.dirt2;
+    for (let sy = 0; sy < dirtH; sy += U) {
+        for (let sx = xo; sx < W + U; sx += U * 2) {
+            const t = Math.round((cam + sx) / U) + sy / U;
+            if ((t & 1) === 0) ctx.fillRect(sx, dirtTop + sy, U, U);
+        }
+    }
+
+    // 자갈 층 (해시 기반 고정 배치 자갈)
+    const gravelTop = dirtTop + dirtH;
+    ctx.fillStyle = g.gravel;
+    ctx.fillRect(0, gravelTop, W, Math.max(0, H - gravelTop));
+    ctx.fillStyle = g.pebble;
+    for (let sy = gravelTop; sy < H; sy += U) {
+        for (let sx = xo; sx < W + U; sx += U) {
+            const t = Math.round((cam + sx) / U) * 31 + Math.round(sy / U) * 7;
+            if (bgHash(t) < 0.06) {
+                ctx.fillRect(sx, sy, U * 2, U);
+            }
         }
     }
 }

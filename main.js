@@ -1497,8 +1497,6 @@ function render() {
         drawBackground();
     }
     
-    ctx.fillStyle = '#228B22';
-    ctx.fillRect(0, GROUND_Y + 16 * PIXEL_SCALE, canvas.width, canvas.height);
     
     // 장애물 렌더링
     obstacles.forEach(obstacle => {
