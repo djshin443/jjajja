@@ -1,4 +1,42 @@
 // HTML 스타일 타이틀 화면 표시 함수
+// 텍스트를 저해상 캔버스에 그린 뒤 nearest-neighbor 확대해
+// '진짜 도트 글자'로 만든다 (이모지도 함께 도트화됨)
+function createPixelTextCanvas(text, opts = {}) {
+    const {
+        fontPx = 16,
+        color = '#FF69B4',
+        outline = '#FFFFFF',
+        shadow = 'rgba(0,0,0,0.3)',
+        scale = 3
+    } = opts;
+    const c = document.createElement('canvas');
+    const font = `${fontPx}px 'DungGeunMo', 'Jua', sans-serif`;
+    let cx = c.getContext('2d');
+    cx.font = font;
+    c.width = Math.ceil(cx.measureText(text).width) + fontPx;
+    c.height = Math.ceil(fontPx * 1.7);
+    cx = c.getContext('2d');   // 크기 변경 후 컨텍스트 상태 초기화됨
+    cx.font = font;
+    cx.textAlign = 'center';
+    cx.textBaseline = 'middle';
+    const x = c.width / 2, y = Math.floor(c.height / 2);
+    cx.fillStyle = shadow;                       // 계단형 그림자
+    cx.fillText(text, x + 2, y + 2);
+    cx.fillStyle = outline;                      // 8방향 외곽선
+    for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]]) {
+        cx.fillText(text, x + dx, y + dy);
+    }
+    cx.fillStyle = color;
+    cx.fillText(text, x, y);
+    c.style.width = (c.width * scale) + 'px';
+    c.style.height = 'auto';
+    c.style.maxWidth = '92vw';
+    c.style.imageRendering = 'pixelated';
+    c.style.display = 'block';
+    c.style.margin = '0 auto';
+    return c;
+}
+
 function showTitleScreen() {
     // 기존 타이틀 화면 제거
     const existingTitle = document.getElementById('titleScreen');
@@ -197,7 +235,7 @@ function showTitleScreen() {
     const starCount = isMobilePortrait ? 20 : 30;
     for (let i = 0; i < starCount; i++) {
         const star = document.createElement('div');
-        star.innerHTML = '✨';
+        star.appendChild(createPixelTextCanvas('✨', { fontPx: 12, scale: 2, outline: 'rgba(0,0,0,0)', shadow: 'rgba(0,0,0,0)' }));
         star.style.cssText = `
             position: absolute;
             font-size: ${Math.random() * 20 + 15}px;
@@ -215,7 +253,7 @@ function showTitleScreen() {
     const heartCount = isMobilePortrait ? 10 : 15;
     for (let i = 0; i < heartCount; i++) {
         const heart = document.createElement('div');
-        heart.innerHTML = '💖';
+        heart.appendChild(createPixelTextCanvas('💖', { fontPx: 14, scale: 2, outline: 'rgba(0,0,0,0)', shadow: 'rgba(0,0,0,0)' }));
         heart.style.cssText = `
             position: absolute;
             font-size: ${Math.random() * 15 + 20}px;
@@ -233,7 +271,7 @@ function showTitleScreen() {
     const coinCount = isMobilePortrait ? 12 : 20;
     for (let i = 0; i < coinCount; i++) {
         const coin = document.createElement('div');
-        coin.innerHTML = '🪙';
+        coin.appendChild(createPixelTextCanvas('🪙', { fontPx: 14, scale: 2, outline: 'rgba(0,0,0,0)', shadow: 'rgba(0,0,0,0)' }));
         const randomLeft = Math.random() * 100;
         coin.style.cssText = `
             position: absolute;
@@ -282,48 +320,34 @@ function showTitleScreen() {
     `;
     
     // 게임 제목 (반응형 폰트 크기)
-    const title = document.createElement('h1');
-    title.innerHTML = '🚀 지율이의 잉글리쉬 어드벤쳐 🚀';
-
-    // 뷰포트 단위 사용하여 반응형 폰트 크기 설정
-    const titleFontSize = isMobilePortrait ?
-        'min(7vw, 28px)' :
-        (isMobile ? '2.2em' : '3em');
-
-    title.style.cssText = `
-        font-size: ${titleFontSize};
-        color: #FF69B4;
-        text-shadow:
-            3px 3px 0px #FFD700,
-            6px 6px 0px rgba(0,0,0,0.25);
-        margin: 0;
-        font-weight: bold;
-        text-align: center;
-        line-height: 1.3;
-        word-break: keep-all;
-        white-space: normal;
-    `;
-
-    // 부제목 (반응형 폰트 크기)
-    const subtitle = document.createElement('h2');
-    subtitle.innerHTML = '👽 ABC 대마왕의 지구 침공! 👾';
-
-    const subtitleFontSize = isMobilePortrait ?
-        'min(5vw, 22px)' :
-        (isMobile ? '1.5em' : '2em');
-
-    subtitle.style.cssText = `
-        font-size: ${subtitleFontSize};
-        color: #FFD700;
-        text-shadow: 3px 3px 0px #FF69B4,
-                     6px 6px 0px rgba(0,0,0,0.25);
+    // 제목/부제목: 저해상 캔버스에 그려 확대한 '진짜 도트 글자'
+    const titleWrap = document.createElement('div');
+    const subtitleWrap = document.createElement('div');
+    subtitleWrap.style.cssText = `
         margin: ${isMobilePortrait ? '10px 0 15px 0' : '20px 0 25px 0'};
-        font-weight: bold;
         animation: float 2.5s ease-in-out infinite;
     `;
-    
-    mainTitle.appendChild(title);
-    mainTitle.appendChild(subtitle);
+
+    function renderTitleTexts() {
+        titleWrap.innerHTML = '';
+        titleWrap.appendChild(createPixelTextCanvas('🚀 지율이의 잉글리쉬 어드벤쳐 🚀', {
+            fontPx: 20, scale: isMobilePortrait ? 2 : 3,
+            color: '#FF69B4', outline: '#FFFFFF', shadow: '#FFD700'
+        }));
+        subtitleWrap.innerHTML = '';
+        subtitleWrap.appendChild(createPixelTextCanvas('👽 ABC 대마왕의 지구 침공! 👾', {
+            fontPx: 14, scale: isMobilePortrait ? 2 : 3,
+            color: '#FFD700', outline: '#8B008B', shadow: 'rgba(0,0,0,0.3)'
+        }));
+    }
+    renderTitleTexts();
+    // 도트 폰트 로드가 끝나면 다시 그려 확실히 픽셀 글꼴로 표시
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(renderTitleTexts);
+    }
+
+    mainTitle.appendChild(titleWrap);
+    mainTitle.appendChild(subtitleWrap);
 
     // 시작 버튼 (반응형 크기)
     const startButton = document.createElement('button');
@@ -470,22 +494,24 @@ function showTitleScreen() {
         }, 800);
     };
     
-    // 작은 도움말 텍스트 (반응형 폰트)
+    // 작은 도움말 텍스트 (도트 캔버스)
     const helpText = document.createElement('div');
-    helpText.innerHTML = '💥 지율이와 함께 ABC 대마왕을 물리치자! 💥';
-    
-    const helpFontSize = isMobilePortrait ? 
-        'min(3.5vw, 14px)' : 
-        '1.1em';
-    
     helpText.style.cssText = `
-        font-size: ${helpFontSize};
-        color: #8B008B;
-        text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
         margin-top: ${isMobilePortrait ? '15px' : '30px'};
         animation: float 3s ease-in-out infinite;
         text-align: center;
     `;
+    function renderHelpText() {
+        helpText.innerHTML = '';
+        helpText.appendChild(createPixelTextCanvas('💥 지율이와 함께 ABC 대마왕을 물리치자! 💥', {
+            fontPx: 12, scale: 2,
+            color: '#8B008B', outline: '#FFFFFF', shadow: 'rgba(0,0,0,0.2)'
+        }));
+    }
+    renderHelpText();
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(renderHelpText);
+    }
     
     // 모든 요소를 컨테이너에 추가
     contentContainer.appendChild(mainTitle);

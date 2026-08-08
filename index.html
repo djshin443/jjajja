@@ -1010,6 +1010,31 @@
             });
         }
 
+        // 메뉴 제목/부제목을 도트 캔버스 텍스트로 교체 (opening.js의 헬퍼 사용)
+        function pixelateMenuTitles() {
+            if (typeof createPixelTextCanvas !== 'function') return;
+            const t = document.getElementById('menuTitle');
+            if (t) {
+                t.innerHTML = '';
+                t.appendChild(createPixelTextCanvas('🌟 영어 히어로를 선택하세요! 🌟', {
+                    fontPx: 16, scale: 2, color: '#9932CC', outline: '#FFFFFF', shadow: 'rgba(0,0,0,0.2)'
+                }));
+            }
+            const s = document.getElementById('menuSubtitle');
+            if (s) {
+                s.innerHTML = '';
+                s.appendChild(createPixelTextCanvas('ABC 대마왕으로부터 지구를 지킬 히어로는?', {
+                    fontPx: 11, scale: 2, color: '#6B3AA0', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)'
+                }));
+            }
+        }
+        window.addEventListener('load', () => {
+            pixelateMenuTitles();
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(pixelateMenuTitles);
+            }
+        });
+
         // 캐릭터별 인사말 데이터
         const characterGreetings = {
             jiyul: "안녕! 나는 지율이야! 💜 오늘은 영어 단어를 배우러 왔어! 키위나 화이트하우스를 타면 특별한 능력도 쓸 수 있어! ✨",
