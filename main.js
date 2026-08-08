@@ -178,7 +178,9 @@ function showBossMessage(messageType, onComplete) {
     document.getElementById('ui').style.display = 'none';
     document.getElementById('controls').style.display = 'none';
     document.getElementById('questionPanel').style.display = 'none';
-    
+    const pauseB = document.getElementById('pauseBtn');
+    if (pauseB) pauseB.style.display = 'none';
+
     // 대화 시스템 초기화
     currentDialogue = dialogues;
     currentDialogueIndex = 0;
@@ -523,6 +525,8 @@ function endDialogue(onComplete) {
     // UI 복원
     document.getElementById('ui').style.display = 'block';
     document.getElementById('controls').style.display = 'flex';
+    const pauseBtnEl = document.getElementById('pauseBtn');
+    if (pauseBtnEl) pauseBtnEl.style.display = 'block';
 
     // 완료 콜백 실행 (자동재생 경로에서는 전역에 보관된 콜백 사용)
     const callback = onComplete || window.currentDialogueComplete;
@@ -588,7 +592,8 @@ let gameState = {
     screenShake: 0,
     shakeTimer: 0,
     bossSpawned: false,
-    bossDialogueActive: false
+    bossDialogueActive: false,
+    paused: false
 };
 
 // 단어 관리자 초기화
@@ -857,6 +862,11 @@ function checkIOSFullscreen() {
 // 게임 초기화
 function initGame() {
     gameState.running = true;
+    gameState.paused = false;
+    const pauseOv = document.getElementById('pauseOverlay');
+    if (pauseOv) pauseOv.style.display = 'none';
+    const pauseB = document.getElementById('pauseBtn');
+    if (pauseB) pauseB.style.display = 'block';
     gameState.score = 0;
     gameState.stage = 1;
     gameState.distance = 0;
@@ -1989,11 +1999,39 @@ function startSelectedGame() {
 // 메뉴 표시
 function showMenu() {
     gameState.running = false;
+    gameState.paused = false;
 	 document.getElementById('gameContainer').classList.add('menu-mode');
     document.getElementById('characterSelectMenu').style.display = 'flex';
     document.getElementById('unitSelectMenu').style.display = 'none';
     document.getElementById('ui').style.display = 'none';
     document.getElementById('questionPanel').style.display = 'none';
+    const pauseOv = document.getElementById('pauseOverlay');
+    if (pauseOv) pauseOv.style.display = 'none';
+    const pauseB = document.getElementById('pauseBtn');
+    if (pauseB) pauseB.style.display = 'none';
+}
+
+// ── 일시정지: 버튼을 잘못 눌러도 게임이 끊기지 않게 오버레이로 확인 ──
+function pauseGame() {
+    if (!gameState.running || gameState.paused) return;
+    gameState.paused = true;
+    gameState.running = false;
+    const ov = document.getElementById('pauseOverlay');
+    if (ov) ov.style.display = 'flex';
+}
+
+function resumeGame() {
+    if (!gameState.paused) return;
+    gameState.paused = false;
+    const ov = document.getElementById('pauseOverlay');
+    if (ov) ov.style.display = 'none';
+    gameState.running = true;
+    requestAnimationFrame(gameLoop);
+}
+
+function exitToMenuFromPause() {
+    gameState.paused = false;
+    showMenu();
 }
 
 // 화면 전환 함수들
@@ -2252,11 +2290,11 @@ document.addEventListener('touchstart', function(e) {
     
     if (target) {
         // 버튼 클래스, ID, 또는 부모 요소 확인
-        if (target.classList.contains('control-btn') || 
-            target.id === 'jumpBtn' || 
-            target.id === 'menuBtn' || 
-            target.id === 'helpBtn' ||
+        if (target.classList.contains('control-btn') ||
+            target.id === 'jumpBtn' ||
+            target.id === 'pauseBtn' ||
             target.id === 'fullscreenBtn' ||
+            target.closest('#pauseOverlay') ||
             target.closest('#controls') ||
             target.closest('#ui') ||
             target.closest('#questionPanel') ||
@@ -2296,11 +2334,11 @@ document.addEventListener('touchend', function(e) {
     
     if (endTarget) {
         // 종료 지점이 버튼이나 UI 요소면 점프하지 않음
-        if (endTarget.classList.contains('control-btn') || 
-            endTarget.id === 'jumpBtn' || 
-            endTarget.id === 'menuBtn' || 
-            endTarget.id === 'helpBtn' ||
+        if (endTarget.classList.contains('control-btn') ||
+            endTarget.id === 'jumpBtn' ||
+            endTarget.id === 'pauseBtn' ||
             endTarget.id === 'fullscreenBtn' ||
+            endTarget.closest('#pauseOverlay') ||
             endTarget.closest('#controls') ||
             endTarget.closest('#ui') ||
             endTarget.closest('#questionPanel') ||
@@ -2675,8 +2713,16 @@ document.addEventListener('click', enableAudio, { once: true });
 
 // 키보드 이벤트 처리
 document.addEventListener('keydown', function(e) {
+    // 일시정지 중: ESC/스페이스/엔터로 즉시 복귀
+    if (gameState.paused) {
+        if (e.code === 'Escape' || e.code === 'Space' || e.code === 'Enter') {
+            e.preventDefault();
+            resumeGame();
+        }
+        return;
+    }
     if (!gameState.running) return;
-    
+
     switch(e.code) {
         case 'Space':
             e.preventDefault();
@@ -2697,12 +2743,12 @@ document.addEventListener('keydown', function(e) {
         case 'Escape':
             e.preventDefault();
             // ESC 키로 전체화면 해제 시 사용자 의도로 간주
-            if (document.fullscreenElement || document.webkitFullscreenElement || 
+            if (document.fullscreenElement || document.webkitFullscreenElement ||
                 document.mozFullScreenElement || document.msFullscreenElement) {
                 isUserExiting = true;
                 isFullscreenDesired = false;
             }
-            showMenu();
+            pauseGame();
             break;
         case 'KeyH':
             e.preventDefault();
