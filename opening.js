@@ -98,6 +98,13 @@ function showTitleScreen() {
     const OUTLINE = '#180C04';
 
     // ── 텍스트 → 픽셀 그리드 (0 빈칸, 1 채움, 2 외곽선) ──
+    // 같은 (text, fontPx) 재래스터를 피하는 캐시 (dense 모드에서 매 프레임 호출됨)
+    const _gridCache = new Map();
+    function rasterGrid(text, fontPx) {
+        const k = text + '@' + fontPx;
+        if (!_gridCache.has(k)) _gridCache.set(k, buildLogoGrid(text, fontPx));
+        return _gridCache.get(k);
+    }
     function buildLogoGrid(text, fontPx) {
         const off = document.createElement('canvas');
         let octx = off.getContext('2d');
@@ -114,7 +121,8 @@ function showTitleScreen() {
         for (let y = 0; y < off.height; y++) {
             const row = [];
             for (let x = 0; x < off.width; x++) {
-                row.push(img[(y * off.width + x) * 4 + 3] > 100 ? 1 : 0);
+                // 임계값 96: 축소 래스터에서 가는 획의 안티앨리어스 픽셀이 잘리지 않게
+                row.push(img[(y * off.width + x) * 4 + 3] > 96 ? 1 : 0);
             }
             g.push(row);
         }
@@ -141,12 +149,26 @@ function showTitleScreen() {
                         if (ny >= 0 && ny < H && nx >= 0 && nx < W && p[ny][nx] === 1) { p[y][x] = 2; break; }
                     }
                 }
+        // dense 재래스터에 필요한 원본 정보 (draw와 measure가 같은 계산을 쓰게 함)
+        p.text = text;
+        p.fontPx = fontPx;
         return p;
     }
 
     // ── 금속 도트 텍스트 렌더 (정수 스냅) ──
+    // 칸 크기 2px 이상: 정수 반올림해 도트 느낌 유지 (큰 로고)
+    // 칸 크기 2px 미만: 소수 배율 축소가 획을 지우므로, 목표 크기로
+    //   촘촘히 다시 래스터화한 격자를 1px 칸으로 그린다 (대사·캡션)
     function drawMetalGrid(grid, cx, cy, px, ramp, shineX) {
-        px = Math.max(1, Math.round(px));
+        if (px < 2 && grid.text) {
+            const denseFont = Math.max(10, Math.round(grid.fontPx * px));
+            const dg = rasterGrid(grid.text, denseFont);
+            return paintGrid(dg, cx, cy, 1, ramp, shineX);
+        }
+        return paintGrid(grid, cx, cy, Math.max(1, Math.round(px)), ramp, shineX);
+    }
+
+    function paintGrid(grid, cx, cy, px, ramp, shineX) {
         const gw = grid[0].length, gh = grid.length;
         const x0 = Math.round(cx - (gw * px) / 2);
         const y0 = Math.round(cy - (gh * px) / 2);
@@ -206,15 +228,20 @@ function showTitleScreen() {
     const walkPoses = ['walking1', 'walking2', 'walking3', 'walking4'];
 
     function buildLogos() {
-        logoTop = buildLogoGrid('크림이의', 14);
+        // 둥근모꼴은 16px 원본 비트맵 폰트: 16px 배수로 래스터해야 획이 안 뭉개진다
+        // (작은 텍스트는 그리기 배율을 낮춰 화면상 크기는 기존과 동일하게 유지)
+        logoTop = buildLogoGrid('크림이의', 16);
         logoMain = buildLogoGrid('잉글리쉬 어드벤쳐', 22);
-        logoSub = buildLogoGrid("CREAM'S ENGLISH ADVENTURE", 10);
-        logoTouch = buildLogoGrid('터치해서 시작!', 12);
+        logoSub = buildLogoGrid("CREAM'S ENGLISH ADVENTURE", 16);
+        logoTouch = buildLogoGrid('터치해서 시작!', 16);
     }
 
     function resize() {
-        W = cv.width = window.innerWidth;
-        H = cv.height = window.innerHeight;
+        // 격자 한 칸이 항상 '기기 픽셀' 정수에 대응하도록 내부 해상도를 DPR 배로 설정
+        // (CSS 크기는 100% 그대로 → 화면상 크기 동일, 픽셀만 선명해짐)
+        const dpr = Math.max(1, Math.min(3, Math.round(window.devicePixelRatio || 1)));
+        W = cv.width = Math.round(window.innerWidth * dpr);
+        H = cv.height = Math.round(window.innerHeight * dpr);
         U = Math.max(3, Math.round(H / 100));   // 기본 도트 단위
     }
 
@@ -348,18 +375,19 @@ function showTitleScreen() {
                 return Math.max(2, Math.min(Math.round(U * 1.05), Math.floor((W * 0.92) / logoMain[0].length)));
             }
             const mainPx = basePx() * zoom;
-            drawMetalGrid(logoTop, cxm, baseY - logoMain.length * basePx() / 2 - logoTop.length * basePx() * 0.4,
-                Math.max(1, Math.round(basePx() * 0.55)), RAMP_SILVER);
+            // 작은 텍스트: 16px 래스터로 바뀌었으므로 (기존폰트/16) 배율로 화면 크기 유지
+            drawMetalGrid(logoTop, cxm, baseY - logoMain.length * basePx() / 2 - logoTop.length * basePx() * 0.35,
+                basePx() * 0.55 * (14 / 16), RAMP_SILVER);
             drawMetalGrid(logoMain, cxm + ox, baseY + oy, mainPx, RAMP_GOLD, shine);
             if (phase === 'idle') {
-                drawMetalGrid(logoSub, cxm, baseY + logoMain.length * basePx() / 2 + logoSub.length * basePx() * 0.5 + U,
-                    Math.max(1, Math.round(basePx() * 0.45)), RAMP_ORANGE);
+                drawMetalGrid(logoSub, cxm, baseY + logoMain.length * basePx() / 2 + logoSub.length * basePx() * 0.3 + U,
+                    basePx() * 0.45 * (10 / 16), RAMP_ORANGE);
             }
         }
 
         // ── 터치해서 시작! (깜빡임) ──
         if (phase === 'idle' && logoTouch && Math.floor(frame / 26) % 2 === 0) {
-            drawMetalGrid(logoTouch, W / 2, H * 0.6, Math.max(1, Math.round(U * 0.5)), RAMP_GOLD);
+            drawMetalGrid(logoTouch, W / 2, H * 0.6, U * 0.5 * (12 / 16), RAMP_GOLD);
         }
 
         // ── 먼지 파티클 ──
@@ -378,7 +406,7 @@ function showTitleScreen() {
         if (H > W && logoTouch) {
             c.fillStyle = 'rgba(0,0,0,0.55)';
             c.fillRect(0, 0, W, H);
-            const rot = buildLogoGrid('화면을 옆으로 돌려주세요!', 12);
+            const rot = rasterGrid('화면을 옆으로 돌려주세요!', 16);
             drawMetalGrid(rot, W / 2, H / 2, Math.max(1, Math.floor(W * 0.9 / rot[0].length)), RAMP_GOLD);
         }
 
