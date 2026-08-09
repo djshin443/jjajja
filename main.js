@@ -93,7 +93,7 @@ const characterInfo = {
         bgColor: "#4B0082"
     },
     jiyul: {
-        name: "지율이",
+        name: "크림이",
         color: "#FF69B4",
         bgColor: "#FF1493"
     },
@@ -1642,7 +1642,7 @@ function render() {
     if (!skipPlayerDraw && typeof pixelData !== 'undefined' && pixelData[player.sprite]) {
         const moving = gameState.isMoving && !gameState.questionActive;
 
-        // 지율이가 탈것을 타고 있는 경우
+        // 크림이가 탈것을 타고 있는 경우
         if (player.sprite === 'jiyul' && gameState.selectedVehicle !== 'none') {
             if (gameState.selectedVehicle === 'kiwi' && pixelData.kiwi) {
                 // 키위 (발밑 = player.y)
@@ -1650,7 +1650,7 @@ function render() {
                 const kiwiSprite = pickSpriteFrame(kiwiData, player.isJumping, moving, player.animFrame);
                 drawSpriteAnchored(kiwiSprite, kiwiData.colorMap, player.x, player.y, player.width);
 
-                // 지율이를 키위(게코) 등 위에 태우기
+                // 크림이를 키위(게코) 등 위에 태우기
                 const jiyulData = pixelData.jiyul;
                 drawSpriteAnchored((player.smashTimer > 0 && jiyulData.smashing) ? jiyulData.smashing : jiyulData.idle, jiyulData.colorMap, player.x, player.y - 5 * PIXEL_SCALE, player.width);
 
@@ -1660,7 +1660,7 @@ function render() {
                 const whSprite = pickSpriteFrame(whData, player.isJumping, moving, player.animFrame);
                 drawSpriteAnchored(whSprite, whData.colorMap, player.x, player.y, player.width);
 
-                // 지율이를 지붕 위에 세우기
+                // 크림이를 지붕 위에 세우기
                 const jiyulData = pixelData.jiyul;
                 drawSpriteAnchored((player.smashTimer > 0 && jiyulData.smashing) ? jiyulData.smashing : jiyulData.idle, jiyulData.colorMap, player.x, player.y - 13 * PIXEL_SCALE, player.width);
             }
@@ -1857,7 +1857,7 @@ function selectChoice(choiceIndex) {
     gameStats.totalQuestions++;
     
     if (choiceIndex === gameState.currentQuestion.correctIndex) {
-        // 정답! 지율이의 라켓 스매싱 발동
+        // 정답! 크림이의 라켓 스매싱 발동
         player.smashTimer = 20;
         gameStats.combo++;
         gameStats.maxCombo = Math.max(gameStats.maxCombo, gameStats.combo);
@@ -2116,17 +2116,17 @@ function updateSelectedCharacterDisplay() {
     
     if (selectedCharacterName) {
         const characterNames = {
-            'jiyul': '지율이',
+            'jiyul': '크림이',
             'kiwi': '키위',
             'whitehouse': '화이트하우스'
         };
-        setPixelText(selectedCharacterName, characterNames[gameState.selectedCharacter] || '지율이', { fontPx: 11, scale: 2, color: '#9932CC', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', inline: true });
+        setPixelText(selectedCharacterName, characterNames[gameState.selectedCharacter] || '크림이', { fontPx: 11, scale: 2, color: '#9932CC', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', inline: true });
     }
 }
 
 // 도움말 표시
 function showHelp() {
-    alert('🌸 지율이의 픽셀 영어 게임 도움말 🌸\n\n' +
+    alert('🌸 크림이의 픽셀 영어 게임 도움말 🌸\n\n' +
           '1. Unit을 선택하고 시작하세요!\n' +
           '2. 화면을 누르면 점프! 장애물을 뛰어넘으세요!\n' +
           '3. 움직이는 몬스터를 만나면 영어 문제를 풀어요!\n' +
@@ -2137,7 +2137,7 @@ function showHelp() {
           '🏕️ 화이트하우스와 함께라면: 오답 데미지 감소!\n' +
           '🔥 연속 정답 콤보로 보너스 점수를 노려보세요!\n' +
           '📝 틀린 단어는 오답 노트에 저장되어 다시 나와요!\n\n' +
-          '💕 지율이 화이팅! 💕');
+          '💕 크림이 화이팅! 💕');
 }
 
 // 게임 오버
@@ -2471,7 +2471,7 @@ function initializeGame() {
         showMenu();
     }
     
-    console.log('🌸 지율이의 픽셀 영어 게임이 초기화되었습니다! 🌸');
+    console.log('🌸 크림이의 픽셀 영어 게임이 초기화되었습니다! 🌸');
 }
 
 // 오프닝 시퀀스 시작
@@ -2582,7 +2582,7 @@ function showGameRecords() {
     let recordText = '🏆 게임 기록 🏆\n\n';
     gameRecords.slice(-5).reverse().forEach((record, index) => {
         recordText += `${index + 1}. ${record.date}\n`;
-        recordText += `   캐릭터: ${record.character === 'jiyul' ? '지율이' : 
+        recordText += `   캐릭터: ${record.character === 'jiyul' ? '크림이' : 
                                    record.character === 'kiwi' ? '키위' : '화이트하우스'}\n`;
         recordText += `   점수: ${record.score}점 (스테이지 ${record.stage})\n`;
         recordText += `   정답률: ${record.accuracy}% (${record.correctAnswers}/${record.totalQuestions})\n`;
@@ -2631,7 +2631,7 @@ window.gameOver = gameOverWithRecord;
 // 고급 도움말 함수
 function showAdvancedHelp() {
     const helpText = `
-🌸 지율이의 픽셀 영어 게임 - 상세 도움말 🌸
+🌸 크림이의 픽셀 영어 게임 - 상세 도움말 🌸
 
 🎮 조작법:
 • 화면 아무 곳이나 탭/클릭: 점프
@@ -2867,4 +2867,4 @@ if (document.readyState === 'loading') {
     lockOrientation();
 }
 
-console.log('✨ 지율이의 픽셀 영어 게임 준비 완료! ✨');
+console.log('✨ 크림이의 픽셀 영어 게임 준비 완료! ✨');

@@ -206,9 +206,9 @@ function showTitleScreen() {
     const walkPoses = ['walking1', 'walking2', 'walking3', 'walking4'];
 
     function buildLogos() {
-        logoTop = buildLogoGrid('지율이의', 14);
+        logoTop = buildLogoGrid('크림이의', 14);
         logoMain = buildLogoGrid('잉글리쉬 어드벤쳐', 22);
-        logoSub = buildLogoGrid("JIYUL'S ENGLISH ADVENTURE", 10);
+        logoSub = buildLogoGrid("CREAM'S ENGLISH ADVENTURE", 10);
         logoTouch = buildLogoGrid('터치해서 시작!', 12);
     }
 
@@ -465,7 +465,7 @@ class OpeningSequence {
         this.dialogues = [
             { 
                 scene: 1, 
-                text: "🌸 평화로운 어느 날... 지율이는 간식을 먹고 있었다 🍪", 
+                text: "🌸 평화로운 어느 날... 크림이는 간식을 먹고 있었다 🍪", 
                 speaker: "narrator",
                 effect: "peaceful"
             },
@@ -489,7 +489,7 @@ class OpeningSequence {
             },
             { 
                 scene: 5, 
-                text: "지율: \"뭐어어?! 내 간식 빼앗아가는 건 참을 수 없어! 😤\"", 
+                text: "크림: \"뭐어어?! 내 간식 빼앗아가는 건 참을 수 없어! 😤\"", 
                 speaker: "jiyul",
                 effect: "angry"
             },
@@ -701,7 +701,7 @@ class OpeningSequence {
                 this.ufo.rotation += 0.1;
                 break;
                 
-            case 5: // 지율이 화남
+            case 5: // 크림이 화남
                 this.jiyul.y = (this.isLandscape ? this.canvas.height * 0.5 : this.canvas.height * 0.4) + 
                               Math.abs(Math.sin(this.frame * 0.2)) * -10;
                 this.jiyul.expression = 'angry';
@@ -1057,7 +1057,7 @@ class OpeningSequence {
     drawScene() {
         // 캐릭터들 그리기
         if (typeof characterPixelData !== 'undefined') {
-            // 지율이
+            // 크림이
             if (characterPixelData.jiyul) {
                 this.drawPixelSprite(
                     characterPixelData.jiyul.idle,
@@ -1458,7 +1458,7 @@ class OpeningSequence {
     // 화자 표시 이름
     getSpeakerName(speaker) {
         switch(speaker) {
-            case 'jiyul': return '지율';
+            case 'jiyul': return '크림';
             case 'kiwi': return '키위';
             case 'whitehouse': return '화이트하우스';
             case 'alien': return 'ABC 대마왕';

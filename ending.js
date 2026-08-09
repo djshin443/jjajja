@@ -697,10 +697,10 @@ function showEnding() {
     
     const comicEndingStories = {
         jiyul: {
-            title: "지율이의 신나는 글로벌 영어 대모험! 🌟",
+            title: "크림이의 신나는 글로벌 영어 대모험! 🌟",
             scenes: [
                 {
-                    text: "지율이: '와하하! 모든 몬스터를 이겼다!' <span class='wiggle-emoji'>🎉</span>",
+                    text: "크림이: '와하하! 모든 몬스터를 이겼다!' <span class='wiggle-emoji'>🎉</span>",
                     emoji: "🌈"
                 },
                 {
@@ -708,7 +708,7 @@ function showEnding() {
                     emoji: "☁️"
                 },
                 {
-                    text: "미국 대통령: 'Hello! 지율아! 우리나라로 와줘!' <span class='wiggle-emoji'>🇺🇸</span>",
+                    text: "미국 대통령: 'Hello! 크림아! 우리나라로 와줘!' <span class='wiggle-emoji'>🇺🇸</span>",
                     emoji: "🏛️"
                 },
                 {
@@ -720,11 +720,11 @@ function showEnding() {
                     emoji: "🗼"
                 },
                 {
-                    text: "지율이: '어어? 다 알아들어! 나 천재인가?' <span class='ending-emoji'>🤯</span>",
+                    text: "크림이: '어어? 다 알아들어! 나 천재인가?' <span class='ending-emoji'>🤯</span>",
                     emoji: "🧠"
                 },
                 {
-                    text: "그래서 지율이는 제주도에 '영어 마법 카페'를 열었어요! <span class='wiggle-emoji'>✨</span>",
+                    text: "그래서 크림이는 제주도에 '영어 마법 카페'를 열었어요! <span class='wiggle-emoji'>✨</span>",
                     emoji: "☕"
                 },
                 {
@@ -732,11 +732,11 @@ function showEnding() {
                     emoji: "🗿"
                 },
                 {
-                    text: "지율이: '영어로 제주도 구경 시켜드릴게요~!' <span class='wiggle-emoji'>🌊</span>",
+                    text: "크림이: '영어로 제주도 구경 시켜드릴게요~!' <span class='wiggle-emoji'>🌊</span>",
                     emoji: "🖏"
                 },
                 {
-                    text: "그리고 지율이는 영어 마법사가 되어 행복하게 살았답니다! <span class='ending-emoji'>🎊</span>",
+                    text: "그리고 크림이는 영어 마법사가 되어 행복하게 살았답니다! <span class='ending-emoji'>🎊</span>",
                     emoji: "🧙‍♀️"
                 }
             ]
@@ -1110,7 +1110,7 @@ function showEnding() {
     createCelebrationEffects();
 }
 
-// 지율이 엔딩 애니메이션 (캐릭터 픽셀 데이터 사용)
+// 크림이 엔딩 애니메이션 (캐릭터 픽셀 데이터 사용)
 function animateJiyulEndingScene(ctx, canvas) {
     let frame = 0;
     const landmarkTypes = ['tower', 'castle', 'bridge', 'moai'];
@@ -1160,7 +1160,7 @@ function animateJiyulEndingScene(ctx, canvas) {
         // 2D 스프라이트 비행기 (원본 해상도로 선명하게)
         drawFlyingAirplaneWithJiyul(ctx, canvas, frame);
 
-        // ── 원본 해상도: 지율 스프라이트·마법 링·도트 텍스트 ──
+        // ── 원본 해상도: 크림 스프라이트·마법 링·도트 텍스트 ──
         if (jiyulData) {
             const centerX = canvas.width / 2 - 32;
             const centerY = canvas.height / 2 - 32 + Math.sin(frame * 0.05) * 20;

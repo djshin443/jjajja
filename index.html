@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="screen-orientation" content="landscape">
     <meta name="x5-orientation" content="landscape">
-    <title>지율이의 픽셀 영어 게임</title>
+    <title>크림이의 픽셀 영어 게임</title>
 	<link rel="apple-touch-icon" href="ico.png">
     <link rel="icon" type="image/png" href="ico.png">
     <style>
@@ -1081,7 +1081,7 @@
                         <div id="characterGrid" class="character-grid">
                             <button class="character-btn selected" data-character="jiyul">
                                 <canvas class="character-pixel" width="96" height="96"></canvas>
-                                <span>지율이</span>
+                                <span>크림이</span>
                             </button>
                             <button class="character-btn" data-character="kiwi">
                                 <canvas class="character-pixel" width="96" height="96"></canvas>
@@ -1109,13 +1109,13 @@
                         <h3 class="card-title">👑 선택된 캐릭터</h3>
                         <div id="selectedCharacterDisplay" class="character-display">
                             <canvas id="selectedCharacterPixel" width="64" height="64"></canvas>
-                            <span id="selectedCharacterName">지율이</span>
+                            <span id="selectedCharacterName">크림이</span>
                             <div id="characterGreeting" class="character-greeting">
                                 안녕! 영어 단어를 배우러 왔어요! 💕
                             </div>
                         </div>
                         
-                        <!-- 지율이 선택 시 탈것 옵션 -->
+                        <!-- 크림이 선택 시 탈것 옵션 -->
                         <div id="vehicleOptions" style="display: none; margin-top: 20px;">
                             <h4 style="color: #9932CC; font-size: 16px; margin-bottom: 12px;">🚀 이동 방법 선택</h4>
                             <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
@@ -1293,8 +1293,8 @@
 
         // 캐릭터별 인사말 데이터
         const characterGreetings = {
-            jiyul: "안녕! 나는 지율이야! 💜 오늘은 영어 단어를 배우러 왔어! 키위나 화이트하우스를 타면 특별한 능력도 쓸 수 있어! ✨",
-            kiwi: "키위키위~! 🥝 나는 지율이가 키우는 크레스티드게코 키위야! 나랑 함께라면 공중에서 한 번 더 점프하는 더블 점프를 쓸 수 있어! ✨",
+            jiyul: "안녕! 나는 크림이야! 💜 오늘은 영어 단어를 배우러 왔어! 키위나 화이트하우스를 타면 특별한 능력도 쓸 수 있어! ✨",
+            kiwi: "키위키위~! 🥝 나는 크림이가 키우는 크레스티드게코 키위야! 나랑 함께라면 공중에서 한 번 더 점프하는 더블 점프를 쓸 수 있어! ✨",
             whitehouse: "안녕! 나는 화이트하우스 텐트야! 🏕️ 튼튼한 텐트라서 문제를 틀려도 아픈 걸 막아줄게! (오답 데미지 감소) 우리만의 특별한 공간이야! 🎪"
         };
 
@@ -1312,7 +1312,7 @@
             
             const nameElement = document.getElementById('selectedCharacterName');
             if (nameElement) {
-                nameElement.textContent = characterName === 'jiyul' ? '지율이' : 
+                nameElement.textContent = characterName === 'jiyul' ? '크림이' : 
                                         characterName === 'kiwi' ? '키위' : '화이트하우스';
             }
             
@@ -1332,7 +1332,7 @@
                 drawCharacterPixelSprite(ctx, characterPixelData[characterName].idle, characterPixelData[characterName].colorMap, 4);
             }
             
-            // 지율이 선택 시 탈것 옵션 표시 (gameState와 무관하게 작동)
+            // 크림이 선택 시 탈것 옵션 표시 (gameState와 무관하게 작동)
             const vehicleOptions = document.getElementById('vehicleOptions');
             if (vehicleOptions) {
                 if (characterName === 'jiyul') {
@@ -1358,7 +1358,7 @@
                     const ctx = canvas.getContext('2d');
                     
                     if (vehicle === 'none' && characterPixelData.jiyul) {
-                        // 걸어서 - 지율이 이미지
+                        // 걸어서 - 크림이 이미지
                         drawCharacterPixelSprite(ctx, characterPixelData.jiyul.idle, characterPixelData.jiyul.colorMap, 2);
                     } else if (vehicle === 'kiwi' && characterPixelData.kiwi) {
                         // 키위 이미지
@@ -1399,7 +1399,7 @@
                 
                 setTimeout(() => {
                     selectCharacter(selectedCharacter);
-                    // 지율이 선택 시 탈것 픽셀 그리기
+                    // 크림이 선택 시 탈것 픽셀 그리기
                     if (selectedCharacter === 'jiyul') {
                         drawVehiclePixels();
                     }
@@ -1507,7 +1507,7 @@
                 });
             }
             
-            // 기본 캐릭터 선택 (지율이)
+            // 기본 캐릭터 선택 (크림이)
             selectCharacter('jiyul');
             // 탈것 픽셀 그리기
             setTimeout(() => {
