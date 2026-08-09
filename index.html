@@ -998,37 +998,19 @@
             }
         }
 
+        /* 세로모드 안내: 도트 스프라이트 캔버스 오버레이 */
+        #rotatePrompt {
+            position: fixed;
+            inset: 0;
+            display: none;
+            z-index: 9999;
+            background: #0E1230;
+            padding: 0;
+        }
+
         /* 세로모드 실시간 감지 (CSS 미디어 쿼리) */
         @media screen and (orientation: portrait) {
-            /* 검은 반투명 배경 (모든 화면에서 표시) */
-            #gameContainer::before {
-                content: "";
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.8);
-                z-index: 9998;
-            }
-
-            /* 메인 메시지 (회전 아이콘 포함, 모든 화면에서 표시) */
-            #gameContainer::after {
-                content: "화면을 가로로 돌려주세요!\A\A최적의 게임 경험을 위해";
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                color: white;
-                font-size: min(6vw, 28px);
-                z-index: 9999;
-                font-family: 'DungGeunMo', 'Jua', sans-serif;
-                text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
-                text-align: center;
-                line-height: 1.5;
-                font-weight: bold;
-                white-space: pre-line;
-            }
+            #rotatePrompt { display: block; }
 
             /* 모든 메뉴와 게임 UI 숨김 */
             #gameContainer #gameCanvas,
@@ -1178,6 +1160,9 @@
         </div>
 
         <button id="pauseBtn">쉬기</button>
+
+        <!-- 세로 모드 안내 (도트 스프라이트 캔버스) -->
+        <div id="rotatePrompt"></div>
 
         <!-- 일시정지 오버레이: 실수로 눌러도 '계속하기'로 바로 복귀 -->
         <div id="pauseOverlay">
@@ -1552,6 +1537,143 @@
             
             console.log('탈것 선택됨:', vehicleName);
         }
+    </script>
+
+    <!-- 세로 모드 안내: 전부 도트 스프라이트로 그리는 캔버스 -->
+    <script>
+    (function pixelRotatePrompt() {
+        const prompt = document.getElementById('rotatePrompt');
+        if (!prompt) return;
+        prompt.innerHTML = '';
+        const rc = document.createElement('canvas');
+        rc.style.cssText = 'width:100%;height:100%;display:block;image-rendering:pixelated;';
+        prompt.appendChild(rc);
+        const g = rc.getContext('2d');
+
+        // 도트 휴대폰 (세로) — 숫자 배열 + colorMap
+        const PHONE_P = [
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,3,3,3,3,1,1,1],
+            [1,2,2,2,2,2,2,2,2,1],
+            [1,2,2,2,2,2,2,2,2,1],
+            [1,2,2,4,2,2,2,2,2,1],
+            [1,2,2,4,4,2,2,2,2,1],
+            [1,2,2,4,4,4,2,2,2,1],
+            [1,2,2,4,4,2,2,2,2,1],
+            [1,2,2,4,2,2,2,2,2,1],
+            [1,2,2,2,2,2,2,2,2,1],
+            [1,2,2,2,2,2,2,2,2,1],
+            [1,2,2,2,2,2,2,2,2,1],
+            [1,2,2,2,2,2,2,2,2,1],
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,3,3,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1]
+        ];
+        // 도트 휴대폰 (가로) = 세로 배열을 전치해 자동 생성
+        const PHONE_L = PHONE_P[0].map((_, c) =>
+            PHONE_P.map(row => row[c]).reverse()
+        );
+        const PHONE_COLORS = { 0: null, 1: '#C8D4E0', 2: '#1E3A5C', 3: '#5A6478', 4: '#FFC22B' };
+
+        function drawSprite(sprite, colors, x0, y0, ps) {
+            for (let y = 0; y < sprite.length; y++) {
+                const row = sprite[y];
+                for (let x = 0; x < row.length; x++) {
+                    const col = colors[row[x]];
+                    if (!col) continue;
+                    g.fillStyle = col;
+                    g.fillRect(x0 + x * ps, y0 + y * ps, ps, ps);
+                }
+            }
+        }
+
+        // 텍스트: fontPx를 크게 래스터하고 drawScale로 낮춰 그려 획을 보존
+        const textCache = new Map();
+        function textSprite(text, fontPx, color, outline) {
+            const k = text + '@' + fontPx + color;
+            if (!textCache.has(k) && typeof createPixelTextCanvas === 'function') {
+                textCache.set(k, createPixelTextCanvas(text, {
+                    fontPx, scale: 1, color, outline, shadow: 'rgba(0,0,0,0.45)'
+                }));
+            }
+            return textCache.get(k) || null;
+        }
+        function drawText(text, cx, cy, fontPx, color, outline, targetH, maxW) {
+            const tc = textSprite(text, fontPx, color, outline);
+            if (!tc) return;
+            let s = targetH / tc.height;
+            if (tc.width * s > maxW) s = maxW / tc.width;
+            const dw = Math.round(tc.width * s), dh = Math.round(tc.height * s);
+            g.imageSmoothingEnabled = false;
+            g.drawImage(tc, Math.round(cx - dw / 2), Math.round(cy - dh / 2), dw, dh);
+        }
+
+        let frame = 0;
+        function draw() {
+            frame++;
+            // 숨겨져 있으면 렌더링 건너뜀 (성능)
+            const visible = getComputedStyle(prompt).display !== 'none';
+            if (visible) {
+                const dpr = Math.max(1, Math.min(3, Math.round(window.devicePixelRatio || 1)));
+                const cw = Math.round(prompt.clientWidth * dpr), chh = Math.round(prompt.clientHeight * dpr);
+                if (rc.width !== cw || rc.height !== chh) {
+                    rc.width = cw;
+                    rc.height = chh;
+                }
+                const w = rc.width, h = rc.height;
+                const base = Math.max(0.7, Math.min(w / 360, h / 640));
+
+                // 밤하늘 색 밴드 4단계
+                const bands = ['#0A0E24', '#0E1230', '#161C40', '#1E2650'];
+                const bandH = Math.ceil(h / bands.length);
+                bands.forEach((color, i) => {
+                    g.fillStyle = color;
+                    g.fillRect(0, i * bandH, w, bandH + 1);
+                });
+                // 흰 점 별 (고정 배치, 깜빡임 없음)
+                g.fillStyle = 'rgba(255,255,255,0.65)';
+                for (let i = 1; i <= 22; i++) {
+                    const sx = (i * 73856093) % w;
+                    const sy = (i * 19349663) % Math.round(h * 0.9);
+                    const ss = i % 3 === 0 ? 3 : 2;
+                    g.fillRect(sx, sy, ss, ss);
+                }
+
+                // 휴대폰: 1초마다 세로 ↔ 가로 (60프레임 주기)
+                const showLandscape = Math.floor(frame / 60) % 2 === 1;
+                const sprite = showLandscape ? PHONE_L : PHONE_P;
+                const ps = Math.max(4, Math.floor(base * 9));
+                const pw = sprite[0].length * ps, ph = sprite.length * ps;
+                const px0 = Math.round((w - pw) / 2), py0 = Math.round(h * 0.32 - ph / 2);
+                drawSprite(sprite, PHONE_COLORS, px0, py0, ps);
+
+                // 금색 도트 회전 화살표 (호를 그리는 점들 + 화살촉)
+                g.fillStyle = '#FFE55A';
+                const ccx = w / 2, ccy = h * 0.32;
+                const rad = Math.max(pw, ph) * 0.75;
+                const ds = Math.max(4, Math.round(base * 5));
+                for (let a = 0; a < 7; a++) {
+                    const ang = -Math.PI * 0.25 + a * 0.16;
+                    g.fillRect(Math.round(ccx + Math.cos(ang) * rad - ds / 2),
+                               Math.round(ccy + Math.sin(ang) * rad - ds / 2), ds, ds);
+                }
+                const tipAng = -Math.PI * 0.25 + 7 * 0.16;
+                const tx = ccx + Math.cos(tipAng) * rad, ty = ccy + Math.sin(tipAng) * rad;
+                g.fillRect(Math.round(tx - ds), Math.round(ty - ds * 1.6), ds * 2, ds);
+                g.fillRect(Math.round(tx - ds), Math.round(ty - ds * 0.6), ds, ds);
+
+                // 안내 문구: 큰 fontPx 래스터 + drawScale 축소로 또렷하게
+                drawText('화면을 돌려주세요!', w / 2, h * 0.58, 32, '#FFD700', '#100C08',
+                    Math.round(44 * base), Math.round(w * 0.88));
+                if (Math.floor(frame / 40) % 2 === 0) {
+                    drawText('가로 모드에서 플레이할 수 있어요', w / 2, h * 0.68, 28, '#FFFFFF', '#100C08',
+                        Math.round(30 * base), Math.round(w * 0.88));
+                }
+            }
+            requestAnimationFrame(draw);
+        }
+        draw();
+    })();
     </script>
 </body>
 </html>
