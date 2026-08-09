@@ -180,7 +180,7 @@
             z-index: 10;
             background: rgba(16, 12, 8, 0.92);
             border-bottom: 3px solid #FFD700;
-            padding: 7px calc(92px + env(safe-area-inset-right)) 7px calc(14px + env(safe-area-inset-left));
+            padding: 11px calc(92px + env(safe-area-inset-right)) 11px calc(14px + env(safe-area-inset-left));
             display: none;
             font-family: 'DungGeunMo', 'Jua', sans-serif;
             image-rendering: pixelated;
@@ -687,10 +687,22 @@
             min-width: 400px;
         }
 
+        .vehicle-btn span {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        .vehicle-btn span canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
         .vehicle-btn {
             background: linear-gradient(135deg, #ffffff, #F8F4FF);
             border: 2px solid #DDA0DD;
             border-radius: 10px;
+            min-width: 0;
+            max-width: 240px;
             padding: 10px 15px;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -861,10 +873,10 @@
 
             /* ── 인게임 상단 UI (노치 안전영역 포함) ── */
             #ui {
-                padding: 4px calc(84px + env(safe-area-inset-right)) 4px calc(10px + env(safe-area-inset-left));
+                padding: 7px calc(84px + env(safe-area-inset-right)) 7px calc(10px + env(safe-area-inset-left));
                 border-bottom-width: 2px;
             }
-            #ui canvas { width: auto !important; max-height: 16px; }
+            #ui canvas { width: auto !important; max-height: 17px; }
             #fullscreenBtn {
                 top: 4px;
                 right: calc(6px + env(safe-area-inset-right));
@@ -1125,11 +1137,11 @@
                                 </button>
                                 <button class="vehicle-btn" data-vehicle="kiwi">
                                     <canvas class="vehicle-pixel" width="32" height="32"></canvas>
-                                    <span>키위 타고 🥝더블점프</span>
+                                    <span>키위 (더블점프)</span>
                                 </button>
                                 <button class="vehicle-btn" data-vehicle="whitehouse">
                                     <canvas class="vehicle-pixel" width="32" height="32"></canvas>
-                                    <span>화이트하우스 타고 🛡️튼튼</span>
+                                    <span>화이트하우스 (튼튼)</span>
                                 </button>
                             </div>
                         </div>

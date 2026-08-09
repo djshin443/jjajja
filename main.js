@@ -666,8 +666,8 @@ function resizeCanvas() {
         player.height = 16 * PIXEL_SCALE;
     }
     
-    // GROUND_Y 위치를 화면 비율에 맞게 조정
-    const groundRatio = aspectRatio > 1 ? 0.7 : 0.75;
+    // GROUND_Y 위치를 화면 비율에 맞게 조정 (땅을 낮춰 플레이 영역을 넓게)
+    const groundRatio = aspectRatio > 1 ? 0.82 : 0.8;
     GROUND_Y = screenHeight * groundRatio;
     
     // 기존 장애물들의 위치도 새로운 GROUND_Y에 맞게 조정
