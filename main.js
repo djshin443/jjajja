@@ -1772,11 +1772,11 @@ function updateQuestionPanel() {
     const qEl = document.getElementById('questionText');
     qEl.innerHTML = '';
     qEl.appendChild(createPixelTextCanvas(`${badge}${q.question}`, {
-        fontPx: 20, scale: 2, color: '#9932CC', outline: '#FFFFFF', shadow: 'rgba(0,0,0,0.15)'
+        fontPx: 24, scale: 2, color: '#FFD700', outline: '#100C08', shadow: 'rgba(0,0,0,0.35)'
     }));
     if (posHint) {
         qEl.appendChild(createPixelTextCanvas(`품사 힌트: ${posHint}`, {
-            fontPx: 10, scale: 2, color: '#9370DB', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)'
+            fontPx: 12, scale: 2, color: '#3DDCFF', outline: '#100C08', shadow: 'rgba(0,0,0,0)'
         }));
     }
     qEl.querySelectorAll('canvas').forEach(c => { c.style.maxWidth = '100%'; });
@@ -1795,7 +1795,7 @@ function updateQuestionPanel() {
 		
 		setPixelText(document.getElementById('enemyInfo'),
 			`${enemyName} 체력: ${gameState.currentEnemy.hp}/${gameState.currentEnemy.maxHp}`,
-			{ fontPx: 10, scale: 2, color: '#9370DB', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', inline: true });
+			{ fontPx: 12, scale: 2, color: '#FFB3C1', outline: '#100C08', shadow: 'rgba(0,0,0,0)', inline: true });
 	}
     
     // 4지선다 버튼 생성
@@ -1818,8 +1818,8 @@ function updateChoiceButtons() {
         const button = document.createElement('button');
         button.className = 'choice-btn';
         setPixelText(button, `(${index + 1}) ${choice}`, {
-            fontPx: 11, scale: 2, color: '#9932CC',
-            outline: 'rgba(255,255,255,0.85)', shadow: 'rgba(0,0,0,0)', wrapPx: 150
+            fontPx: 14, scale: 2, color: '#FFFFFF',
+            outline: 'rgba(16,12,8,0.9)', shadow: 'rgba(0,0,0,0)', wrapPx: 170
         });
         button.setAttribute('data-choice', index);
         button.onclick = () => chooseAnswer(index);

@@ -191,16 +191,16 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #F8F4FF, #E6E6FA);
+            background: linear-gradient(135deg, #3A2158, #241238);
             padding: 20px;
-            border: 4px solid #9370DB;
+            border: 4px solid #FFD700;
             text-align: center;
             font-size: 16px;
-            color: #6B3AA0;
+            color: #FFFFFF;
             display: none;
             z-index: 50;
             width: 90vw;
-            max-width: 500px;
+            max-width: 560px;
             font-family: 'DungGeunMo', 'Jua', sans-serif;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -221,8 +221,9 @@
         #enemyInfo {
             margin: 10px 0;
             font-size: 14px;
-            color: #9370DB;
-            background: rgba(255,255,255,0.5);
+            color: #FFB3C1;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 215, 0, 0.5);
             padding: 8px 15px;
             border-radius: 15px;
             display: inline-block;
@@ -238,9 +239,9 @@
         }
 
         .choice-btn {
-            background: linear-gradient(135deg, #E6E6FA, #D8BFD8);
-            border: 3px solid #9370DB;
-            color: #9932CC;
+            background: linear-gradient(135deg, #5A3A8E, #43286E);
+            border: 3px solid #B79CFF;
+            color: #FFFFFF;
             padding: 15px 10px;
             font-size: 16px;
             font-weight: bold;
@@ -267,10 +268,10 @@
 
         /* 선택된 답 강조 (제출 전) */
         .choice-btn.chosen {
-            background: linear-gradient(135deg, #FFF3B0, #FFE066);
-            border-color: #FF8C00;
-            transform: scale(1.03);
-            box-shadow: 0 0 14px rgba(255, 140, 0, 0.55);
+            background: linear-gradient(135deg, #7B4FC7, #5A35A0);
+            border-color: #FFD700;
+            transform: scale(1.04);
+            box-shadow: 0 0 16px rgba(255, 215, 0, 0.75);
         }
 
         #submitAnswerBtn {
@@ -289,9 +290,10 @@
             transition: all 0.15s ease;
         }
         #submitAnswerBtn:disabled {
-            background: linear-gradient(135deg, #C8C8D2, #E2E2EA);
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.45);
             box-shadow: none;
-            opacity: 0.75;
+            opacity: 0.8;
             cursor: default;
         }
         #submitAnswerBtn:not(:disabled):active {
@@ -918,16 +920,16 @@
                 width: 88vw;
                 max-width: 600px;
             }
-            #questionText { margin-bottom: 2px; }
-            #questionText canvas:first-child { width: auto !important; max-height: 30px; }
-            #questionText canvas:not(:first-child) { width: auto !important; max-height: 15px; }
-            #enemyInfo { margin: 3px 0; padding: 2px 10px; }
-            #enemyInfo canvas { width: auto !important; max-height: 13px; }
-            #choicesContainer { gap: 8px; margin: 8px 0 2px; padding: 0 4px; }
-            .choice-btn { min-height: 44px; padding: 5px 6px; border-width: 2px; border-radius: 10px; }
-            .choice-btn canvas { width: auto !important; max-height: 24px; }
-            #submitAnswerBtn { padding: 7px 26px; border-width: 2px; border-radius: 10px; margin-top: 0; }
-            #submitAnswerBtn canvas { width: auto !important; max-height: 18px; }
+            #questionText { margin-bottom: 3px; }
+            #questionText canvas:first-child { width: auto !important; max-height: 38px; }
+            #questionText canvas:not(:first-child) { width: auto !important; max-height: 18px; }
+            #enemyInfo { margin: 3px 0; padding: 3px 12px; }
+            #enemyInfo canvas { width: auto !important; max-height: 15px; }
+            #choicesContainer { gap: 9px; margin: 9px 0 3px; padding: 0 4px; }
+            .choice-btn { min-height: 50px; padding: 6px 6px; border-width: 2px; border-radius: 10px; }
+            .choice-btn canvas { width: auto !important; max-height: 28px; }
+            #submitAnswerBtn { padding: 9px 30px; border-width: 2px; border-radius: 10px; margin-top: 2px; }
+            #submitAnswerBtn canvas { width: auto !important; max-height: 21px; }
 
             /* ── 보스 대화창 ── */
             #dialogueBox { height: 150px; bottom: 8px; border-width: 3px; border-radius: 14px; }
