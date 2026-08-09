@@ -176,7 +176,6 @@ function showBossMessage(messageType, onComplete) {
     
     // UI 숨기기
     document.getElementById('ui').style.display = 'none';
-    document.getElementById('controls').style.display = 'none';
     document.getElementById('questionPanel').style.display = 'none';
     const pauseB = document.getElementById('pauseBtn');
     if (pauseB) pauseB.style.display = 'none';
@@ -524,7 +523,6 @@ function endDialogue(onComplete) {
 
     // UI 복원
     document.getElementById('ui').style.display = 'block';
-    document.getElementById('controls').style.display = 'flex';
     const pauseBtnEl = document.getElementById('pauseBtn');
     if (pauseBtnEl) pauseBtnEl.style.display = 'block';
 
@@ -863,6 +861,12 @@ function checkIOSFullscreen() {
 function initGame() {
     gameState.running = true;
     gameState.paused = false;
+    // 점프 버튼이 없어졌으므로 조작법을 잠깐 안내
+    setTimeout(() => {
+        if (gameState.running && typeof showFloatingText === 'function') {
+            showFloatingText(player.x + 60, player.y - 90, '화면을 누르면 점프!', '#FFD700', 18);
+        }
+    }, 800);
     const pauseOv = document.getElementById('pauseOverlay');
     if (pauseOv) pauseOv.style.display = 'none';
     const pauseB = document.getElementById('pauseBtn');
@@ -881,7 +885,6 @@ function initGame() {
     document.getElementById('questionPanel').style.display = 'none';
     document.getElementById('ui').style.display = 'block';
     document.getElementById('fullscreenBtn').style.display = 'block';
-    document.getElementById('controls').style.display = 'flex';
 
     document.getElementById('questionPanel').style.display = 'none';
     
@@ -2076,7 +2079,7 @@ function updateSelectedCharacterDisplay() {
 function showHelp() {
     alert('🌸 지율이의 픽셀 영어 게임 도움말 🌸\n\n' +
           '1. Unit을 선택하고 시작하세요!\n' +
-          '2. 점프 버튼으로 장애물을 뛰어넘으세요!\n' +
+          '2. 화면을 누르면 점프! 장애물을 뛰어넘으세요!\n' +
           '3. 움직이는 몬스터를 만나면 영어 문제를 풀어요!\n' +
           '4. 영어 단어의 뜻을 4지선다에서 고르세요!\n' +
           '5. 정답을 맞추면 몬스터를 물리칠 수 있어요!\n\n' +
@@ -2291,7 +2294,6 @@ document.addEventListener('touchstart', function(e) {
     if (target) {
         // 버튼 클래스, ID, 또는 부모 요소 확인
         if (target.classList.contains('control-btn') ||
-            target.id === 'jumpBtn' ||
             target.id === 'pauseBtn' ||
             target.id === 'fullscreenBtn' ||
             target.closest('#pauseOverlay') ||
@@ -2335,7 +2337,6 @@ document.addEventListener('touchend', function(e) {
     if (endTarget) {
         // 종료 지점이 버튼이나 UI 요소면 점프하지 않음
         if (endTarget.classList.contains('control-btn') ||
-            endTarget.id === 'jumpBtn' ||
             endTarget.id === 'pauseBtn' ||
             endTarget.id === 'fullscreenBtn' ||
             endTarget.closest('#pauseOverlay') ||
@@ -2365,12 +2366,27 @@ document.addEventListener('touchend', function(e) {
         }
     }
     
-    // 위로 스와이프 또는 빠른 터치 감지 (캔버스 영역에서만)
-    if ((deltaY > 50 && deltaTime < 500) || (deltaTime < 200 && Math.abs(deltaY) < 30)) {
+    // 위로 스와이프 또는 탭 감지 (화면 아무 곳이나 눌러서 점프)
+    lastTouchEndAt = Date.now();
+    if ((deltaY > 50 && deltaTime < 500) || (deltaTime < 350 && Math.abs(deltaY) < 40)) {
         e.preventDefault();
         jump();
     }
 }, { passive: false });
+
+// 데스크톱: 마우스 클릭으로도 점프 (터치 후 발생하는 합성 클릭은 무시)
+let lastTouchEndAt = 0;
+document.addEventListener('click', function(e) {
+    if (Date.now() - lastTouchEndAt < 800) return;
+    if (!gameState.running || gameState.paused || gameState.questionActive || gameState.bossDialogueActive) return;
+    const t = e.target;
+    if (!t || t.tagName === 'BUTTON' || t.closest('button') ||
+        t.closest('#ui') || t.closest('#questionPanel') || t.closest('#pauseOverlay') ||
+        t.closest('#characterSelectMenu') || t.closest('#unitSelectMenu')) {
+        return;
+    }
+    jump();
+});
 
 // 오프닝 실행 여부 체크
 let hasSeenOpening = false;
@@ -2418,8 +2434,7 @@ function startOpeningSequence() {
     document.getElementById('ui').style.display = 'none';
     document.getElementById('questionPanel').style.display = 'none';
     document.getElementById('fullscreenBtn').style.display = 'none';
-    document.getElementById('controls').style.display = 'none';
-    
+
     // 오프닝 실행 (opening.js에서)
     if (typeof startOpening === 'function') {
         startOpening(canvas, ctx, function() {
@@ -2570,10 +2585,10 @@ function showAdvancedHelp() {
 🌸 지율이의 픽셀 영어 게임 - 상세 도움말 🌸
 
 🎮 조작법:
-• 스페이스바 또는 점프 버튼: 점프
-• 위로 스와이프: 점프 (모바일)
+• 화면 아무 곳이나 탭/클릭: 점프
+• 스페이스바: 점프 (키보드)
 • 1,2,3,4 키: 문제 선택지 선택
-• ESC 키: 메뉴로 돌아가기
+• ESC 키: 일시정지/계속하기
 • H 키: 도움말
 
 🎯 게임 목표:
