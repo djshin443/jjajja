@@ -697,137 +697,137 @@ function showEnding() {
     
     const comicEndingStories = {
         jiyul: {
-            title: "크림이의 신나는 글로벌 영어 대모험! 🌟",
+            title: "크림이의 신나는 글로벌 영어 대모험!",
             scenes: [
                 {
-                    text: "크림이: '와하하! 모든 몬스터를 이겼다!' <span class='wiggle-emoji'>🎉</span>",
-                    emoji: "🌈"
+                    text: "크림이: '와하하! 모든 몬스터를 이겼다!'",
+                    emoji: ""
                 },
                 {
-                    text: "갑자기 하늘에서 무지개가 내려와서... <span class='ending-emoji'>🌈</span>",
-                    emoji: "☁️"
+                    text: "갑자기 하늘에서 무지개가 내려와서...",
+                    emoji: ""
                 },
                 {
-                    text: "미국 대통령: 'Hello! 크림아! 우리나라로 와줘!' <span class='wiggle-emoji'>🇺🇸</span>",
-                    emoji: "🏛️"
+                    text: "미국 대통령: 'Hello! 크림아! 우리나라로 와줘!'",
+                    emoji: ""
                 },
                 {
-                    text: "영국 여왕: '브라보! 런던에서 차 한 잔 할까?' <span class='ending-emoji'>🫖</span>",
-                    emoji: "👑"
+                    text: "영국 여왕: '브라보! 런던에서 차 한 잔 할까?'",
+                    emoji: ""
                 },
                 {
-                    text: "프랑스 대통령: '마니피크! 파리에서 크루아상 먹자!' <span class='wiggle-emoji'>🥐</span>",
-                    emoji: "🗼"
+                    text: "프랑스 대통령: '마니피크! 파리에서 크루아상 먹자!'",
+                    emoji: ""
                 },
                 {
-                    text: "크림이: '어어? 다 알아들어! 나 천재인가?' <span class='ending-emoji'>🤯</span>",
-                    emoji: "🧠"
+                    text: "크림이: '어어? 다 알아들어! 나 천재인가?'",
+                    emoji: ""
                 },
                 {
-                    text: "그래서 크림이는 제주도에 '영어 마법 카페'를 열었어요! <span class='wiggle-emoji'>✨</span>",
-                    emoji: "☕"
+                    text: "그래서 크림이는 제주도에 '영어 마법 카페'를 열었어요!",
+                    emoji: ""
                 },
                 {
-                    text: "매일 외국인들이 줄을 서서 영어 마법을 배우러 와요! <span class='ending-emoji'>🏃‍♂️</span><span class='ending-emoji'>🏃‍♀️</span>",
-                    emoji: "🗿"
+                    text: "매일 외국인들이 줄을 서서 영어 마법을 배우러 와요!",
+                    emoji: ""
                 },
                 {
-                    text: "크림이: '영어로 제주도 구경 시켜드릴게요~!' <span class='wiggle-emoji'>🌊</span>",
-                    emoji: "🖏"
+                    text: "크림이: '영어로 제주도 구경 시켜드릴게요~!'",
+                    emoji: ""
                 },
                 {
-                    text: "그리고 크림이는 영어 마법사가 되어 행복하게 살았답니다! <span class='ending-emoji'>🎊</span>",
-                    emoji: "🧙‍♀️"
+                    text: "그리고 크림이는 영어 마법사가 되어 행복하게 살았답니다!",
+                    emoji: ""
                 }
             ]
         },
         kiwi: {
-            title: "키위의 우주 대모험 시간여행! 🚀",
+            title: "키위의 우주 대모험 시간여행!",
             scenes: [
                 {
-                    text: "키위: '라룹라룹!' (와! 내가 해냈어!) <span class='wiggle-emoji'>🦎</span>",
-                    emoji: "🎉"
+                    text: "키위: '라룹라룹!' (와! 내가 해냈어!)",
+                    emoji: ""
                 },
                 {
-                    text: "그때 갑자기, 번쩍번쩍 UFO가 내려와요! <span class='ending-emoji'>🛸</span>",
-                    emoji: "✨"
+                    text: "그때 갑자기, 번쩍번쩍 UFO가 내려와요!",
+                    emoji: ""
                 },
                 {
-                    text: "외계인: '우와! 키위! 너는 전설의 영어 도마뱀이구나!' <span class='wiggle-emoji'>👽</span>",
-                    emoji: "🌌"
+                    text: "외계인: '우와! 키위! 너는 전설의 영어 도마뱀이구나!'",
+                    emoji: ""
                 },
                 {
-                    text: "키위: '라룹?' (엥? 외계인도 있었어?) <span class='ending-emoji'>❓</span>",
-                    emoji: "🤔"
+                    text: "키위: '라룹?' (엥? 외계인도 있었어?)",
+                    emoji: ""
                 },
                 {
-                    text: "외계인: '우리 은하수 영어 학교 선생님이 되어줘!' <span class='wiggle-emoji'>🌟</span>",
-                    emoji: "📚"
+                    text: "외계인: '우리 은하수 영어 학교 선생님이 되어줘!'",
+                    emoji: ""
                 },
                 {
-                    text: "키위: '라룹라룹!' (오오! 재밌겠네!) <span class='ending-emoji'>😄</span>",
-                    emoji: "💫"
+                    text: "키위: '라룹라룹!' (오오! 재밌겠네!)",
+                    emoji: ""
                 },
                 {
-                    text: "이제 키위는 우주 최고 영어 선생님이 되어서... <span class='wiggle-emoji'>👨‍🏫</span>",
-                    emoji: "🚀"
+                    text: "이제 키위는 우주 최고 영어 선생님이 되어서...",
+                    emoji: ""
                 },
                 {
-                    text: "외계 각 행성 친구들에게 영어를 가르치고 있어요! <span class='ending-emoji'>👾</span><span class='ending-emoji'>🛸</span>",
-                    emoji: "🪐"
+                    text: "외계 각 행성 친구들에게 영어를 가르치고 있어요!",
+                    emoji: ""
                 },
                 {
-                    text: "키위: 'Laloop means Hello in Earth language!' <span class='wiggle-emoji'>🌍</span>",
-                    emoji: "🗣️"
+                    text: "키위: 'Laloop means Hello in Earth language!'",
+                    emoji: ""
                 },
                 {
-                    text: "우주에서 가장 유명한 영어 도마뱀이 되었답니다! <span class='ending-emoji'>⭐</span>",
-                    emoji: "🏆"
+                    text: "우주에서 가장 유명한 영어 도마뱀이 되었답니다!",
+                    emoji: ""
                 }
             ]
         },
         whitehouse: {
-            title: "화이트하우스의 마법 왕국 건설기! 🏰",
+            title: "화이트하우스의 마법 왕국 건설기!",
             scenes: [
                 {
-                    text: "화이트하우스: '드디어! 모든 정보를 학습했다!' <span class='wiggle-emoji'>🤖</span>",
-                    emoji: "💡"
+                    text: "화이트하우스: '드디어! 모든 정보를 학습했다!'",
+                    emoji: ""
                 },
                 {
-                    text: "갑자기 텐트가 반짝반짝 거대한 성으로 변해요! <span class='ending-emoji'>✨</span>",
-                    emoji: "🏰"
+                    text: "갑자기 텐트가 반짝반짝 거대한 성으로 변해요!",
+                    emoji: ""
                 },
                 {
-                    text: "영어 단어들이 살아나서 춤을 춰요! <span class='wiggle-emoji'>💃</span><span class='wiggle-emoji'>🕺</span>",
-                    emoji: "🎭"
+                    text: "영어 단어들이 살아나서 춤을 춰요!",
+                    emoji: ""
                 },
                 {
-                    text: "Hello: '새로운 왕님! 여기 앉으세요!' <span class='ending-emoji'>👋</span>",
-                    emoji: "👑"
+                    text: "Hello: '새로운 왕님! 여기 앉으세요!'",
+                    emoji: ""
                 },
                 {
-                    text: "Wonderful: '오늘은 정말 멋진 날이네요!' <span class='wiggle-emoji'>☀️</span>",
-                    emoji: "🌞"
+                    text: "Wonderful: '오늘은 정말 멋진 날이네요!'",
+                    emoji: ""
                 },
                 {
-                    text: "Amazing: '이 왕국이 정말 놀라워요!' <span class='ending-emoji'>😍</span>",
-                    emoji: "🏰"
+                    text: "Amazing: '이 왕국이 정말 놀라워요!'",
+                    emoji: ""
                 },
                 {
-                    text: "화이트하우스: '오호! 이것이 진짜 영어 마법 왕국이구나!' <span class='wiggle-emoji'>🎩</span>",
-                    emoji: "👑"
+                    text: "화이트하우스: '오호! 이것이 진짜 영어 마법 왕국이구나!'",
+                    emoji: ""
                 },
                 {
-                    text: "매일 새로운 영어 단어 친구들이 이사를 와요! <span class='ending-emoji'>📦</span><span class='ending-emoji'>🚚</span>",
-                    emoji: "🏡"
+                    text: "매일 새로운 영어 단어 친구들이 이사를 와요!",
+                    emoji: ""
                 },
                 {
-                    text: "'사전 성(Dictionary Castle)'이라고 불리는 이곳은... <span class='wiggle-emoji'>📖</span>",
-                    emoji: "🏛️"
+                    text: "'사전 성(Dictionary Castle)'이라고 불리는 이곳은...",
+                    emoji: ""
                 },
                 {
-                    text: "온 세상에서 가장 재밌고 신나는 영어 왕국이 되었답니다! <span class='ending-emoji'>🎪</span>",
-                    emoji: "🎯"
+                    text: "온 세상에서 가장 재밌고 신나는 영어 왕국이 되었답니다!",
+                    emoji: ""
                 }
             ]
         }
@@ -873,19 +873,19 @@ function showEnding() {
     let grade, gradeEmoji, gradeColor;
     if (accuracy >= 95) {
         grade = "슈퍼 천재";
-        gradeEmoji = "👑";
+        gradeEmoji = "";
         gradeColor = "#FFD700";
     } else if (accuracy >= 85) {
         grade = "영어 마법사";
-        gradeEmoji = "🧙‍♂️";
+        gradeEmoji = "";
         gradeColor = "#FF69B4";
     } else if (accuracy >= 70) {
         grade = "영어 용사";
-        gradeEmoji = "⚔️";
+        gradeEmoji = "";
         gradeColor = "#00D9FF";
     } else {
         grade = "영어 새싹";
-        gradeEmoji = "🌱";
+        gradeEmoji = "";
         gradeColor = "#7FFF00";
     }
     
@@ -1790,4 +1790,4 @@ function createCelebrationEffects() {
 // 전역 함수로 등록
 window.showEnding = showEnding;
 
-console.log('✨ 최종 개선된 엔딩 시스템 로드 완료! 자동 스크롤 + 사용자 친화적 토글 버튼 ✨');
+console.log('최종 개선된 엔딩 시스템 로드 완료! 자동 스크롤 + 사용자 친화적 토글 버튼');

@@ -698,7 +698,7 @@ function resizeCanvas() {
         player.onGround = true;
         player.isJumping = false;
         
-        console.log(`🔧 화면 크기 조정: GROUND_Y = ${GROUND_Y}, Player Y = ${player.y}`);
+        console.log(`화면 크기 조정: GROUND_Y = ${GROUND_Y}, Player Y = ${player.y}`);
     }
 }
 
@@ -813,7 +813,7 @@ function showIOSFullscreenGuide() {
     `;
     
     guideDiv.innerHTML = `
-        <div style="font-size: 24px; margin-bottom: 20px;">🎀 아이폰 사용자님께 🎀</div>
+        <div style="font-size: 24px; margin-bottom: 20px;">아이폰 사용자님께</div>
         <div style="margin-bottom: 20px;">
             전체화면으로 플레이하시려면:<br><br>
             1. Safari 하단의 <span style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 10px;">공유 버튼</span>을 누르세요<br>
@@ -852,7 +852,7 @@ function checkIOSFullscreen() {
     if (isIOS && !isStandalone) {
         const fullscreenBtn = document.getElementById('fullscreenBtn');
         if (fullscreenBtn) {
-            setPixelText(fullscreenBtn, '🏠 추가', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
+            setPixelText(fullscreenBtn, '홈 추가', { fontPx: 11, scale: 2, color: '#FFFFFF', outline: 'rgba(0,0,0,0.35)', shadow: 'rgba(0,0,0,0)', inline: true });
         }
     }
 }
@@ -1111,7 +1111,7 @@ function update() {
 		});
 		
 		gameState.bossSpawned = true;
-		console.log('🐉 보스 등장! 엔딩 직전 최종 보스전!');
+		console.log('보스 등장! 엔딩 직전 최종 보스전!');
 	}
 
     // 스테이지 진행 체크 - 거리 기준 개선
@@ -1154,7 +1154,7 @@ function triggerEnding() {
     if (typeof showEnding === 'function') {
         showEnding();
     } else {
-        alert('🎉 축하합니다! 모든 스테이지를 클리어했어요! 🎉');
+        alert('축하합니다! 모든 스테이지를 클리어했어요!');
         showMenu();
     }
 }
@@ -1768,14 +1768,14 @@ function updateQuestionPanel() {
     if (q.wordInfo && q.wordInfo.pos) {
         posHint = q.wordInfo.pos.split('').map(c => posNames[c] || c).join('·');
     }
-    const badge = q.isReview ? '📝 복습! ' : '✨ ';
+    const badge = q.isReview ? '복습! ' : '';
     const qEl = document.getElementById('questionText');
     qEl.innerHTML = '';
     qEl.appendChild(createPixelTextCanvas(`${badge}${q.question}`, {
         fontPx: 20, scale: 2, color: '#9932CC', outline: '#FFFFFF', shadow: 'rgba(0,0,0,0.15)'
     }));
     if (posHint) {
-        qEl.appendChild(createPixelTextCanvas(`💡 품사 힌트: ${posHint}`, {
+        qEl.appendChild(createPixelTextCanvas(`품사 힌트: ${posHint}`, {
             fontPx: 10, scale: 2, color: '#9370DB', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)'
         }));
     }
@@ -1785,12 +1785,12 @@ function updateQuestionPanel() {
 	if (gameState.currentEnemy) {
 		let enemyName;
 		if (gameState.currentEnemy.type === 'boss') {
-			enemyName = '👑 보스';
+			enemyName = '보스';
 		} else if (gameState.currentEnemy.type.startsWith('alphabet')) {
 			const letter = gameState.currentEnemy.type.replace('alphabet', '');
-			enemyName = `🔤 ${letter} 몬스터`;
+			enemyName = `${letter} 몬스터`;
 		} else {
-			enemyName = '👹 몬스터';
+			enemyName = '몬스터';
 		}
 		
 		setPixelText(document.getElementById('enemyInfo'),
@@ -1868,7 +1868,7 @@ function selectChoice(choiceIndex) {
 
         // 콤보 연출
         if (gameStats.combo >= 2 && typeof showFloatingText === 'function') {
-            showFloatingText(player.x + 40, player.y - 60, `🔥 콤보 x${gameStats.combo}! +${20 + comboBonus}점`, '#FF8C00', 18);
+            showFloatingText(player.x + 40, player.y - 60, `콤보 x${gameStats.combo}! +${20 + comboBonus}점`, '#FF8C00', 18);
         }
 
         // 복습 문제를 맞히면 오답 노트에서 제거 (완전히 익힌 것으로 간주)
@@ -1876,7 +1876,7 @@ function selectChoice(choiceIndex) {
             const eng = gameState.currentQuestion.wordInfo.english;
             gameStats.wrongWords = gameStats.wrongWords.filter(w => w.english !== eng);
             if (typeof showFloatingText === 'function') {
-                showFloatingText(player.x, player.y - 80, '📝 복습 성공! 오답 노트에서 지웠어요', '#32CD32', 14);
+                showFloatingText(player.x, player.y - 80, '복습 성공! 오답 노트에서 지웠어요', '#32CD32', 14);
             }
         }
 
@@ -1962,7 +1962,7 @@ function selectChoice(choiceIndex) {
         if (typeof showFloatingText === 'function') {
             showFloatingText(player.x, player.y - 30, `틀렸어요! 정답: ${correctAnswer}`, '#FF0000');
             if (hasWhitehousePower()) {
-                showFloatingText(player.x, player.y - 55, '🏕️ 화이트하우스가 지켜줬어요!', '#87CEEB', 13);
+                showFloatingText(player.x, player.y - 55, '화이트하우스가 지켜줬어요!', '#87CEEB', 13);
             }
         }
         
@@ -2008,7 +2008,7 @@ function updateSelectedDisplay() {
     let unitMsg;
     if (gameState.selectedUnits.length > 0) {
         const sortedUnits = gameState.selectedUnits.sort();
-        unitMsg = `💕 선택한 Unit: ${sortedUnits.join(', ')}`;
+        unitMsg = `선택한 Unit: ${sortedUnits.join(', ')}`;
         if (wordManager) {
             const wordCount = wordManager.getWordCountFromSelection(gameState.selectedUnits);
             if (wordCount > 0) {
@@ -2016,7 +2016,7 @@ function updateSelectedDisplay() {
             }
         }
     } else {
-        unitMsg = '💕 선택한 Unit: 없음';
+        unitMsg = '선택한 Unit: 없음';
     }
     setPixelText(selectedUnitsElement, unitMsg,
         { fontPx: 10, scale: 2, color: '#9932CC', outline: 'rgba(255,255,255,0.9)', shadow: 'rgba(0,0,0,0)', wrapPx: 260 });
@@ -2126,24 +2126,24 @@ function updateSelectedCharacterDisplay() {
 
 // 도움말 표시
 function showHelp() {
-    alert('🌸 크림이의 픽셀 영어 게임 도움말 🌸\n\n' +
+    alert('크림이의 픽셀 영어 게임 도움말\n\n' +
           '1. Unit을 선택하고 시작하세요!\n' +
           '2. 화면을 누르면 점프! 장애물을 뛰어넘으세요!\n' +
           '3. 움직이는 몬스터를 만나면 영어 문제를 풀어요!\n' +
           '4. 영어 단어의 뜻을 4지선다에서 고르세요!\n' +
           '5. 정답을 맞추면 몬스터를 물리칠 수 있어요!\n\n' +
-          '✨ 특별한 능력 ✨\n' +
-          '🥝 키위와 함께라면: 공중에서 더블 점프!\n' +
-          '🏕️ 화이트하우스와 함께라면: 오답 데미지 감소!\n' +
-          '🔥 연속 정답 콤보로 보너스 점수를 노려보세요!\n' +
-          '📝 틀린 단어는 오답 노트에 저장되어 다시 나와요!\n\n' +
-          '💕 크림이 화이팅! 💕');
+          '특별한 능력\n' +
+          '키위와 함께라면: 공중에서 더블 점프!\n' +
+          '화이트하우스와 함께라면: 오답 데미지 감소!\n' +
+          '연속 정답 콤보로 보너스 점수를 노려보세요!\n' +
+          '틀린 단어는 오답 노트에 저장되어 다시 나와요!\n\n' +
+          '크림이 화이팅!');
 }
 
 // 게임 오버
 function gameOver() {
     gameState.running = false;
-    alert(`게임 오버! 😢\n최종 점수: ${gameState.score}점\n다시 도전해보세요!`);
+    alert(`게임 오버!\n최종 점수: ${gameState.score}점\n다시 도전해보세요!`);
     showMenu();
 }
 
@@ -2232,7 +2232,7 @@ function jump() {
             createParticles(player.x, player.y, 'hint');
         }
         if (typeof showFloatingText === 'function') {
-            showFloatingText(player.x, player.y - 40, '🥝 더블 점프!', '#FF8C00');
+            showFloatingText(player.x, player.y - 40, '더블 점프!', '#FF8C00');
         }
     } else {
         // 공중에서 누른 점프는 잠시 기억해 뒀다가 착지 직후 실행 (입력 버퍼링)
@@ -2471,7 +2471,7 @@ function initializeGame() {
         showMenu();
     }
     
-    console.log('🌸 크림이의 픽셀 영어 게임이 초기화되었습니다! 🌸');
+    console.log('크림이의 픽셀 영어 게임이 초기화되었습니다!');
 }
 
 // 오프닝 시퀀스 시작
@@ -2575,11 +2575,11 @@ function saveGameRecord() {
 // 게임 기록 표시
 function showGameRecords() {
     if (gameRecords.length === 0) {
-        alert('아직 게임 기록이 없어요! 게임을 플레이해보세요! 💕');
+        alert('아직 게임 기록이 없어요! 게임을 플레이해보세요!');
         return;
     }
     
-    let recordText = '🏆 게임 기록 🏆\n\n';
+    let recordText = '게임 기록\n\n';
     gameRecords.slice(-5).reverse().forEach((record, index) => {
         recordText += `${index + 1}. ${record.date}\n`;
         recordText += `   캐릭터: ${record.character === 'jiyul' ? '크림이' : 
@@ -2596,17 +2596,17 @@ function showGameRecords() {
 function gameOverWithRecord() {
     const record = saveGameRecord();
     
-    let message = `게임 오버! 😢\n\n`;
-    message += `🏆 게임 결과 🏆\n`;
+    let message = `게임 오버!\n\n`;
+    message += `게임 결과\n`;
     message += `최종 점수: ${record.score}점\n`;
     message += `스테이지: ${record.stage}\n`;
     message += `정답률: ${record.accuracy}% (${record.correctAnswers}/${record.totalQuestions})\n`;
-    message += `최고 콤보: ${record.maxCombo}연속 🔥\n`;
+    message += `최고 콤보: ${record.maxCombo}연속\n`;
     message += `플레이 시간: ${Math.floor(record.playTime / 60)}분 ${record.playTime % 60}초\n`;
 
     // 오답 노트: 틀린 단어를 보여줘서 복습 유도
     if (record.wrongWords && record.wrongWords.length > 0) {
-        message += `\n📝 오늘 틀린 단어 (복습해요!)\n`;
+        message += `\n오늘 틀린 단어 (복습해요!)\n`;
         record.wrongWords.slice(0, 8).forEach(w => {
             message += `  • ${w.english} = ${w.korean}\n`;
         });
@@ -2615,7 +2615,7 @@ function gameOverWithRecord() {
         }
     }
 
-    message += `\n다시 도전해보세요! 💕`;
+    message += `\n다시 도전해보세요!`;
     
     gameState.running = false;
     alert(message);
@@ -2631,32 +2631,32 @@ window.gameOver = gameOverWithRecord;
 // 고급 도움말 함수
 function showAdvancedHelp() {
     const helpText = `
-🌸 크림이의 픽셀 영어 게임 - 상세 도움말 🌸
+크림이의 픽셀 영어 게임 - 상세 도움말
 
-🎮 조작법:
+조작법:
 • 화면 아무 곳이나 탭/클릭: 점프
 • 스페이스바: 점프 (키보드)
 • 1,2,3,4 키: 문제 선택지 선택
 • ESC 키: 일시정지/계속하기
 • H 키: 도움말
 
-🎯 게임 목표:
+게임 목표:
 • 장애물을 뛰어넘으며 전진하세요!
 • 몬스터를 만나면 영어 문제를 풀어요!
 • 20스테이지까지 클리어하는 것이 목표!
 
-💡 팁:
+팁:
 • 점프하면 앞으로 더 멀리 갈 수 있어요!
 • 보스전에서는 더 어려운 문제가 나와요!
 • Unit을 많이 선택할수록 다양한 문제가 나와요!
 
-🏆 점수 시스템:
+점수 시스템:
 • 장애물 통과: 5-10점
 • 문제 정답: 20점
 • 몬스터 처치: 50점 (보스 100점)
 • 점프: 1점
 
-❤️ 체력 시스템:
+체력 시스템:
 • 틀린 답: -15 체력
 • 체력이 0이 되면 게임 오버!
     `;
@@ -2685,7 +2685,7 @@ window.selectCharacterByName = selectCharacterByName;
 window.replayOpening = replayOpening;
 
 // 게임 시작 시 초기화
-console.log('🎮 게임 스크립트 로딩 완료!');
+console.log('게임 스크립트 로딩 완료!');
 
 // DOM이 완전히 로드된 후 게임 초기화
 if (document.readyState === 'loading') {
@@ -2867,4 +2867,4 @@ if (document.readyState === 'loading') {
     lockOrientation();
 }
 
-console.log('✨ 크림이의 픽셀 영어 게임 준비 완료! ✨');
+console.log('크림이의 픽셀 영어 게임 준비 완료!');

@@ -465,55 +465,55 @@ class OpeningSequence {
         this.dialogues = [
             { 
                 scene: 1, 
-                text: "🌸 평화로운 어느 날... 크림이는 간식을 먹고 있었다 🍪", 
+                text: "평화로운 어느 날... 크림이는 간식을 먹고 있었다", 
                 speaker: "narrator",
                 effect: "peaceful"
             },
             { 
                 scene: 2, 
-                text: "🚨 삐용삐용! 갑자기 이상한 UFO가 나타났다! 🛸", 
+                text: "삐용삐용! 갑자기 이상한 UFO가 나타났다!", 
                 speaker: "narrator",
                 effect: "alert"
             },
             { 
                 scene: 3, 
-                text: "👽 \"푸하하! 나는 알파벳 대마왕이다! ABCD도 모르는 지구 꼬맹이들!\"", 
+                text: "\"푸하하! 나는 알파벳 대마왕이다! ABCD도 모르는 지구 꼬맹이들!\"", 
                 speaker: "alien",
                 effect: "villain"
             },
             { 
                 scene: 4, 
-                text: "👽 \"영어 단어 시험에서 100점 못 맞으면... 지구는 내 거다! 푸푸푸!\"", 
+                text: "\"영어 단어 시험에서 100점 못 맞으면... 지구는 내 거다! 푸푸푸!\"", 
                 speaker: "alien",
                 effect: "villain"
             },
             { 
                 scene: 5, 
-                text: "크림: \"뭐어어?! 내 간식 빼앗아가는 건 참을 수 없어! 😤\"", 
+                text: "크림: \"뭐어어?! 내 간식 빼앗아가는 건 참을 수 없어!\"", 
                 speaker: "jiyul",
                 effect: "angry"
             },
             { 
                 scene: 6, 
-                text: "키위: \"라룩라룩! (번역: 감히 우리 지구를?!) 🦎💢\"", 
+                text: "키위: \"라룩라룩! (번역: 감히 우리 지구를?!)\"", 
                 speaker: "kiwi",
                 effect: "angry"
             },
             { 
                 scene: 7, 
-                text: "화이트하우스: \"흠... 내 안에는 영어 백과사전이 있다구! 📚✨\"", 
+                text: "화이트하우스: \"흠... 내 안에는 영어 백과사전이 있다구!\"", 
                 speaker: "whitehouse",
                 effect: "confident"
             },
             { 
                 scene: 8, 
-                text: "👽 \"흥... 그럼 내가 준비한 슈퍼 울트라 영어 문제를 풀어보거라!\"", 
+                text: "\"흥... 그럼 내가 준비한 슈퍼 울트라 영어 문제를 풀어보거라!\"", 
                 speaker: "alien",
                 effect: "challenge"
             },
             { 
                 scene: 9, 
-                text: "모두: \"좋아! 우리가 영어 챔피언이 되어줄게! 🔥 LET'S GO! 🔥\"", 
+                text: "모두: \"좋아! 우리가 영어 챔피언이 되어줄게! LET'S GO!\"", 
                 speaker: "all",
                 effect: "heroic"
             }
@@ -615,7 +615,7 @@ class OpeningSequence {
             y: 20,
             width: buttonSize.width,
             height: buttonSize.height,
-            text: "SKIP ⏭"
+            text: "SKIP"
         };
     }
     
@@ -911,10 +911,18 @@ class OpeningSequence {
         this.ctx.save();
         this.ctx.translate(centerX, centerY - 30);
         this.ctx.rotate(Math.PI / 2);
-        this.ctx.font = `${iconSize}px Arial`;
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
-        this.ctx.fillText('📱', 0, 0);
+        // 도트 스마트폰 아이콘
+        {
+            const P = Math.max(3, Math.round(iconSize / 14));
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillRect(-4 * P, -7 * P, 8 * P, 14 * P);          // 몸체
+            this.ctx.fillStyle = '#1A1030';
+            this.ctx.fillRect(-3 * P, -5 * P, 6 * P, 9 * P);           // 스크린
+            this.ctx.fillStyle = '#9370DB';
+            this.ctx.fillRect(-P, 5 * P, 2 * P, P);                    // 홈 버튼
+            this.ctx.fillStyle = '#1A1030';
+            this.ctx.fillRect(-P, -7 * P + Math.round(P / 2), 2 * P, Math.max(2, Math.round(P / 2))); // 수화부
+        }
         this.ctx.restore();
 
         // 메시지 텍스트
@@ -924,7 +932,7 @@ class OpeningSequence {
         this.ctx.textBaseline = 'middle';
         this.ctx.shadowColor = 'rgba(0,0,0,0.5)';
         this.ctx.shadowBlur = 8;
-        this.ctx.fillText('💜 화면을 가로로 돌려주세요! 💜', centerX, centerY + iconSize + 20);
+        this.ctx.fillText('화면을 가로로 돌려주세요!', centerX, centerY + iconSize + 20);
         this.ctx.shadowBlur = 0;
 
         // 작은 안내 텍스트
@@ -1129,23 +1137,31 @@ class OpeningSequence {
                 this.ctx.stroke();
                 break;
                 
-            case 'determined':
-                // 결의에 찬 불꽃
-                this.ctx.font = '20px Arial';
-                this.ctx.fillText('🔥', x - 10, y);
+            case 'determined': {
+                // 결의에 찬 불꽃 (도트)
+                const P = 3, fx = x - 12, fy = y - 22;
+                [[1,3,'#FF3B1F'],[0,2,'#FF3B1F'],[2,2,'#FF3B1F'],[1,2,'#FF7A1A'],
+                 [0,1,'#FF7A1A'],[2,1,'#FF7A1A'],[1,1,'#FFD84A'],[1,0,'#FFD84A']]
+                    .forEach(([dx,dy,c]) => { this.ctx.fillStyle = c; this.ctx.fillRect(fx + dx*P, fy + dy*P, P, P); });
                 break;
-                
-            case 'confident':
-                // 반짝임
-                this.ctx.font = '20px Arial';
-                this.ctx.fillText('✨', x - 10, y);
+            }
+
+            case 'confident': {
+                // 반짝임 (도트 십자 스파클)
+                const P = 3, sx = x - 12, sy = y - 22;
+                [[1,0,'#FFE97A'],[0,1,'#FFE97A'],[2,1,'#FFE97A'],[1,2,'#FFE97A'],[1,1,'#FFFFFF']]
+                    .forEach(([dx,dy,c]) => { this.ctx.fillStyle = c; this.ctx.fillRect(sx + dx*P, sy + dy*P, P, P); });
                 break;
-                
-            case 'heroic':
-                // 별
-                this.ctx.font = '20px Arial';
-                this.ctx.fillText('⭐', x - 10, y);
+            }
+
+            case 'heroic': {
+                // 별 (도트 다이아몬드 스타)
+                const P = 3, bx = x - 14, by = y - 24;
+                [[2,0,'#FFD700'],[1,1,'#FFD700'],[3,1,'#FFD700'],[0,2,'#FFD700'],[4,2,'#FFD700'],
+                 [1,3,'#FFD700'],[3,3,'#FFD700'],[2,4,'#FFD700'],[2,2,'#FFFFFF'],[2,1,'#FFEC8B'],[2,3,'#FFEC8B'],[1,2,'#FFEC8B'],[3,2,'#FFEC8B']]
+                    .forEach(([dx,dy,c]) => { this.ctx.fillStyle = c; this.ctx.fillRect(bx + dx*P, by + dy*P, P, P); });
                 break;
+            }
         }
     }
     
@@ -1299,12 +1315,14 @@ class OpeningSequence {
             }
         });
         
-        // 화난 마크
+        // 화난 마크 (도트 4괄호)
         this.angryMarks.forEach(mark => {
             this.ctx.save();
-            this.ctx.font = 'bold 20px Arial';
-            this.ctx.fillStyle = `rgba(255, 0, 0, ${mark.life / 30})`;
-            this.ctx.fillText('💢', mark.x, mark.y);
+            this.ctx.globalAlpha = Math.max(0, mark.life / 30);
+            this.ctx.fillStyle = '#FF2A2A';
+            const P = 3;
+            [[0,0],[1,0],[0,1],[3,0],[4,0],[4,1],[0,3],[0,4],[1,4],[4,3],[3,4],[4,4]]
+                .forEach(([dx,dy]) => this.ctx.fillRect(mark.x - 8 + dx*P, mark.y - 8 + dy*P, P, P));
             this.ctx.restore();
         });
     }
@@ -1685,4 +1703,4 @@ function startOpening(canvas, ctx, onComplete) {
 window.startOpening = startOpening;
 window.showTitleScreen = showTitleScreen;
 
-console.log('📚 opening.js 로드 완료');
+console.log('opening.js 로드 완료');
