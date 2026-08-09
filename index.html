@@ -171,22 +171,19 @@
             transform: scale(0.96);
         }
 
+        /* 오락실 스타일 상태바: 검은 띠 + 골드 라인, 도트 텍스트/하트 */
         #ui {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 120px;
-            color: white;
-            font-size: 14px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            top: 0;
+            left: 0;
+            right: 0;
             z-index: 10;
-            background: linear-gradient(135deg, rgba(147,112,219,0.9), rgba(221,160,221,0.9));
-            border: 3px solid #FFF;
-            padding: 12px 20px;
+            background: rgba(16, 12, 8, 0.92);
+            border-bottom: 3px solid #FFD700;
+            padding: 7px calc(92px + env(safe-area-inset-right)) 7px calc(14px + env(safe-area-inset-left));
             display: none;
             font-family: 'DungGeunMo', 'Jua', sans-serif;
-            border-radius: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            image-rendering: pixelated;
         }
 
         #questionPanel {
@@ -864,14 +861,10 @@
 
             /* ── 인게임 상단 UI (노치 안전영역 포함) ── */
             #ui {
-                top: 4px;
-                left: calc(6px + env(safe-area-inset-left));
-                right: calc(86px + env(safe-area-inset-right));
-                padding: 4px 10px;
-                border-width: 2px;
-                border-radius: 12px;
+                padding: 4px calc(84px + env(safe-area-inset-right)) 4px calc(10px + env(safe-area-inset-left));
+                border-bottom-width: 2px;
             }
-            #ui canvas { width: auto !important; max-height: 15px; }
+            #ui canvas { width: auto !important; max-height: 16px; }
             #fullscreenBtn {
                 top: 4px;
                 right: calc(6px + env(safe-area-inset-right));
@@ -1044,11 +1037,6 @@
             .control-btn {
                 font-size: min(3vh, 14px) !important;
                 padding: 1vh !important;
-            }
-            
-            #ui {
-                font-size: min(2.5vh, 12px) !important;
-                padding: 1vh 2vw !important;
             }
             
             #questionPanel {

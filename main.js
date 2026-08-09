@@ -1486,13 +1486,62 @@ function updateAnimations() {
 }
 
 // UI 업데이트
+// 오락실 HUD용 도트 하트 (7x6)
+const HUD_HEART = [
+    '.HH.HH.',
+    'HHHHHHH',
+    'HHHHHHH',
+    '.HHHHH.',
+    '..HHH..',
+    '...H...'
+];
+
+// 체력을 하트 5개(하트당 20)로 표현, 반쪽 하트 지원
+function renderHudHearts(el) {
+    if (!el) return;
+    const hearts = 5, S = 3, gap = 5;
+    const w = 7 * S, h = 6 * S;
+    const hp = Math.max(0, player.hp);
+    const cv = document.createElement('canvas');
+    cv.width = hearts * w + (hearts - 1) * gap;
+    cv.height = h;
+    const c = cv.getContext('2d');
+    for (let i = 0; i < hearts; i++) {
+        const frac = Math.max(0, Math.min(1, (hp - i * 20) / 20));
+        const mode = frac >= 0.75 ? 'full' : (frac >= 0.25 ? 'half' : 'empty');
+        const ox = i * (w + gap);
+        HUD_HEART.forEach((row, y) => {
+            for (let x = 0; x < row.length; x++) {
+                if (row[x] !== 'H') continue;
+                let col = 'rgba(255,255,255,0.22)';           // 빈 하트
+                if (mode === 'full') col = '#FF3355';
+                else if (mode === 'half' && x <= 3) col = '#FF3355';
+                c.fillStyle = col;
+                c.fillRect(ox + x * S, y * S, S, S);
+            }
+        });
+        if (mode !== 'empty') {                                // 하이라이트 점
+            c.fillStyle = '#FFB3C1';
+            c.fillRect(ox + S, S, S, S);
+        }
+    }
+    cv.style.imageRendering = 'pixelated';
+    cv.style.height = '18px';
+    cv.style.width = 'auto';
+    el.innerHTML = '';
+    el.appendChild(cv);
+}
+
 function updateUI() {
-    // 상단 UI 4칸을 도트 텍스트로 갱신 (이벤트 시점에만 호출되므로 부담 없음)
-    const o = { fontPx: 11, scale: 2, color: '#FFFFFF', outline: '#6B3AA0', shadow: 'rgba(0,0,0,0)', inline: true };
-    setPixelText(document.getElementById('uiUnit'), `📚 ${gameState.unitDisplay || '-'}`, o);
-    setPixelText(document.getElementById('uiStage'), `🏰 스테이지 ${gameState.stage}`, o);
-    setPixelText(document.getElementById('uiScore'), `⭐ ${gameState.score}점`, o);
-    setPixelText(document.getElementById('uiHp'), `💖 체력: ${Math.max(0, player.hp)}`, o);
+    // 오락실 상태바: UNIT(하늘색) / STAGE(골드) / SCORE(흰색, 6자리) / 하트 체력
+    const stage = gameState.stage;
+    const unitLabel = (typeof BOSS_STAGE !== 'undefined' && stage >= BOSS_STAGE) ? 'BOSS'
+        : (stage > ALL_UNITS.length ? '복습' : `UNIT ${stage}`);
+    const base = { fontPx: 12, scale: 2, outline: '#100C08', shadow: 'rgba(0,0,0,0)', inline: true };
+    setPixelText(document.getElementById('uiUnit'), unitLabel, { ...base, color: '#3DDCFF' });
+    setPixelText(document.getElementById('uiStage'), `STAGE ${stage}`, { ...base, color: '#FFD700' });
+    setPixelText(document.getElementById('uiScore'), `SCORE ${String(Math.max(0, gameState.score)).padStart(6, '0')}`, { ...base, color: '#FFFFFF' });
+    renderHudHearts(document.getElementById('uiHp'));
 }
 
 // 렌더링
