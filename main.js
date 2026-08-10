@@ -1151,6 +1151,17 @@ function triggerEnding() {
     // 클리어 기록 저장 (기존에는 엔딩 경로에서 기록이 저장되지 않는 버그가 있었음)
     saveGameRecord();
 
+    // 히든 엔딩: 한 문제도 틀리지 않은 퍼펙트 클리어 (정답률 100%)
+    const isPerfect = gameStats.totalQuestions > 0 &&
+        gameStats.correctAnswers === gameStats.totalQuestions;
+    if (isPerfect && typeof showHiddenEnding === 'function') {
+        showHiddenEnding(function() {
+            if (typeof showEnding === 'function') showEnding();
+            else showMenu();
+        });
+        return;
+    }
+
     if (typeof showEnding === 'function') {
         showEnding();
     } else {

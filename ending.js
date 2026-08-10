@@ -1788,6 +1788,183 @@ function createCelebrationEffects() {
 }
 
 // 전역 함수로 등록
+// ═══════════════════════════════════════════════════════
+// 히든 엔딩: 퍼펙트 클리어(정답률 100%) 전용 순수 도트 씬
+// 전부 캔버스 2D 스프라이트 — DOM 텍스트/이모지 없음
+// ═══════════════════════════════════════════════════════
+const HIDDEN_TROPHY = [
+    'g....gggggg....g',
+    'g...gGGGGGGg...g',
+    'gg..gGWGGGGg..gg',
+    '.g..gGGGGGGg..g.',
+    '.gg.gGGGGGGg.gg.',
+    '..ggGGGGGGGGgg..',
+    '....gGGGGGGg....',
+    '.....gGGGGg.....',
+    '......gGGg......',
+    '......gGGg......',
+    '.....gGGGGg.....',
+    '....GGGGGGGG....',
+    '..dddddddddddd..',
+    '..dddddddddddd..'
+];
+const HIDDEN_TROPHY_COLORS = {
+    g: '#B8860B', G: '#FFD700', W: '#FFFFFF', d: '#8B5A2B', _slug: true
+};
+
+function showHiddenEnding(onDone) {
+    if (typeof gameState !== 'undefined') {
+        gameState.running = false;
+        gameState.isMoving = false;
+    }
+    const div = document.createElement('div');
+    div.id = 'hiddenEndingScreen';
+    div.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#0E1230;overflow:hidden;';
+    const cv = document.createElement('canvas');
+    cv.style.cssText = 'width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:manipulation;';
+    div.appendChild(cv);
+    document.body.appendChild(div);
+    const g = cv.getContext('2d');
+
+    // 축하 새벽 하늘 밴드 (위 → 아래)
+    const BANDS = ['#1B1035', '#3D2560', '#7C3A6E', '#C75B4E', '#E87A3C', '#F5A048', '#FFD84A'];
+    const CONFETTI_COLS = ['#FFD700', '#FF7B9C', '#3DDCFF', '#7ED957', '#FFFFFF'];
+    let frame = 0, alive = true;
+
+    // 큰 fontPx 래스터 + dispScale 축소로 획을 보존하는 텍스트
+    const tCache = new Map();
+    function tSprite(text, fontPx, color, outline) {
+        const k = text + '@' + fontPx + color;
+        if (!tCache.has(k) && typeof createPixelTextCanvas === 'function') {
+            tCache.set(k, createPixelTextCanvas(text, {
+                fontPx, scale: 1, color, outline, shadow: 'rgba(0,0,0,0.45)'
+            }));
+        }
+        return tCache.get(k) || null;
+    }
+    function tDraw(text, cx, cy, fontPx, color, outline, targetH, maxW) {
+        const tc = tSprite(text, fontPx, color, outline);
+        if (!tc) return;
+        let s = targetH / tc.height;
+        if (tc.width * s > maxW) s = maxW / tc.width;
+        const dw = Math.round(tc.width * s), dh = Math.round(tc.height * s);
+        g.imageSmoothingEnabled = false;
+        g.drawImage(tc, Math.round(cx - dw / 2), Math.round(cy - dh / 2), dw, dh);
+    }
+
+    // 스프라이트 베이크 (외곽선+림라이트/셰이드 포함)
+    const bakes = new Map();
+    function baked(name, pose) {
+        const k = name + ':' + pose;
+        if (!bakes.has(k)) {
+            const d = getCharacterPixelData(name);
+            if (!d || !d[pose] || typeof window.bakePixelSprite !== 'function') return null;
+            bakes.set(k, window.bakePixelSprite(d[pose], d.colorMap, false));
+        }
+        return bakes.get(k);
+    }
+    let trophyBake = null;
+    function drawTrophy(cx, bottomY, scale) {
+        if (!trophyBake && typeof window.bakePixelSprite === 'function') {
+            trophyBake = window.bakePixelSprite(HIDDEN_TROPHY, HIDDEN_TROPHY_COLORS, false);
+        }
+        if (!trophyBake) return;
+        const dw = trophyBake.width * scale, dh = trophyBake.height * scale;
+        g.drawImage(trophyBake, Math.round(cx - dw / 2), Math.round(bottomY - dh), dw, dh);
+    }
+
+    function draw() {
+        if (!alive || !document.getElementById('hiddenEndingScreen')) return;
+        frame++;
+        const dpr = Math.max(1, Math.min(3, Math.round(window.devicePixelRatio || 1)));
+        const cw = Math.round(div.clientWidth * dpr), chh = Math.round(div.clientHeight * dpr);
+        if (cv.width !== cw || cv.height !== chh) { cv.width = cw; cv.height = chh; }
+        const W = cv.width, H = cv.height;
+        const groundY = Math.round(H * 0.8);
+        const scale = Math.max(2, Math.floor(Math.min(W / 480, H / 320) * 2.2));
+
+        // 하늘 밴드
+        const bandH = Math.ceil(groundY / BANDS.length);
+        BANDS.forEach((col, i) => { g.fillStyle = col; g.fillRect(0, i * bandH, W, bandH + 1); });
+        // 고정 별 (위쪽 어두운 밴드)
+        g.fillStyle = 'rgba(255,255,255,0.7)';
+        for (let i = 1; i <= 18; i++) {
+            g.fillRect((i * 73856093) % W, (i * 19349663) % Math.round(groundY * 0.4), 2, 2);
+        }
+        // 지면: 잔디 + 흙 체커
+        g.fillStyle = '#3E8E2F';
+        g.fillRect(0, groundY, W, scale * 2);
+        g.fillStyle = '#5FB53E';
+        for (let x = 0; x < W; x += scale * 4) g.fillRect(x, groundY, scale * 2, scale);
+        const tile = scale * 8;
+        for (let ty = groundY + scale * 2; ty < H + tile; ty += tile) {
+            for (let tx = 0; tx < W + tile; tx += tile) {
+                g.fillStyle = ((tx / tile | 0) + (ty / tile | 0)) % 2 === 0 ? '#5C3A24' : '#4E3120';
+                g.fillRect(tx, ty, tile, tile);
+            }
+        }
+
+        // 색종이 (결정적 낙하, 상태 저장 없음)
+        for (let i = 0; i < 40; i++) {
+            const cx2 = ((i * 73856093) % W + Math.round(Math.sin((frame + i * 37) * 0.03) * 6 * scale / 2)) % W;
+            const cy2 = (frame * (2 + (i % 3)) + (i * 19349663) % H) % (H + 20) - 10;
+            g.fillStyle = CONFETTI_COLS[i % CONFETTI_COLS.length];
+            const cs = (i % 2 === 0 ? 2 : 3) * Math.max(1, Math.round(scale / 2));
+            g.fillRect(Math.round(cx2), Math.round(cy2), cs, cs);
+        }
+
+        // 트로피 (중앙, 은은한 빛 점)
+        const trophyScale = scale;
+        drawTrophy(W / 2, groundY, trophyScale);
+        g.fillStyle = 'rgba(255,215,0,0.85)';
+        for (let a = 0; a < 6; a++) {
+            const ang = (frame * 0.02) + a * Math.PI / 3;
+            const rr = 14 * trophyScale;
+            g.fillRect(Math.round(W / 2 + Math.cos(ang) * rr), Math.round(groundY - 7 * trophyScale + Math.sin(ang) * rr * 0.5), scale, scale);
+        }
+
+        // 캐릭터 3인: 크림(점프 환호) + 키위 + 화이트하우스
+        const hop = Math.abs(Math.sin(frame * 0.08)) * 5 * scale;
+        const trio = [
+            { name: 'jiyul', pose: hop > 3 * scale ? 'jump' : 'idle', dx: -24, hop },
+            { name: 'kiwi', pose: Math.floor(frame / 10) % 2 ? 'walking1' : 'idle', dx: -42, hop: 0 },
+            { name: 'whitehouse', pose: 'idle', dx: 26, hop: 0 }
+        ];
+        trio.forEach(t => {
+            const b = baked(t.name, t.pose) || baked(t.name, 'idle');
+            if (!b) return;
+            const s = (16 * scale) / (b.height - 2);
+            const dw = Math.round(b.width * s), dh = Math.round(b.height * s);
+            const x = Math.round(W / 2 + t.dx * scale - dw / 2);
+            const y = Math.round(groundY - dh - t.hop + Math.floor(scale / 2));
+            g.imageSmoothingEnabled = false;
+            g.drawImage(b, x, y, dw, dh);
+        });
+
+        // 텍스트
+        tDraw('HIDDEN ENDING', W / 2, H * 0.12, 24, '#FF7A1A', '#100C08', Math.round(9 * scale), W * 0.85);
+        tDraw('퍼펙트 클리어!', W / 2, H * 0.24, 40, '#FFD700', '#100C08', Math.round(16 * scale), W * 0.9);
+        tDraw('정답률 100%! 크림이는 진짜 영어 천재!', W / 2, H * 0.36, 28, '#FFFFFF', '#100C08', Math.round(8 * scale), W * 0.9);
+        if (Math.floor(frame / 30) % 2 === 0) {
+            tDraw('화면을 터치하면 계속', W / 2, H * 0.62, 24, '#3DDCFF', '#100C08', Math.round(7 * scale), W * 0.8);
+        }
+
+        requestAnimationFrame(draw);
+    }
+
+    function finish() {
+        if (!alive) return;
+        alive = false;
+        div.remove();
+        if (typeof onDone === 'function') onDone();
+    }
+    div.addEventListener('click', finish);
+    div.addEventListener('touchend', function(e) { e.preventDefault(); finish(); }, { passive: false });
+
+    draw();
+}
+
+window.showHiddenEnding = showHiddenEnding;
 window.showEnding = showEnding;
 
 console.log('최종 개선된 엔딩 시스템 로드 완료! 자동 스크롤 + 사용자 친화적 토글 버튼');
