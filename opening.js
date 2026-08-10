@@ -336,18 +336,36 @@ function showTitleScreen() {
 
         const groundY = drawBackground(ox, oy);
 
-        // ── 행진하는 캐릭터들 ──
-        const step = Math.floor(frame / 9) % walkPoses.length;
-        marchers.forEach((name, i) => {
-            const baked = bakeSprite(name, walkPoses[(step + i) % walkPoses.length]) || bakeSprite(name, 'idle');
-            if (!baked) return;
-            const scale = Math.max(2, Math.round(U * 0.6));
-            const spd = 0.00045;
-            const mx = ((frame * spd + i * 0.18) % 1.2 - 0.1) * W;
-            const my = groundY + Math.round(U * 1.6) - baked.height * scale;
+        // ── 행진하는 캐릭터들 (하단 소형 도트 대열, 어떤 화면 비율에서도 동작) ──
+        {
+            // 화면 높이 기준 자동 크기: 세로 화면에서는 함께 작아짐
+            const dprF = Math.max(1, Math.round(W / Math.max(1, window.innerWidth)));
+            const scale = Math.max(2, Math.floor(Math.min(W / (480 * dprF), H / (320 * dprF)) * 2.6)) * dprF;
+            // 8프레임마다 걷기 프레임 교차
+            const pose = Math.floor(frame / 8) % 2 === 0 ? 'walking1' : 'walking2';
+            // 트리오 × 2 = 6명 대열, 캐릭터별 offset 90~110px 간격
+            const lineup = [];
+            let off = 0;
+            for (let i = 0; i < 6; i++) {
+                lineup.push({ name: marchers[i % marchers.length], off: off * dprF });
+                off += 90 + ((i * 13) % 21);   // 90~110px 사이 고정 간격 (결정적)
+            }
+            const spd = 1.6 * dprF;
+            const marginPx = 16 * scale + 40 * dprF;   // 화면 밖 여유
             c.imageSmoothingEnabled = false;
-            c.drawImage(baked, Math.round(ox + mx), Math.round(oy + my), baked.width * scale, baked.height * scale);
-        });
+            lineup.forEach(m => {
+                const baked = bakeSprite(m.name, pose) || bakeSprite(m.name, 'idle');
+                if (!baked) return;
+                // 스프라이트 원본 크기(16/32px)와 무관하게 16*scale 높이로 정규화
+                const s = (16 * scale) / (baked.height - 2);   // -2: 외곽선 패딩 보정
+                const dw = Math.round(baked.width * s), dh = Math.round(baked.height * s);
+                // 상태 저장 없이 프레임 수만으로 위치 계산 → 오른쪽 밖 = 왼쪽 재등장
+                const x = Math.round(((frame * spd + m.off) % (W + marginPx)) - marginPx);
+                // 발을 지면 라인에 정확히 붙임
+                const y = Math.round(groundY - dh + Math.floor(scale / 2));
+                c.drawImage(baked, x + ox, y + oy, dw, dh);
+            });
+        }
 
         // ── 로고 (등장 연출: 거대 → 쾅 착지) ──
         if (logoMain) {
