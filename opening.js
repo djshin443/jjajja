@@ -343,11 +343,11 @@ function showTitleScreen() {
             const scale = Math.max(2, Math.floor(Math.min(W / (480 * dprF), H / (320 * dprF)) * 2.6)) * dprF;
             // 8프레임마다 걷기 프레임 교차
             const pose = Math.floor(frame / 8) % 2 === 0 ? 'walking1' : 'walking2';
-            // 트리오 × 2 = 6명 대열, 캐릭터별 offset 90~110px 간격
+            // 캐릭터당 한 번씩만 등장하는 3명 대열, offset 90~110px 간격
             const lineup = [];
             let off = 0;
-            for (let i = 0; i < 6; i++) {
-                lineup.push({ name: marchers[i % marchers.length], off: off * dprF });
+            for (let i = 0; i < marchers.length; i++) {
+                lineup.push({ name: marchers[i], off: off * dprF });
                 off += 90 + ((i * 13) % 21);   // 90~110px 사이 고정 간격 (결정적)
             }
             const spd = 1.6 * dprF;
